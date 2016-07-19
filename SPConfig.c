@@ -51,6 +51,14 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 #define PCA_DIM_LOW_LIMIT 10
 #define PCA_DIM_HIGH_LIMIT 28
 
+#define ERROR_INVALID_LINE_MSG(config_filename, line_number) 
+							  (printf("File: %s\nLine: %d\nMessage: Invalid configuration line\n", config_filename, line_number))
+#define ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number)
+							  (printf("File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n", config_filename, line_number))
+#define ERROR_PARMETER_NOT_SET_MSG(config_filename, num_of_lines, param_name)
+							  (printf("File: %s\nLine: %d\nMessage: Parameter %s is not set\n", config_filename, num_of_lines, param_name))
+
+
 struct sp_config_t{
 	char* spImagesDirectory; //hasNoWhiteSpace
 	char* spImagesPrefix; // hasNoWhiteSpace
@@ -68,25 +76,7 @@ struct sp_config_t{
 	char * spLoggerFilename; //hasNoWhiteSpace
 };
 
-ERROR_INVALID_LINE_MSG = 
-/*File: <the configuration filename>
-Line: <the number of the invalid line>
-Message: Invalid configuration line”
-*/
 
-ERROR_INVALID_CONSTRAINT_MSG = 
-/*
-“File: <the configuration filename>
-Line: <the number of the invalid value>
-Message: Invalid value - constraint not met”
-*/
-
-ERROR_PARMETER_NOT_SET_MSG = 
-/*
-“File: <the configuration filename>
-Line: <the number of lines in the configuration file>
-Message: Parameter <parameter name> is not set”
-*/
 
 
 int parseConfigFile(char * config_filename) {
