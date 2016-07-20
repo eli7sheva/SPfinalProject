@@ -16,7 +16,7 @@
 #define SP_PCA_DIMENSION_STR 		 "spPCADimension"
 #define SP_PCA_FILENAME_STR			 "spPCAFilename"
 #define SP_NUM_OF_FEATURES_STR		 "spNumOfFeatures"
-#define SP_EXTRACTION_MODE_STR 			 "spExtractionMode"
+#define SP_EXTRACTION_MODE_STR 		 "spExtractionMode"
 #define SP_NUM_OF_SIMILAR_IMAGES_STR "spNumOfSimilarImages"
 #define SP_KD_TREE_SPLIT_METHOD_STR  "spKDTreeSplitMethod"
 #define SP_KNN_STR 					 "spKNN"
@@ -51,12 +51,9 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 #define PCA_DIM_LOW_LIMIT 10
 #define PCA_DIM_HIGH_LIMIT 28
 
-#define ERROR_INVALID_LINE_MSG(config_filename, line_number) 
-							  (printf("File: %s\nLine: %d\nMessage: Invalid configuration line\n", config_filename, line_number))
-#define ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number)
-							  (printf("File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n", config_filename, line_number))
-#define ERROR_PARMETER_NOT_SET_MSG(config_filename, num_of_lines, param_name)
-							  (printf("File: %s\nLine: %d\nMessage: Parameter %s is not set\n", config_filename, num_of_lines, param_name))
+#define ERROR_INVALID_LINE_MSG ("File: %s\nLine: %d\nMessage: Invalid configuration line\n")
+#define ERROR_INVALID_CONSTRAINT_MSG ("File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n")
+#define ERROR_PARMETER_NOT_SET_MSG ("File: %s\nLine: %d\nMessage: Parameter %s is not set\n")
 
 
 struct sp_config_t{
@@ -132,7 +129,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
  	else if (strcmp(left, SP_IMAGES_DIRECTORY_STR) == 0) {
 		if (!hasNoWhiteSpace(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -144,7 +141,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_IMAGES_PREFIX_STR) == 0) {
 		if (!hasNoWhiteSpace(right))
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -155,7 +152,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_IMAGES_SUFFIX_STR) == 0) {
 		if (!validSuffix(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -166,7 +163,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_NUM_OF_IMAGES_STR) == 0) {
 		if (!isPositiveInteger(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -177,7 +174,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_PCA_DIMENSION_STR) == 0) {
 		if (!isInRange(right, PCA_DIM_LOW_LIMIT, PCA_DIM_HIGH_LIMIT) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -188,7 +185,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_PCA_FILENAME_STR) == 0) {
 		if (!hasNoWhiteSpace(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -199,7 +196,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_NUM_OF_FEATURES_STR) == 0) {
 		if (!isPositiveInteger(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -211,7 +208,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	//todo finish this one
 	else if (strcmp(left, SP_EXTRACTION_MODE_STR) == 0) {
 		if (!check boolean))) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -222,7 +219,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_NUM_OF_SIMILAR_IMAGES_STR) == 0) {
 		if (!isNotNegativeInteger(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -234,7 +231,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	// todo finish this one
 	else if (strcmp(left, SP_KD_TREE_SPLIT_METHOD_STR) == 0) {
 		if (!check tree_split) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -245,7 +242,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_KNN_STR) == 0) {
 		if (!isNotNegativeInteger(right)) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -257,7 +254,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	//todo finish this one
 	else if (strcmp(left, SP_MINIMAL_GUI_STR) == 0) {
 		if (! check boolean) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -269,7 +266,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	//todo finish this one
 	else if (strcmp(left, SP_LOGGER_LEVEL_STR) == 0) {
 		if (! check SP_LOGGER_LEVEL) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -280,7 +277,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 
 	else if (strcmp(left, SP_LOGGER_FILNAME_STR) == 0) {
 		if (!hasNoWhiteSpace(right) ) {
-			ERROR_INVALID_CONSTRAINT_MSG(config_filename, line_number);
+			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			return -1;
 		}
 		else {
@@ -290,7 +287,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	}			
 
  	else {
- 		ERROR_INVALID_LINE_MSG(config_filename, line_number, line);
+ 		printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
  		return -1;
  	}
  }
@@ -301,22 +298,22 @@ return 0 on success
 */
 int checkMissingAndSetDefaults(char * config_filename, int num_of_lines, char * set_in_config, SPConfig config) {
 	if (!set_in_config[SP_IMAGES_PREFIX_INDEX]) {
-		ERROR_PARMETER_NOT_SET(config_filename, num_of_lines, SP_IMAGES_PREFIX_STR);
+		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_PREFIX_STR);
 		return -1;
  	}
  	
  	if (!set_in_config[SP_IMAGES_SUFFIX_INDEX]) {
-		ERROR_PARMETER_NOT_SET(config_filename, num_of_lines, SP_IMAGES_SUFFIX_STR);
+		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_SUFFIX_STR);
 		return -1;
  	}
  	
  	if (!set_in_config[SP_NUM_OF_IMAGES_INDEX]) {
-		ERROR_PARMETER_NOT_SET(config_filename, num_of_lines, SP_NUM_OF_IMAGES_STR);
+		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_NUM_OF_IMAGES_STR);
 		return -1;
  	}
 
 	if (!set_in_config[SP_IMAGES_DIRECTORY_INDEX) {
-		ERROR_PARMETER_NOT_SET(config_filename, num_of_lines, SP_IMAGES_DIRECTORY_STR);
+		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_DIRECTORY_STR);
 		return -1;
 	}			
 
