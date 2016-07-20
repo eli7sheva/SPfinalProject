@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+
 
 #define DEFUALT_PCA_DIM 				20
 #define DEFAULT_PCA_FILENAME 			"pca.yml"
@@ -711,7 +714,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		parameter_found_index = parseLine(config_filename, line, line_number, config, msg);
 		if (parameter_found_index == -1) {
     		fclose(fp);	
-    		free(config);
+    		spConfigDestroy(); //free config
 			return NULL;
 		}
 		else if (parameter_found_index >= 0) {
@@ -722,7 +725,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
     fclose(fp);
 
 	if (checkMissingAndSetDefaults(config_filename, line_number, parameter_found, msg) == -1 ) {
-		free(config);
+		spConfigDestroy(); // free config
 		return NULL;
 	}
 
@@ -730,3 +733,138 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 	return config;
  }
 
+// todo remove this doc (its in the header)
+/*
+ * Returns true if spExtractionMode = true, false otherwise.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return true if spExtractionMode = true, false otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+bool spConfigIsExtractionMode(const SPConfig config, SP_CONFIG_MSG* msg){
+	config->spExtractionMode == true
+	// bool? todo finish this
+
+}
+
+// todo remove this doc (its in the header)
+/*
+ * Returns true if spMinimalGUI = true, false otherwise.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return true if spExtractionMode = true, false otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+bool spConfigMinimalGui(const SPConfig config, SP_CONFIG_MSG* msg){
+	// bool? todo finish this
+}
+
+
+int spConfigGetNumOfImages(const SPConfig config, SP_CONFIG_MSG* msg) {
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+ 	return config->spNumOfImages;
+
+}
+
+int spConfigGetNumOfFeatures(const SPConfig config, SP_CONFIG_MSG* msg){
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+ 	return config->spNumOfFeatures;
+}
+
+int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg){
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+ 	return config->spPCADimension;
+}
+
+// todo remove this doc (its in the header)
+/**
+ * Given an index 'index' the function stores in imagePath the full path of the
+ * ith image.
+ *
+ * For example:
+ * Given that the value of:
+ *  spImagesDirectory = "./images/"
+ *  spImagesPrefix = "img"
+ *  spImagesSuffix = ".png"
+ *  spNumOfImages = 17
+ *  index = 10
+ *
+ * The functions stores "./images/img10.png" to the address given by imagePath.
+ * Thus the address given by imagePath must contain enough space to
+ * store the resulting string.
+ *
+ * @param imagePath - an address to store the result in, it must contain enough space.
+ * @param config - the configuration structure
+ * @param index - the index of the image.
+ *
+ * @return
+ * - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
+ * - SP_CONFIG_INDEX_OUT_OF_RANGE - if index >= spNumOfImages
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config, int index) {
+	//  todo finish this
+}
+
+
+// todo remove this doc (its in the header)
+/**
+ * The function stores in pcaPath the full path of the pca file.
+ * For example given the values of:
+ *  spImagesDirectory = "./images/"
+ *  spPcaFilename = "pca.yml"
+ *
+ * The functions stores "./images/pca.yml" to the address given by pcaPath.
+ * Thus the address given by pcaPath must contain enough space to
+ * store the resulting string.
+ *
+ * @param imagePath - an address to store the result in, it must contain enough space.
+ * @param config - the configuration structure
+ * @return
+ *  - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
+ *  - SP_CONFIG_SUCCESS - in case of success
+ */
+SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
+ // todo finish this
+}
+
+// todo check this
+void spConfigDestroy(SPConfig config) {
+	if (config != NULL) {
+		free(config->spImagesDirectory);
+		free(config->spImagesPrefix);
+		free(config->spImagesSuffix);
+		free(config->spPCAFilename);
+		free(config->spLoggerFilename);
+		free(config);
+	}
+}

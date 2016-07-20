@@ -30,8 +30,10 @@ int main(int argc, char *argv[]) {
 	if (argc == 1) {
 		strcpy(config_filename, DEFAULT_CONFIG_FILENAME);
 		config = spConfigCreate(config_filename, &msg);
-		if (strcmp(msg, SP_CONFIG_CANNOT_OPEN_FILE) == 0) {
+		if (strcmp(msg, SP_CONFIG_CANNOT_OPEN_FILE) == 0)
 			printf(ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG);
+
+		if (msg != SP_CONFIG_SUCCESS) {
 			free(config_filename);
 			free(config);
 			return -1;
@@ -48,8 +50,10 @@ int main(int argc, char *argv[]) {
 	
 		strcpy(config_filename, argv[2]);
 		config = spConfigCreate(config_filename, &msg); 
-		if (strcmp(msg, SP_CONFIG_CANNOT_OPEN_FILE) == 0) {
+		if (strcmp(msg, SP_CONFIG_CANNOT_OPEN_FILE) == 0) 
 			printf(ERROR_OPENING_CONFIG_FILE_MSG);
+
+		if (msg != SP_CONFIG_SUCCESS) {
 			free(config_filename);
 			free(config);
 			return -1;
