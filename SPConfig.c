@@ -81,20 +81,20 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 
 
 struct sp_config_t{
-	char* spImagesDirectory; //hasNoWhiteSpace
-	char* spImagesPrefix; // hasNoWhiteSpace
-	char* spImagesSuffix; //validSuffix
-	int spNumOfImages; //isPositiveInteger
-	int spPCADimension; // isInRange(spPCADimension, PCA_DIM_LOW_LIMIT, PCA_DIM_HIGH_LIMIT)
-	char* spPCAFilename; //hasNoWhiteSpace
-	int spNumOfFeatures; //isPositiveInteger
+	char* spImagesDirectory;
+	char* spImagesPrefix;
+	char* spImagesSuffix; 
+	int spNumOfImages; 
+	int spPCADimension; 
+	char* spPCAFilename; 
+	int spNumOfFeatures; 
 	boolean spExtractionMode;
-	int spNumOfSimilarImages; //spNumOfSimilarImages>0
+	int spNumOfSimilarImages;
 	tree_split_method spKDTreeSplitMethod;
-	int spKNN; // spKNN > 0
+	int spKNN; 
 	boolean spMinimalGUI;
 	int spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOY
-	char * spLoggerFilename; //hasNoWhiteSpace
+	char * spLoggerFilename; 
 };
 
 
@@ -805,56 +805,33 @@ int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg){
  	return config->spPCADimension;
 }
 
-// todo remove this doc (its in the header)
-/**
- * Given an index 'index' the function stores in imagePath the full path of the
- * ith image.
- *
- * For example:
- * Given that the value of:
- *  spImagesDirectory = "./images/"
- *  spImagesPrefix = "img"
- *  spImagesSuffix = ".png"
- *  spNumOfImages = 17
- *  index = 10
- *
- * The functions stores "./images/img10.png" to the address given by imagePath.
- * Thus the address given by imagePath must contain enough space to
- * store the resulting string.
- *
- * @param imagePath - an address to store the result in, it must contain enough space.
- * @param config - the configuration structure
- * @param index - the index of the image.
- *
- * @return
- * - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
- * - SP_CONFIG_INDEX_OUT_OF_RANGE - if index >= spNumOfImages
- * - SP_CONFIG_SUCCESS - in case of success
- */
 SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config, int index) {
-	//  todo finish this
+	int n; //todo need?
+	if ((imagePath == NULL) || (config == NULL)) {
+		return SP_CONFIG_INVALID_ARGUMENT;
+	}
+
+	if (index >= config->spNumOfImages) {
+		return SP_CONFIG_INDEX_OUT_OF_RANGE;
+	}
+	if ((n = sprintf(imagePath, "%s%s%d%s", config->spImagesDirectory, config->spImagesPrefix, index, config->spImagesSuffix)) < 0) {
+		// todo what to return on error here?
+	}
+	return SP_CONFIG_SUCCESS;
 }
 
 
-// todo remove this doc (its in the header)
-/**
- * The function stores in pcaPath the full path of the pca file.
- * For example given the values of:
- *  spImagesDirectory = "./images/"
- *  spPcaFilename = "pca.yml"
- *
- * The functions stores "./images/pca.yml" to the address given by pcaPath.
- * Thus the address given by pcaPath must contain enough space to
- * store the resulting string.
- *
- * @param imagePath - an address to store the result in, it must contain enough space.
- * @param config - the configuration structure
- * @return
- *  - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
- *  - SP_CONFIG_SUCCESS - in case of success
- */
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
- // todo finish this
+	int n; //todo need?
+	if ((pcaPath == NULL) || (config == NULL)) {
+		return SP_CONFIG_INVALID_ARGUMENT;
+	}
+	
+	if ((n = sprintf(pcaPath, "%s%s", config->spImagesDirectory, config->spPCAFilename)) < 0) {
+		// todo what to return on error here? maybe just ignore?
+	}
+	
+	return SP_CONFIG_SUCCESS;
 }
 
 // todo check this
