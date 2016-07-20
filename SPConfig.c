@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #define DEFUALT_PCA_DIM 				20
 #define DEFAULT_PCA_FILENAME 			"pca.yml"
 #define DEFAULT_NUM_OF_FEATURES 		100
@@ -7,7 +9,7 @@
 #define DEFAULT_KNN 					1
 #define DEFAULT_MINIMAL_GUI 			false
 #define DEFAULT_LOGGER_LEVEL 			3
-#define DEFAULT_LOGGER_FILENAME 		"stdout"
+#define DEFAULT_LOGGER_FILENAME 		"stdout" // todo do we need this? stdout as a string name? . remember to handle it differently
 
 #define SP_IMAGES_DIRECTORY_STR 	 "spImagesDirectory"
 #define SP_IMAGES_PREFIX_STR	 	 "spImagesPrefix"
@@ -41,19 +43,38 @@
 
 #define CONFIG_PARAMETERS_COUNT    14    // number of parameters
 #define CONFIG_MAX_LINE_SIZE       1024  // each line in the configuration file contains no more than 1024 characters
-#define CONFIG_FILE_PATH_SIZE      1024	 // the path of any file contains no more than 1024 characters
 #define CONFIG_START_COMMENT_MARK '#'    // comment in config file mast start with #
 #define CONFIG_ASSIGNMENT_MARK    '='
 
-typedef enum { false, true } boolean;
-typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL} tree_split;
-const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
-#define PCA_DIM_LOW_LIMIT 10
-#define PCA_DIM_HIGH_LIMIT 28
+typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_method;
 
-#define ERROR_INVALID_LINE_MSG ("File: %s\nLine: %d\nMessage: Invalid configuration line\n")
-#define ERROR_INVALID_CONSTRAINT_MSG ("File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n")
-#define ERROR_PARMETER_NOT_SET_MSG ("File: %s\nLine: %d\nMessage: Parameter %s is not set\n")
+#define SPLIT_METHOD_STR(method)                 \
+    (RANDOM      == method ? "RANDOM"       :    \
+    (MAX_SPREAD  == method ? "MAX_SPREAD"   :    \
+    (INCREMENTAL == method ? "INCREMENTAL"  :  "unknown"))))   
+
+typedef int boolean;
+#define true 1
+#define false 0
+
+// todo remove this
+// typedef enum { false, true, BOOL_COUNTER } boolean;
+// #define BOOLEAN_STR(bool)          \
+//     (false == bool ? "false"  :    \
+//     (true  == bool ? "true"   :    "unknown"))))   
+
+
+
+const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
+#define PCA_DIM_LOW_LIMIT  10
+#define PCA_DIM_HIGH_LIMIT 28
+#define LOW_LOGGER_LEVEL   1
+#define HIGH_LOGGER_LEVEL  4
+
+
+#define ERROR_INVALID_LINE_MSG       "File: %s\nLine: %d\nMessage: Invalid configuration line\n"
+#define ERROR_INVALID_CONSTRAINT_MSG "File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n"
+#define ERROR_PARMETER_NOT_SET_MSG   "File: %s\nLine: %d\nMessage: Parameter %s is not set\n"
 
 
 struct sp_config_t{
@@ -66,56 +87,43 @@ struct sp_config_t{
 	int spNumOfFeatures; //isPositiveInteger
 	boolean spExtractionMode;
 	int spNumOfSimilarImages; //spNumOfSimilarImages>0
-	tree_split spKDTreeSplitMethod;
+	tree_split_method spKDTreeSplitMethod;
 	int spKNN; // spKNN > 0
 	boolean spMinimalGUI;
-	SP_LOGGER_LEVEL spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOY
+	int spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOY
 	char * spLoggerFilename; //hasNoWhiteSpace
 };
 
 
-
-
-int parseConfigFile(char * config_filename) {
-	FILE *fp
-    char line[MAX_LINE_SIZE];
-    int line_number = 0;
-    int parameter_found_index;
-    char parameter_found[CONFIG_PARAMETERS_COUNT -1] = {0};
-    /* opening file for reading */
-    fp = fopen(config_filename , "r");
-    if(fp == NULL) 
-    {
-       perror("Error opening file"); // TODO print to log and to screen
-       return(-1);
-    }
-
-	while (fgets (line, sizeof(line), fp)) {
-		line_number++;
-		parameter_found_index = parseLine(config_filename, line, line_number);
-		if (parameter_found_index == -1) {
-			// todo this is an error
-			return error
-		}
-		else if (parameter_found_index >= 0) {
-			parameter_found[parameter_found_index] = 1;
-		}
-	}
-	
-    fclose(fp);
-   
-	if (checkMissingAndSetDefaults(config_filename, line_number, parameter_found) == -1) { 
-		// todo this is an error
-		return error
-	}
-    return(0);
- }
-
-
-int parseLine(char * config_filename, char * line, int line_number, SPConfig config) {
+/*
+ * Parses a line from the configuration file. if a valid configuration file parameter is found
+ * in the line - it is added to the config struct.
+ *
+ * 
+ * @param config_filename - the configuration file name
+ * @param line - a line from the configuration file
+ * @param line_number - the line number in configuration file of the param line given 
+ * @param config - a pointer to a struct which holds system configuration.
+ * @assert msg != NULL	
+ * @param msg - pointer in which the msg returned by the function is stored
+ *
+ * @return -2 in case an empty line or comment line is given
+ *		   -1 on any error (error explanation will be stored in msg)
+ *          configuration parameter index of the parameter found in the given line
+ * 
+ * The resulting value stored in msg is as follow:
+ * - SP_CONFIG_ALLOC_FAIL - if an allocation failure occurred
+ * - SP_CONFIG_INVALID_INTEGER - if a line in the config file contains invalid integer
+ * - SP_CONFIG_INVALID_STRING - if a line in the config file contains invalid string
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+int parseLine(char * config_filename, char * line, int line_number, SPConfig config, SP_CONFIG_MSG* msg)) {
  	char right[CONFIG_MAX_LINE_SIZE]; // todo might need to set to CONFIG_MAX_LINE_SIZE -1 because of trim - check it 
  	char left[CONFIG_MAX_LINE_SIZE];
- 	splitEqual(line, right, CONFIG_MAX_LINE_SIZE, left, CONFIG_MAX_LINE_SIZE);
+ 	splitEqualAndTrim(line, right, CONFIG_MAX_LINE_SIZE, left, CONFIG_MAX_LINE_SIZE);
+
+ 	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	// if line is a comment - ignore
  	if (*left == CONFIG_START_COMMENT_MARK) {
@@ -130,10 +138,16 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
  	else if (strcmp(left, SP_IMAGES_DIRECTORY_STR) == 0) {
 		if (!hasNoWhiteSpace(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_STRING;
 			return -1;
 		}
 		else {
-			config->spImagesDirectory = right; // todo malloc and strcpy for every char * (not only this parameter)
+			if ((config->spImagesDirectory = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return -1; 
+			}
+
+			strcpy(config->spImagesDirectory, right);
  			return SP_IMAGES_DIRECTORY_INDEX;
  		}
  	}
@@ -142,10 +156,16 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_IMAGES_PREFIX_STR) == 0) {
 		if (!hasNoWhiteSpace(right))
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_STRING;
 			return -1;
 		}
 		else {
-			config->spImagesPrefix = right;
+			if ((config->spImagesPrefix = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return -1;
+			}
+
+			strcpy(config->spImagesPrefix, right);
  			return SP_IMAGES_PREFIX_INDEX;
  		}
 	}
@@ -153,10 +173,17 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_IMAGES_SUFFIX_STR) == 0) {
 		if (!validSuffix(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_STRING;
 			return -1;
 		}
 		else {
-			config->spImagesSuffix = right;
+			if ((config->spImagesSuffix = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return -1;
+
+			}
+
+			strcpy(config->spImagesSuffix, right);
 			return SP_IMAGES_SUFFIX_INDEX;
 		}
 	}
@@ -164,6 +191,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_NUM_OF_IMAGES_STR) == 0) {
 		if (!isPositiveInteger(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_INTEGER;
 			return -1;
 		}
 		else {
@@ -175,6 +203,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_PCA_DIMENSION_STR) == 0) {
 		if (!isInRange(right, PCA_DIM_LOW_LIMIT, PCA_DIM_HIGH_LIMIT) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_INTEGER;
 			return -1;
 		}
 		else {
@@ -186,10 +215,16 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_PCA_FILENAME_STR) == 0) {
 		if (!hasNoWhiteSpace(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_STRING;
 			return -1;
 		}
 		else {
-			config->spPCAFilename = right;
+			if ((config->spPCAFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return -1;
+			}
+
+			strcpy(config->spPCAFilename, right);
 			return SP_PCA_FILENAME_INDEX;
 		}
 	}
@@ -197,6 +232,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_NUM_OF_FEATURES_STR) == 0) {
 		if (!isPositiveInteger(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_INTEGER;
 			return -1;
 		}
 		else {
@@ -205,14 +241,13 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 		}
 	}
 
-	//todo finish this one
 	else if (strcmp(left, SP_EXTRACTION_MODE_STR) == 0) {
-		if (!check boolean))) {
+		if ((config->spExtractionMode = getBoolean(right)) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = //todo ask
 			return -1;
 		}
 		else {
-			config->spExtractionMode = right;
 			return SP_EXTRACTION_MODE_INDEX;
 		}
 	}
@@ -220,6 +255,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_NUM_OF_SIMILAR_IMAGES_STR) == 0) {
 		if (!isNotNegativeInteger(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_INTEGER;
 			return -1;
 		}
 		else {
@@ -228,14 +264,13 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 		}
 	}
 
-	// todo finish this one
 	else if (strcmp(left, SP_KD_TREE_SPLIT_METHOD_STR) == 0) {
-		if (!check tree_split) {
+		if ((config->spKDTreeSplitMethod = getTreeSplitMethod(right)) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = // todo ask 
 			return -1;
 		}
 		else {
-			config->spKDTreeSplitMethod = right;
 			return SP_KD_TREE_SPLIT_METHOD_INDEX;
 		}
 	}
@@ -243,6 +278,7 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_KNN_STR) == 0) {
 		if (!isNotNegativeInteger(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_INTEGER;
 			return -1;
 		}
 		else {
@@ -251,26 +287,25 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 		}
 	}
 
-	//todo finish this one
 	else if (strcmp(left, SP_MINIMAL_GUI_STR) == 0) {
-		if (! check boolean) {
+		if ((config->spMinimalGUI = getBoolean(right)) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = // TODO ask
 			return -1;
 		}
 		else {
-			config->spMinimalGUI = right;
 			return SP_MINIMAL_GUI_INDEX;
 		}
 	}			
 
-	//todo finish this one
 	else if (strcmp(left, SP_LOGGER_LEVEL_STR) == 0) {
-		if (! check SP_LOGGER_LEVEL) {
+		if (!isLoggerLevel(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_INTEGER;
 			return -1;
 		}
 		else {
-			config->spLoggerLevel = right;
+			config->spLoggerLevel = atoi(right);
 			return SP_LOGGER_LEVEL_INDEX;
 		}
 	}			
@@ -278,42 +313,78 @@ int parseLine(char * config_filename, char * line, int line_number, SPConfig con
 	else if (strcmp(left, SP_LOGGER_FILNAME_STR) == 0) {
 		if (!hasNoWhiteSpace(right) ) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
+			*msg = SP_CONFIG_INVALID_STRING;
 			return -1;
 		}
 		else {
-			config->spLoggerFilename = right;
+			if ((config->spLoggerFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+				*msg = SP_CONFIG_ALLOC_FAIL;
+				return -1;
+			}
+
+			strcpy(config->spLoggerFilename, right);
 			return SP_LOGGER_FILNAME_INDEX;
 		}
 	}			
 
  	else {
  		printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
+ 		*msg = // todo 
  		return -1;
  	}
  }
 
-/* todo doc and check config is actually set that way of passing
-return -1 on error
-return 0 on success
-*/
-int checkMissingAndSetDefaults(char * config_filename, int num_of_lines, char * set_in_config, SPConfig config) {
+
+/*
+ *
+ * Checks which parameters in config struct are not set. If a parameter is not set - set it to its default 
+ * value if exists. otherwise return error.
+ * 
+ * @param config_filename - the configuration file name
+ * @param num_of_lines - the number of lines in the configuration file
+ * @param config - a pointer to a struct which holds system configuration.
+ * @param set_in_config - an array holding 0 or 1. if set_in_config[i] == 1 then configuration paramener
+ *						  of index i is set in config struct. else it is not set.
+ * @assert msg != NULL	
+ * @param msg - pointer in which the msg returned by the function is stored
+ *
+ * @return -1 on any error (error explanation will be stored in msg)
+ *          configuration parameter index of the parameter found in the given line
+ * 
+ * The resulting value stored in msg is as follow:
+ * - SP_CONFIG_MISSING_DIR - if spImagesDirectory is missing
+ * - SP_CONFIG_MISSING_PREFIX - if spImagesPrefix is missing
+ * - SP_CONFIG_MISSING_SUFFIX - if spImagesSuffix is missing 
+ * - SP_CONFIG_MISSING_NUM_IMAGES - if spNumOfImages is missing
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+
+int checkMissingAndSetDefaults(char * config_filename, int num_of_lines, SPConfig config, char * set_in_config, SP_CONFIG_MSG* msg) {
+	
+ 	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
 	if (!set_in_config[SP_IMAGES_PREFIX_INDEX]) {
 		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_PREFIX_STR);
+		*msg = SP_CONFIG_MISSING_PREFIX;
 		return -1;
  	}
  	
  	if (!set_in_config[SP_IMAGES_SUFFIX_INDEX]) {
 		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_SUFFIX_STR);
+		*msg = SP_CONFIG_MISSING_SUFFIX;
 		return -1;
  	}
  	
  	if (!set_in_config[SP_NUM_OF_IMAGES_INDEX]) {
 		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_NUM_OF_IMAGES_STR);
+		*msg = SP_CONFIG_MISSING_NUM_IMAGES;
 		return -1;
  	}
 
 	if (!set_in_config[SP_IMAGES_DIRECTORY_INDEX) {
 		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_DIRECTORY_STR);
+		*msg = SP_CONFIG_MISSING_DIR;
 		return -1;
 	}			
 
@@ -322,7 +393,11 @@ int checkMissingAndSetDefaults(char * config_filename, int num_of_lines, char * 
  	}
 
 	if (!set_in_config[SP_PCA_FILENAME_INDEX]) {
-		config->spPCAFilename = DEFAULT_PCA_FILENAME;
+		if ((config->spPCAFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+			*msg = SP_CONFIG_ALLOC_FAIL;
+			return -1;
+		}
+		strcpy(config->spPCAFilename, DEFAULT_PCA_FILENAME);
  	}
 
  	if (!set_in_config[SP_NUM_OF_FEATURES_INDEX]) {
@@ -354,8 +429,13 @@ int checkMissingAndSetDefaults(char * config_filename, int num_of_lines, char * 
 	}			
 
 	if (!set_in_config[SP_LOGGER_FILNAME_INDEX) {
-		config->spLoggerFilename = DEFAULT_LOGGER_FILENAME;
-	}	
+		// todo do we need this? stdout as a string name?
+		if ((config->spLoggerFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+			*msg = SP_CONFIG_ALLOC_FAIL;
+			return -1;
+		}
+		strcpy(config->spLoggerFilename, DEFAULT_LOGGER_FILENAME);
+ 	}
 
 	return 0;		
 }
@@ -394,7 +474,12 @@ int validSuffix(const char * suffix) {
 	return 0;
 }
 
-// todo doc
+/**
+ * checks if string contains only numbers (not - or + signs)
+ * @param s - the string to check
+ * @return 0 if string s contains only numbers (not - or + signs)
+ *          -1 otherwise
+ */
 int numbersOnly(const char *s)
 {
     while (*s) {
@@ -405,13 +490,17 @@ int numbersOnly(const char *s)
 }
 
 
-
-// todo doc
-// Stores the trimmed input string into the given output buffer, which must be
-// large enough to store the result.  If it is too small, the output is
-// truncated.
-// @param buffer_size the length of string out
-// @param out the new string - str trimmed
+/**
+ * Trim white spaces from the begining and end of the given string
+ * Stores the trimmed input string into the given output buffer, which must be
+ * large enough to store the result.  If it is too small, the output is truncated.
+ * @param out - the string that will hold the output string (whichout whitespaces)
+ * @param buffer_size - the size of param out string
+ * @param str - the string to trim spaces off
+ * @returns the size of the output string (out). 
+ *          0 if buffer_size is 0
+ *          1 if the output string is the empty string ('\0')
+ */
 size_t trimWhitespace(char *out, size_t buffer_size, const char *str)
 {
   if(buffer_size == 0)
@@ -445,8 +534,20 @@ size_t trimWhitespace(char *out, size_t buffer_size, const char *str)
 }
 
 
-//todo doc
-void splitEqual(const char *s, char * left, int left_size, char * right, int right_size)
+/**
+ * Splits a string at the first occurence of the '=' char, into two strings: left and right.
+ * Trims white spaces from the begining and end of the two new trings left and right.
+ * If there is no '=' mark in the given string - the right string will be empty and the left string will 
+ * be the same as the given string but without spaces at the begining and the end.
+ *
+ * @param s - the string to split and trim
+ * @param left - the string that will hold the left part after splitting and trimming
+ * @param left_size  - the size of the left string
+ * @param right - the string that will hold the right part after splitting and trimming
+ * @param right_size  - the size of the right string
+ *
+ */
+void splitEqualAndTrim(const char *s, char * left, int left_size, char * right, int right_size)
 {
     int i = 0;
     char left_temp [left_size];
@@ -493,7 +594,12 @@ int isPositiveInteger(char * n) {
 	return 0;
 }
 
-//todo doc
+/**
+ * checks if a string represent an int which is not negative (larger than 0)
+ * @param n - the string to check
+ * @returns 0 -  if string n represent an int which is not negative (larger than 0)
+ *          1  - otherwise
+ */
 int isNotNegativeInteger(char * n) {
 	int num ;
 	if (numbersOnly(n)) {
@@ -522,6 +628,105 @@ int isInRange(char * n, int low, int high) {
 }
 
 
-SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
-	assert(msg != NULL);
+/*
+ * returns the tree_split_method enum integer value of a string ( if it is a valid enum)
+ * @param c - the string to convert
+ * @return the enum value of c  (0 if c is "RANDOM"
+ *						    	 1 if c is "MAX_SPREAD"
+ *				                 2 if c is "INCREMENTAL")
+ * 		  -1 is c is not a valid tree_split_method enum
+ */
+int getTreeSplitMethod(char * c) {
+	int i;
+	for (i=0; i < SPLIT_METHOD_COUNT; i++) {
+		if (strcmp(c, SPLIT_METHOD_STR(i)) == 0)
+			return i;
+	}
+	return -1;
 }
+
+
+/*
+ * returns the boolean value of string (if it is a valid boolean)
+ * @param c - the string to check
+ * @return true (1) if c is "true"
+ * @return false (0) is c is "false"
+ * @return -1 if c is not a valid boolean
+ */
+int getBoolean(char * c) {
+	if (strcmp(c, "true") == 0)
+		return true;
+
+	if (strcmp(c, "false") == 0)
+		return false;
+
+	else
+		return -1;
+}
+
+
+/*
+ * checks if string is a SP_LOGGER_LEVEL
+ * @param c - the string to check
+ * @return 1 if c is a valid logger level
+ * @return 0 otherwise
+ */
+int isLoggerLevel(char * c) {
+	return isInRange(LOW_LOGGER_LEVEL, HIGH_LOGGER_LEVEL);
+}
+
+
+SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
+	SPConfig config;
+	FILE *fp
+    char line[MAX_LINE_SIZE];
+    int line_number = 0;
+    int parameter_found_index;
+    char parameter_found[CONFIG_PARAMETERS_COUNT -1] = {0};
+	
+ 	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+	if (filename == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return NULL;
+	}
+
+    
+    /* opening file for reading */
+    fp = fopen(config_filename , "r");
+    if(fp == NULL) {
+       *msg = SP_CONFIG_CANNOT_OPEN_FILE;
+       return NULL;
+    }
+
+    if ((config = (SPConfig)malloc(sizeof(*config))) == NULL) {
+    	fclose(fp);
+    	*msg = SP_CONFIG_ALLOC_FAIL;
+        return NULL;
+    }
+
+	while (fgets (line, sizeof(line), fp)) {
+		line_number++;
+		parameter_found_index = parseLine(config_filename, line, line_number, config, msg);
+		if (parameter_found_index == -1) {
+    		fclose(fp);	
+    		free(config);
+			return NULL;
+		}
+		else if (parameter_found_index >= 0) {
+			parameter_found[parameter_found_index] = 1;
+		}
+	}
+	
+    fclose(fp);
+
+	if (checkMissingAndSetDefaults(config_filename, line_number, parameter_found, msg) == -1 ) {
+		free(config);
+		return NULL;
+	}
+
+	*msg = SP_CONFIG_SUCCESS;
+	return config;
+ }
+
