@@ -952,6 +952,9 @@ extractFeaturesIntoFile(const SPConfig config) {
 #define FEATURES_FILE_COOR_FORMAT   "%f "
 #define FEATURES_FILE_LAST_COOR_FORMAT   "%f\n"
 
+// Extraction mode
+// In this mode, we first extract the features of each image and then store each of these features to a file
+// which will be located in the directory given by spImagesDirectory.
 // todo add doc =- writes given features of specific image (of index image_index) into file
 void writeImageFeaturesToFile (const SPPoint* features, char* features_filename, int image_index, int num_of_featues)
 
@@ -1088,11 +1091,11 @@ double* parseCoorLineFormat(char* line, int dim) {
 }
 
 // todo doc
-readFeaturesFromFile(const SPConfig config) {
+SPPoint** readFeaturesFromFile(const SPConfig config) {
 
 	int i;
 	char current_image_path[CONFIG_MAX_LINE_SIZE];
-	SPPoint* resPoints = (SPPoint*) malloc(sizeof(*resPoints) * config->spNumOfImages);
+	SPPoint** resPoints = (SPPoint**) malloc(sizeof(*resPoints) * config->spNumOfImages);
 	if (resPoints == NULL) {
 		// todo handle error and free
 	}
@@ -1105,4 +1108,9 @@ readFeaturesFromFile(const SPConfig config) {
 		resPoints[i] = extractImageFreaturesFromFile(features_filename);// todo handle error
 	}
 
+}
+
+KD_TREE initDataStructures(const SPConfig config) {
+	SPPoint** resPoints = readFeaturesFromFile(config); // todo handle error
+	saveAllFeaturesIntoKDTree() //todo wait for elisheva
 }
