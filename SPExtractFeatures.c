@@ -1,7 +1,6 @@
 #include "SPLogger.h"
 #include "SPExtractFeatures.h"
 #include "SPImageProc.h"
-
 /*
  * features file fomat consts
  * the format of the header is <image index>\n<number of features> (FEATURES_FILE_HEADER_FORMAT)
@@ -18,7 +17,8 @@
 #define FEATURES_FILE_LAST_COOR_FORMAT   "%f\n"
 
 #define FEATURES_FILE_SUFFIX ".feats" // features file suffix
-
+#define MAX_PATH_SIZE		 1024     // any file path size is of maxlen
+#define IMAGE_PATH_FORMAT 	 "%s%s%d%s"
 
 /**
  * Given an index 'index' the function stores in featuresPath the full path of the
@@ -78,10 +78,11 @@ SP_CONFIG_MSG spConfigGetImageFeaturesFilePath(char* featuresPath, const SPConfi
 SPPoint** extractFeaturesIntoFile(const SPConfig config) {
 	int i;
 	int j;
-	char current_image_path[CONFIG_MAX_LINE_SIZE];
-	char features_filename[CONFIG_MAX_LINE_SIZE];
+	int k;
+	char current_image_path[MAX_PATH_SIZE];
+	char features_filename[MAX_PATH_SIZE];
 	SP_CONFIG_MSG msg;
-	int num_of_featues;
+	int* num_of_featues;
 	SPPoint** features;
 	int error = 0;
 
@@ -90,6 +91,11 @@ SPPoint** extractFeaturesIntoFile(const SPConfig config) {
 	}
 
 	if ((features = (SPPoint**) malloc(sizeof(*resPoints) * config->spNumOfImages)) == NULL) {
+		return NULL;
+	}
+
+	if ((num_of_featues = (int*)malloc(sizeof(int) * config->spNumOfImages)) == NULL) {
+		free(features);
 		return NULL;
 	}
 
@@ -112,14 +118,14 @@ SPPoint** extractFeaturesIntoFile(const SPConfig config) {
 		}
 		
 		// get image features
-		features[i] = getImageFeatures(current_image_path, i, &num_of_featues);
+		features[i] = getImageFeatures(current_image_path, i, &(num_of_featues[i]));
 		if (features[i] == NULL) {
 			error = 1;
 			break;
 		}
 
 		// write all features to the features file
-		if (writeImageFeaturesIntoFile(features, features_filename, i, num_of_featues) == -1) {
+		if (writeImageFeaturesIntoFile(features, features_filename, i, num_of_featues[i]) == -1) {
 			error = 1;
 			break;
 		}
@@ -129,12 +135,16 @@ SPPoint** extractFeaturesIntoFile(const SPConfig config) {
 	if (error)
 	{	
 		for (j=0; j<i; j++) {
-			spPointDestroy(features[j]);
+			for(k=0;k<num_of_featues[j];k++){
+				spPointDestroy(features[j][k]);
+			}
 		}
+		free(num_of_featues);
 		free(features);
 		return NULL;
 	}
 
+	free(num_of_featues);
 	return features;
 }
 
@@ -179,6 +189,7 @@ int writeImageFeaturesIntoFile(const SPPoint* features, char* features_filename,
 
     // write header (image index and number of features) to file 
 	if (fprintf(ofp, FEATURES_FILE_HEADER_FORMAT, image_index, num_of_featues) < 0) {
+		fclose(ofp);
 		return -1;
 	}
 
@@ -187,18 +198,21 @@ int writeImageFeaturesIntoFile(const SPPoint* features, char* features_filename,
 		dim = spPointGetDimension(features[i]);
 		// write dim and index
 		if (fprintf(ofp, FEATURES_FILE_UNIT_FORMAT, spPointGetIndex(features[i]), dim, *features[i]->coordinates) < 0) {
+			fclose(ofp);
 			return -1;
 		}
 		
 		// write coordinates
 		for (axis = 0 ; axis < dim -1; axis++) {
 			if (fprintf(ofp, FEATURES_FILE_COOR_FORMAT, spPointGetAxisCoor(features[i], axis))< 0) {
+				fclose(ofp);
 				return -1;
 			}
 		}
 		
 		// write last coordinate
 		if (fprintf(ofp, FEATURES_FILE_LAST_COOR_FORMAT, spPointGetAxisCoor(features[i], axis))< 0) {
+			fclose(ofp);
 			return -1;
 		}
 	}
@@ -212,18 +226,18 @@ int writeImageFeaturesIntoFile(const SPPoint* features, char* features_filename,
  * Extracts features from file
  * 
  * @param features_filename - the path to th file contains the features to extract
+ * @param num_of_featues - will hold the number of feature extracted
  * Note: assumes features_filename is in the right features format described in function writeImageFeaturesIntoFile
  *
  * @return
  * An array of the actual features extracted. NULL is returned in case of an error.
  *
  */
-SPPoint* readImageFreaturesFromFile(char* features_filename) { // todo should return those:  int image_index, int num_of_featues?
+SPPoint* readImageFreaturesFromFile(char* features_filename, int num_of_featues) { // todo should return those:  int image_index, int num_of_featues?
 	int i;
 	int j;
 	SPPoint* features;
 	int image_index;
-	int num_of_featues;
 	char line[MAX_LINE_SIZE];
 	FILE *ifp;
 	int error = 0;
@@ -248,10 +262,11 @@ SPPoint* readImageFreaturesFromFile(char* features_filename) { // todo should re
 	fgets(line, sizeof(line), ifp);
 	image_index = atoi(line);
 	fgets(line, sizeof(line), ifp);
-	num_of_featues = atoi(line);
+	&num_of_featues = atoi(line);
 
 	if ((features = (SPPoint*)malloc(sizeof(*features)*num_of_featues)) == NULL) { // todo check this is ok
 		// *msg = SP_CONFIG_ALLOC_FAIL; todo remove
+		fclose(ifp);
 		return NULL;
 	}
 
@@ -272,6 +287,7 @@ SPPoint* readImageFreaturesFromFile(char* features_filename) { // todo should re
 		for (j=0; j<i; j++) {
 			spPointDestroy(features[j]);
 		}
+		fclose(ifp);
 		free(features);
 		return NULL;
 	}
@@ -332,11 +348,18 @@ double* parseCoorLineFormat(char* line, int dim) {
 SPPoint** extractFeaturesFromFile(const SPConfig config) {
 	int i;
 	int j;
+	int k;
 	int error = 0;
+	char current_image_path[MAX_PATH_SIZE];
+	SPPoint** resPoints;
+	int* num_of_featues;
 
-	char current_image_path[CONFIG_MAX_LINE_SIZE];
-	SPPoint** resPoints = (SPPoint**) malloc(sizeof(*resPoints) * config->spNumOfImages);
-	if (resPoints == NULL) {
+	if ((resPoints = (SPPoint**) malloc(sizeof(*resPoints) * config->spNumOfImages)) == NULL) {
+		return NULL;
+	}
+
+	if ((num_of_featues = (int*) malloc(sizeof(int) * config->spNumOfImages)) == NULL ) {
+		free(resPoints);
 		return NULL;
 	}
 
@@ -345,19 +368,23 @@ SPPoint** extractFeaturesFromFile(const SPConfig config) {
 		error = (msg == SP_CONFIG_SUCCESS);
 		
 		if (!error) {
-			error = (resPoints[i] = readImageFreaturesFromFile(features_filename))==NULL;
+			error = ((resPoints[i] = readImageFreaturesFromFile(features_filename, &(num_of_featues[i])))==NULL);
 		}
 	}
 
 	// on error - free all allocated features and return 
 	if (error) {
 		for(j=0; j<i; j++) {
-			spPointDestroy(resPoints[j]);
+			for (k=0; k<num_of_featues[j]; k++) {
+				spPointDestroy(resPoints[j][k]);
+			}
 		}
+		free(num_of_featues);
 		free(resPoints);
 		return NULL;
 	}
-
+	
+	free(num_of_featues);
 	return resPoints;
 }
 
@@ -371,8 +398,8 @@ void freeFeatures(const SPConfig config, SPPoint** features) {
 	free(features);
 }
 
-KD_TREE initDataStructures(SPPoint** features) {
+// KD_TREE initDataStructures(SPPoint** features) {
 
-	saveAllFeaturesIntoKDTree() //todo wait for elisheva
-}
+// 	saveAllFeaturesIntoKDTree() //todo wait for elisheva
+// }
 
