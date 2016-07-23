@@ -1,3 +1,7 @@
+#include "SPLogger.h"
+#include "SPExtractFeatures.h"
+#include "SPImageProc.h"
+
 /*
  * features file fomat consts
  * the format of the header is <image index>\n<number of features> (FEATURES_FILE_HEADER_FORMAT)

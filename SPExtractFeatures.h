@@ -1,5 +1,5 @@
-#include "SPLogger.h"
 #include "SPPoint.h"
+#include "SPConfig.h"
 
 #define KD_TREE char* //#todo remove this
 /*

@@ -22,10 +22,10 @@ main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h #put depend
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
-SPConfig.o: SPConfig.c SPConfig.h SPLogger.h SPImageProc.h
+SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
 	$(CC) $(COMP_FLAG) -c $*.c	
-SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.h
-	$(CC) $(COMP_FLAG) -c $*.c	
+SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.h SPImageProc.h SPConfig.h
+	$(CC) $(COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(COMP_FLAG) -c $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
