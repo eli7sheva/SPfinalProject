@@ -1,3 +1,7 @@
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "SPLogger.h"
 #include "SPExtractFeatures.h"
 #include "SPImageProc.h"
@@ -18,136 +22,60 @@
 
 #define FEATURES_FILE_SUFFIX ".feats" // features file suffix
 #define MAX_PATH_SIZE		 1024     // any file path size is of maxlen
+#define MAX_LINE_SIZE		 1024     
 #define IMAGE_PATH_FORMAT 	 "%s%s%d%s"
-
-/**
- * Given an index 'index' the function stores in featuresPath the full path of the
- * ith images extracted features file.
- *
- * For example:
- * Given that the value of:
- *  spImagesDirectory = "./images/"
- *  spImagesPrefix = "img"
- *  spNumOfImages = 17
- *  index = 10
- *
- * The functions stores "./images/img10.feats" to the address given by featuresPath.
- * Thus the address given by featuresPath must contain enough space to
- * store the resulting string.
- *
- * @param featuresPath - an address to store the result in, it must contain enough space.
- * @param config - the configuration structure
- * @param index - the index of the image.
- *
- * @return
- * - SP_CONFIG_INVALID_ARGUMENT - if featuresPath == NULL or config == NULL
- * - SP_CONFIG_INDEX_OUT_OF_RANGE - if index >= spNumOfImages
- * - SP_CONFIG_SUCCESS - in case of success
- */
-SP_CONFIG_MSG spConfigGetImageFeaturesFilePath(char* featuresPath, const SPConfig config, int index) {
-	int n; //todo need?
-	if ((featuresPath == NULL) || (config == NULL)) {
-		return SP_CONFIG_INVALID_ARGUMENT;
-	}
-
-	if (index >= config->spNumOfImages) {
-		return SP_CONFIG_INDEX_OUT_OF_RANGE;
-	}
-	if ((n = sprintf(featuresPath, IMAGE_PATH_FORMAT, config->spImagesDirectory, config->spImagesPrefix, index, FEATURES_FILE_SUFFIX)) < 0) {
-		// todo what to return on error here? now I can define it
-	}
-	return SP_CONFIG_SUCCESS;
-}
+#define STRING_NULL_TERMINATOR 		'\0'
 
 
 
 /*
- * extraction mode 
- * extract the features of each image in the directory spImagesDirectory/spImagesPrefix<index>spImagesSuffix 
- * and then store each of these features to a file using the function writeImageFeaturesIntoFile.
- * Thr file will be located in the directory given by spImagesDirectory and will have the
- * same name as the image but the suffix will be ".feats"
- * The features are saved in a special format in the file.
+ * Parses coordinates line in the features file. 
+ * Line format as described in writeImageFeaturesIntoFile
+ * @param line - the line to parse
+ * @param dim - the dimentions of the feature
+ * Note: assums the line is in the right coordinates format
  *
- * @param config - the configuration parameters
  * @return
- * An array of arrays where the ith place is the actual features extracted from the ith image.
- * NULL is returned in case of an error.
+ * An array of the features coordinates. NULL is returned in case of an error.
+ *
  */
-
-SPPoint** extractFeaturesIntoFile(const SPConfig config) {
+double* parseCoorLineFormat(char* line, int dim) {
 	int i;
-	int j;
-	int k;
-	char current_image_path[MAX_PATH_SIZE];
-	char features_filename[MAX_PATH_SIZE];
-	SP_CONFIG_MSG msg;
-	int* num_of_featues;
-	SPPoint** features;
-	int error = 0;
-
-	if (config == NULL) {
+	int cur_coor = 0;
+	char coor_str[MAX_LINE_SIZE];
+	
+	// allocate coordinates array
+	double* coordinates = (double*)malloc(dim*sizeof(double));
+	if (coordinates == NULL) {
 		return NULL;
 	}
 
-	if ((features = (SPPoint**) malloc(sizeof(*resPoints) * config->spNumOfImages)) == NULL) {
-		return NULL;
-	}
+	// get all coordinate except last one
+	while (*(line + i) != STRING_NULL_TERMINATOR) {
+		// when reach to a space - parse the data before as a double (single coordinate)
+		if (isspace(*(line + i ))) {
+			strncpy(coor_str, line, i);
+			coor_str[i] = STRING_NULL_TERMINATOR;
+			coordinates[cur_coor] = atof(coor_str);
+			cur_coor++;
 
-	if ((num_of_featues = (int*)malloc(sizeof(int) * config->spNumOfImages)) == NULL) {
-		free(features);
-		return NULL;
-	}
-
-	ImageProc(config);
-
-	// for each image - write it's features into file
-	for (i=0; !error & i < config->spNumOfImages; i++) {	 
-		// find image path
-		msg = spConfigGetImagePath(current_image_path, config, i);
-		if (msg != SP_CONFIG_SUCCESS) { // should not happen
-			error = 1;
-			break;
+			// advance the pointer to after space (skip space) and start search again to get next coordinate
+			line = line + i + 1;
+			i = 0;
 		}
-
-		// find features file path
-		msg = spConfigGetImageFeaturesFilePath(features_filename, config, i);
-		if (msg != SP_CONFIG_SUCCESS) { // should not happen
-			error = 1;
-			break;
-		}
-		
-		// get image features
-		features[i] = getImageFeatures(current_image_path, i, &(num_of_featues[i]));
-		if (features[i] == NULL) {
-			error = 1;
-			break;
-		}
-
-		// write all features to the features file
-		if (writeImageFeaturesIntoFile(features, features_filename, i, num_of_featues[i]) == -1) {
-			error = 1;
-			break;
+		// continue until a space is found
+		else {
+			i++;
 		}
 	}
 
-	// on error -free all features and return 
-	if (error)
-	{	
-		for (j=0; j<i; j++) {
-			for(k=0;k<num_of_featues[j];k++){
-				spPointDestroy(features[j][k]);
-			}
-		}
-		free(num_of_featues);
-		free(features);
-		return NULL;
-	}
+	// get last coordinate
+	strncpy(coor_str, line, i);
+	coor_str[i] = STRING_NULL_TERMINATOR;
+	coordinates[cur_coor] = atof(coor_str);
 
-	free(num_of_featues);
-	return features;
+	return coordinates;
 }
-
 
 
 /*
@@ -222,6 +150,137 @@ int writeImageFeaturesIntoFile(const SPPoint* features, char* features_filename,
 }
 
 
+/**
+ * Given an index 'index' the function stores in featuresPath the full path of the
+ * ith images extracted features file.
+ *
+ * For example:
+ * Given that the value of:
+ *  spImagesDirectory = "./images/"
+ *  spImagesPrefix = "img"
+ *  spNumOfImages = 17
+ *  index = 10
+ *
+ * The functions stores "./images/img10.feats" to the address given by featuresPath.
+ * Thus the address given by featuresPath must contain enough space to
+ * store the resulting string.
+ *
+ * @param featuresPath - an address to store the result in, it must contain enough space.
+ * @param config - the configuration structure
+ * @param index - the index of the image.
+ *
+ * @return
+ * - SP_CONFIG_INVALID_ARGUMENT - if featuresPath == NULL or config == NULL
+ * - SP_CONFIG_INDEX_OUT_OF_RANGE - if index >= spNumOfImages
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+SP_CONFIG_MSG spConfigGetImageFeaturesFilePath(char* featuresPath, const SPConfig config, int index) {
+	int n; //todo need?
+	if ((featuresPath == NULL) || (config == NULL)) {
+		return SP_CONFIG_INVALID_ARGUMENT;
+	}
+
+	if (index >= config->spNumOfImages) {
+		return SP_CONFIG_INDEX_OUT_OF_RANGE;
+	}
+	if ((n = sprintf(featuresPath, IMAGE_PATH_FORMAT, config->spImagesDirectory, config->spImagesPrefix, index, FEATURES_FILE_SUFFIX)) < 0) {
+		// todo what to return on error here? now I can define it
+	}
+	return SP_CONFIG_SUCCESS;
+}
+
+
+
+/*
+ * extraction mode 
+ * extract the features of each image in the directory spImagesDirectory/spImagesPrefix<index>spImagesSuffix 
+ * and then store each of these features to a file using the function writeImageFeaturesIntoFile.
+ * Thr file will be located in the directory given by spImagesDirectory and will have the
+ * same name as the image but the suffix will be ".feats"
+ * The features are saved in a special format in the file.
+ *
+ * @param config - the configuration parameters
+ * @return
+ * An array of arrays where the ith place is the actual features extracted from the ith image.
+ * NULL is returned in case of an error.
+ */
+
+SPPoint** extractFeaturesIntoFile(const SPConfig config) {
+	int i;
+	int j;
+	int k;
+	char current_image_path[MAX_PATH_SIZE];
+	char features_filename[MAX_PATH_SIZE];
+	SP_CONFIG_MSG msg;
+	int* num_of_featues;
+	SPPoint** features;
+	int error = 0;
+
+	if (config == NULL) {
+		return NULL;
+	}
+
+	if ((features = (SPPoint**)malloc(sizeof(*features) * config->spNumOfImages)) == NULL) {
+		return NULL;
+	}
+
+	if ((num_of_featues = (int*)malloc(sizeof(int) * config->spNumOfImages)) == NULL) {
+		free(features);
+		return NULL;
+	}
+
+	ImageProc(config);
+
+	// for each image - write it's features into file
+	for (i=0; !error & i < config->spNumOfImages; i++) {	 
+		// find image path
+		msg = spConfigGetImagePath(current_image_path, config, i);
+		if (msg != SP_CONFIG_SUCCESS) { // should not happen
+			error = 1;
+			break;
+		}
+
+		// find features file path
+		msg = spConfigGetImageFeaturesFilePath(features_filename, config, i);
+		if (msg != SP_CONFIG_SUCCESS) { // should not happen
+			error = 1;
+			break;
+		}
+		
+		// get image features
+		features[i] = getImageFeatures(current_image_path, i, &(num_of_featues[i]));
+		if (features[i] == NULL) {
+			error = 1;
+			break;
+		}
+
+		// write all features to the features file
+		if (writeImageFeaturesIntoFile(features[i], features_filename, i, num_of_featues[i]) == -1) {
+			error = 1;
+			break;
+		}
+	}
+
+	// on error -free all features and return 
+	if (error)
+	{	
+		for (j=0; j<i; j++) {
+			for(k=0;k<num_of_featues[j];k++){
+				spPointDestroy(features[j][k]);
+			}
+		}
+		free(num_of_featues);
+		free(features);
+		return NULL;
+	}
+
+	free(num_of_featues);
+	return features;
+}
+
+
+
+
 /*
  * Extracts features from file
  * 
@@ -233,7 +292,7 @@ int writeImageFeaturesIntoFile(const SPPoint* features, char* features_filename,
  * An array of the actual features extracted. NULL is returned in case of an error.
  *
  */
-SPPoint* readImageFreaturesFromFile(char* features_filename, int num_of_featues) { // todo should return those:  int image_index, int num_of_featues?
+SPPoint* readImageFreaturesFromFile(char* features_filename, int* num_of_featues) { // todo should return those:  int image_index, int num_of_featues?
 	int i;
 	int j;
 	SPPoint* features;
@@ -262,16 +321,16 @@ SPPoint* readImageFreaturesFromFile(char* features_filename, int num_of_featues)
 	fgets(line, sizeof(line), ifp);
 	image_index = atoi(line);
 	fgets(line, sizeof(line), ifp);
-	&num_of_featues = atoi(line);
+	*num_of_featues = atoi(line);
 
-	if ((features = (SPPoint*)malloc(sizeof(*features)*num_of_featues)) == NULL) { // todo check this is ok
+	if ((features = (SPPoint*)malloc(sizeof(*features)*(*num_of_featues))) == NULL) { // todo check this is ok
 		// *msg = SP_CONFIG_ALLOC_FAIL; todo remove
 		fclose(ifp);
 		return NULL;
 	}
 
 	// extract each features
-	for(i=0; !error & i<num_of_featues; i++) {
+	for(i=0; !error & i<*num_of_featues; i++) {
 
 		index = atoi(fgets(line, sizeof(line), ifp));
 		dim = atoi(fgets(line, sizeof(line), ifp));
@@ -296,61 +355,12 @@ SPPoint* readImageFreaturesFromFile(char* features_filename, int num_of_featues)
 	return features;
 }
 
-/*
- * Parses coordinates line in the features file. 
- * Line format as described in writeImageFeaturesIntoFile
- * @param line - the line to parse
- * @param dim - the dimentions of the feature
- * Note: assums the line is in the right coordinates format
- *
- * @return
- * An array of the features coordinates. NULL is returned in case of an error.
- *
- */
-double* parseCoorLineFormat(char* line, int dim) {
-	int i;
-	int cur_coor = 0;
-	char coor_str[MAX_LINE_SIZE];
-	
-	// allocate coordinates array
-	double* coordinates = (double*)malloc(dim*sizeof(double));
-	if (coordinates == NULL) {
-		return NULL;
-	}
-
-	// get all coordinate except last one
-	while (*(line + i) != STRING_NULL_TERMINATOR) {
-		// when reach to a space - parse the data before as a double (single coordinate)
-		if (isspace(*(line + i ))) {
-			strncpy(coor_str, line, i);
-			coor_str[i] = STRING_NULL_TERMINATOR;
-			coordinates[cur_coor] = atof(coor_str);
-			cur_coor++;
-
-			// advance the pointer to after space (skip space) and start search again to get next coordinate
-			line = line + i + 1;
-			i = 0;
-		}
-		// continue until a space is found
-		else {
-			i++;
-		}
-	}
-
-	// get last coordinate
-	strncpy(coor_str, line, i);
-	coor_str[i] = STRING_NULL_TERMINATOR;
-	coordinates[cur_coor] = atof(coor_str);
-
-	return coordinates;
-}
-
 SPPoint** extractFeaturesFromFile(const SPConfig config) {
 	int i;
 	int j;
 	int k;
 	int error = 0;
-	char current_image_path[MAX_PATH_SIZE];
+	char features_filename[MAX_PATH_SIZE];
 	SPPoint** resPoints;
 	int* num_of_featues;
 
