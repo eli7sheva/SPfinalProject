@@ -7,6 +7,7 @@ extern "C"{
 #include "SPConfig.h"
 #include "SPExtractFeatures.h"
 }
+#include "SPImageProc.h"
 
 #define DEFAULT_CONFIG_FILENAME "spcbir.config"
 #define INVALID_CMD_LINE_MSG "Invalid command line : use -c <config_filename>\n"
@@ -18,14 +19,20 @@ extern "C"{
 #define ENTER_AN_IMAGE_MSG "Please enter an image path:\n"
 
 int main(int argc, char *argv[]) {
+	int i;
+	int j;
+	int k;
 	char config_filename[CONFIG_FILE_PATH_SIZE];
 	char query_image[CONFIG_FILE_PATH_SIZE];
 	SP_CONFIG_MSG msg;
 	SPConfig config;
 	bool extraction_mode;
-	SPPoint ** features;
+	int error = 0;
+	char current_image_path[CONFIG_FILE_PATH_SIZE]; // the path to the current image
+	int* num_of_featues; // num of features extracted from each image
+	SPPoint** features;
 	KD_TREE tree;
-
+	sp::ImageProc *improc;
 	// cmd line arguments are ok if there was no arguments specified (argc ==1) or two arguments specified ( -c and filname)
 	if (argc != 3 && argc != 1) {
 		printf(INVALID_CMD_LINE_MSG);
@@ -76,13 +83,60 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (extraction_mode) {
-		features = extractFeaturesIntoFile(config);
-		if (features == NULL) {
+
+		improc = new sp::ImageProc(config); // todo maybe move this outsize the if (if elisheva needs it too)
+
+		if ((features = (SPPoint**)malloc(sizeof(*features) * config->spNumOfImages)) == NULL) {
 			free(config);
+			return -1; //todo print error msg
+		}
+		
+		if ((num_of_featues = (int*)malloc(sizeof(int) * config->spNumOfImages)) == NULL) {
+			free(features);
+			free(config);
+			return -1; //todo print error msg
+		}
+		
+		// extract each inage features and write them to file
+		for (i=0; !error & i < config->spNumOfImages; i++) {	
+			// find image path
+			msg = spConfigGetImagePath(current_image_path, config, i);
+			if (msg != SP_CONFIG_SUCCESS) { // should not happen
+				error = 1;
+				break;
+			}
+
+			// extract image features
+			features[i] = improc->getImageFeatures(current_image_path, i, &(num_of_featues[i]));
+			if (features[i] == NULL) {
+				error = 1;
+				break;
+			}
+
+			// write image features into file
+			if (writeImageFeaturesIntoFile(config, i, features[i], num_of_featues[i]) == -1) {
+				error = 1;
+				break;
+			}
+		}
+
+		if (error)
+		{	
+			for (j=0; j<i; j++) {
+				for(k=0;k<num_of_featues[j];k++){
+					spPointDestroy(features[j][k]);
+				}
+			}
+			free(features);
+			free(num_of_featues);
+			free(config);
+			//print error  todo
 			return -1;
 		}
+		
 	}
-	else {
+
+	else { // not extraction mode
 		features = extractFeaturesFromFile(config);
 		if (features == NULL) {
 			free(config);
@@ -91,7 +145,17 @@ int main(int argc, char *argv[]) {
 	}
 
 	tree = initDataStructures(features);
-	freeFeatures(config, features);
+	// free features
+	for (j=0; j<config->spNumOfImages; j++) {
+		for(k=0;k<num_of_featues[j];k++){
+			spPointDestroy(features[j][k]);
+		}
+	}
+	free(features);
+	free(num_of_featues);
+
+
+
 
 	if (tree == NULL) { // todo initDataStructures error
 		free(config);

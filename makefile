@@ -18,13 +18,13 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
-main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h #put dependencies here!
+main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h SPImageProc.h #put dependencies here!
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
 	$(CC) $(COMP_FLAG) -c $*.c	
-SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.h SPImageProc.h SPConfig.h
+SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.h SPConfig.h
 	$(CC) $(COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(COMP_FLAG) -c $*.c
