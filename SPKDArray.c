@@ -6,9 +6,13 @@
  */
 #include "SPKDArray.h"
 #include <stdlib.h>
+#include <assert.h>
 
 struct sp_KDArray_t{
-	int** Array;
+	SPPoint* array_of_points;
+	int** matrix_of_sorted_indexes;
+	int n; // number of points in array_of_points, and number of columns in matrix_of_sorted_indexes
+	int d; // number of dimensions of each point in array_of_points, and number of rows in matrix_of_sorted_indexes
 };
 
 SPKDArray* Init(SPPoint* arr, int size){
@@ -26,19 +30,45 @@ SPKDArray* Init(SPPoint* arr, int size){
 		}
 	}
 
-	//allocate memory for KDArray->Array, this will be a d*n matrix, the i'th row is the indexes of the points in arr sorted according to their i'th dimension
-	if ( (KDArray->Array = (int**)malloc(d*sizeof(int*))) == NULL){
+	// initialize n and d
+	KDArray->n = n;
+	KDArray->d = d;
+
+	// allocate memory for KDArray->array_of_points
+	if ( (KDArray->array_of_points = (SPPoint*)malloc(n*sizeof(SPPoint))) == NULL){
 		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
-		free(KDArray->Array);
+		free(KDArray->array_of_points);
+		free(KDArray);
+	}
+
+	//copy each point from arr to KDArray->array_of_points
+	for (i=0; i<n; i++){
+		KDArray->array_of_points[i] = spPointCopy(arr[i]); //spPointCopy returns NULL if an allocation error occurred
+		if (KDArray->array_of_points[i] == NULL){
+			spLoggerPrintError("spPointCopy returned NULL", __FILE__, __func__, __LINE__);
+			for (j=0; j<=i; j++){
+				spPointDestroy(KDArray->array_of_points[j]);
+			}
+			free(KDArray->array_of_points);
+			free(KDArray);
+			return NULL;
+		}
+	}
+
+	//allocate memory for KDArray->matrix_of_sorted_indexes, this will be a d*n matrix, the i'th row is the indexes of the points in arr sorted according to their i'th dimension
+	if ( (KDArray->matrix_of_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
+		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		free(KDArray->matrix_of_sorted_indexes);
+		free(KDArray->array_of_points);
 		free(KDArray);
 	}
 	for (i=0; i<d; i++){
-		if( (KDArray->Array[i]=(int*)malloc(n*sizeof(int))) == NULL){
+		if( (KDArray->matrix_of_sorted_indexes[i]=(int*)malloc(n*sizeof(int))) == NULL){
 			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
-				free(KDArray->Array[j]);
+				free(KDArray->matrix_of_sorted_indexes[j]);
 			}
-			free(KDArray->Array);
+			free(KDArray->matrix_of_sorted_indexes);
 			free(KDArray);
 		}
 	}
@@ -75,7 +105,7 @@ SPKDArray* Init(SPPoint* arr, int size){
 
 		// fill the sorted indexes in to KDArray->Array
 		for (j=0; j<n; j++){ //j=index of point
-			KDArray->Array[i][j] = index_val_arr[j][0];
+			KDArray->matrix_of_sorted_indexes[i][j] = index_val_arr[j][0];
 		}
 	}
 	return &KDArray; //return the pointer to KDArray
@@ -91,9 +121,13 @@ int copmareByValue(void* elem1, void* elem2){
 SPKDArray** Split(SPKDArray kdArr, int coor){
 
 	SPKDArray** array_of_KDArrays; // array storing the pointers to left and right KD arrays
-	int n = kdArr
+	int n = kdArr.n;
+	int num_of_left_points;
+	int num_of_right_points;
 	int* is_index_in_left; // array of 0's and 1's. value is 1 if the point in this index is in left half
-	int i;
+	SPPoint* left_points;
+	SPPoint* right_points;
+	int i, j, k;
 
 	//allocate memory for array_of_KDArrays
 	if ( (array_of_KDArrays = (SPKDArray**)malloc(2*sizeof(SPKDArray*))) == NULL){
@@ -101,9 +135,60 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 		free(array_of_KDArrays);
 	}
 
-	for (i=0; i<n)
+	//allocate memory for is_index_in_left
+	if ( (is_index_in_left = (int*)malloc(n*sizeof(int))) == NULL){
+		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		free(is_index_in_left);
+	}
 
+	//initialize num_of_leftt_points and num_of_right_points
+	if (n%2==0){
+		num_of_left_points = n/2;
+	}
+	else{
+		num_of_left_points = (n/2) +1;
+	}
+	num_of_right_points = n - num_of_left_points;
 
+	// fill is_index_in_left
+	for (i=0; i<num_of_left_points; i++){
+		is_index_in_left[kdArr.matrix_of_sorted_indexes[coor][i]] = 1;
+	}
+	for (i=num_of_left_points; i<n; i++){
+		is_index_in_left[kdArr.matrix_of_sorted_indexes[coor][i]] = 0;
+	}
+
+	//allocate memory for left_points
+	if ( (left_points = (SPPoint*)malloc(num_of_left_points*sizeof(SPPoint))) == NULL){
+		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		free(left_points);
+	}
+
+	//allocate memory for right_points
+	if ( (right_points = (SPPoint*)malloc((num_of_right_points)*sizeof(SPPoint))) == NULL){
+			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			free(right_points);
+		}
+	j=0; //index counter for left_points
+	k=0; //index counter for right_points
+
+	// fill left_points and right_points
+	for (int i=0; i<n; i++){ // i= index counter for is_index_in_left
+		if (is_index_in_left[i]==1){
+			left_points[j]= spPointCopy(kdArr.array_of_points[i]);
+			j++;
+		}
+		else{
+			right_points[k]= spPointCopy(kdArr.array_of_points[i]);
+			k++;
+		}
+	}
+	//TODO: i copied the points do we need the original or to erase it?
+	//TODO: in general can we clear kdArr in the end?
+
+	// assertions on j and k after previous for loop
+	assert (j==num_of_left_points);
+	assert (k==num_of_right_points);
 }
 
 
