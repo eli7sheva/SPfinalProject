@@ -108,7 +108,7 @@ SPKDArray* Init(SPPoint* arr, int size){
 			KDArray->matrix_of_sorted_indexes[i][j] = index_val_arr[j][0];
 		}
 	}
-	return &KDArray; //return the pointer to KDArray
+	return KDArray; //return the pointer to KDArray
 }
 
 //
@@ -120,13 +120,18 @@ int copmareByValue(void* elem1, void* elem2){
 
 SPKDArray** Split(SPKDArray kdArr, int coor){
 
-	SPKDArray** array_of_KDArrays; // array storing the pointers to left and right KD arrays
-	int n = kdArr.n;
-	int num_of_left_points;
-	int num_of_right_points;
-	int* is_index_in_left; // array of 0's and 1's. value is 1 if the point in this index is in left half
-	SPPoint* left_points;
-	SPPoint* right_points;
+	SPKDArray** array_of_KDArrays;     // array storing the pointers to left and right KD arrays
+	int n = kdArr->n;                   // number of points in kdArr
+	int d = kdArr->d;                   // number of dimensions of each point in kdArr
+	int num_of_left_points;            // number of points that will be in the left half
+	int num_of_right_points;           // number of points that will be in the right half
+	int* is_index_in_left;             // array of 0's and 1's. value is 1 if the point in this index is in left half
+	SPPoint* left_points;              // array of the left half points
+	SPPoint* right_points;             // array of the right half points
+	int ** left_sorted_indexes;        // matrix of sorted indexes for left half
+	int** right_sorted_indexes;	       // matrix of sorted indexes for left half
+	int* map_left;                     // mapping from the indexes of the points in kdArr to the indexes in left half
+	int* map_right;                    // mapping from the indexes of the points in kdArr to the indexes in right half
 	int i, j, k;
 
 	//allocate memory for array_of_KDArrays
@@ -152,10 +157,10 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 
 	// fill is_index_in_left
 	for (i=0; i<num_of_left_points; i++){
-		is_index_in_left[kdArr.matrix_of_sorted_indexes[coor][i]] = 1;
+		is_index_in_left[kdArr->matrix_of_sorted_indexes[coor][i]] = 1;
 	}
 	for (i=num_of_left_points; i<n; i++){
-		is_index_in_left[kdArr.matrix_of_sorted_indexes[coor][i]] = 0;
+		is_index_in_left[kdArr->matrix_of_sorted_indexes[coor][i]] = 0;
 	}
 
 	//allocate memory for left_points
@@ -175,11 +180,11 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 	// fill left_points and right_points
 	for (int i=0; i<n; i++){ // i= index counter for is_index_in_left
 		if (is_index_in_left[i]==1){
-			left_points[j]= spPointCopy(kdArr.array_of_points[i]);
+			left_points[j]= spPointCopy(kdArr->array_of_points[i]);
 			j++;
 		}
 		else{
-			right_points[k]= spPointCopy(kdArr.array_of_points[i]);
+			right_points[k]= spPointCopy(kdArr->array_of_points[i]);
 			k++;
 		}
 	}
@@ -189,11 +194,72 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 	// assertions on j and k after previous for loop
 	assert (j==num_of_left_points);
 	assert (k==num_of_right_points);
+
+
+	//allocate memory for left_sorted_indexes, this will be a d*num_of_left_points matrix
+	if ( (left_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
+		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		free(left_sorted_indexes);
+	}
+	for (i=0; i<d; i++){
+		if( (left_sorted_indexes[i]=(int*)malloc(num_of_left_points*sizeof(int))) == NULL){
+			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			for (j=0; j<=i; j++){
+				free(left_sorted_indexes[j]);
+			}
+			free(left_sorted_indexes);
+		}
+	}
+
+	//allocate memory for map_left
+	if ( (map_left= (int*)malloc(n*sizeof(int)))==NULL ){
+		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		free(map_left);
+	}
+
+	//allocate memory for map_right
+		if ( (map_right= (int*)malloc(n*sizeof(int)))==NULL ){
+			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			free(map_right);
+		}
+//fill map_left and map_right
+	for (i=0; i<n; i++){
+//TODO
+	}
+
+	//allocate memory for right_sorted_indexes, this will be a d*num_of_right_points matrix
+		if ( (right_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
+			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			free(right_sorted_indexes);
+		}
+		for (i=0; i<d; i++){
+			if( (right_sorted_indexes[i]=(int*)malloc(num_of_right_points*sizeof(int))) == NULL){
+				spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+				for (j=0; j<=i; j++){
+					free(right_sorted_indexes[j]);
+				}
+				free(right_sorted_indexes);
+			}
+		}
 }
 
 
-
-
+void destroyKDArray(SPKDArray KDArray){
+	int i;
+	if (KDArray==NULL){
+		return;
+	}
+	if (KDArray->array_of_points!=NULL){
+		free(KDArray->array_of_points);
+	}
+	for(i=0; i<KDArray->d;i++){
+		if (KDArray->matrix_of_sorted_indexes[i]!=NULL){
+			free(KDArray->matrix_of_sorted_indexes[i]);
+		}
+	}
+	free(KDArray->matrix_of_sorted_indexes);
+	free(KDArray);
+}
 
 
 
