@@ -146,16 +146,24 @@ int validSuffix(const char * suffix) {
 }
 
 /**
- * checks if string contains only numbers (not - or + signs)
+ * checks if string contains only numbers (including '-' or '+' signs but not '.')
  * @param s - the string to check
- * @return 0 if string s contains only numbers (not - or + signs)
- *          -1 otherwise
+ * @return 1 if string s contains only numbers as specified above
+ *          0 otherwise
+ *
+ * example: input of  "3.0" will return 0
+ *          input of  "-3" will return 1
  */
-int numbersOnly(const char *s)
+int isInteger(char *s)
 {
-    while (*s) {
-        if (isdigit(*s++) == 0) return 0;
-    }
+    char* p = s;
+    unsigned long val = strtoul(s, &p, 10); // base 10
+    
+    if (n == p) // conversion failed (no characters consumed)
+        return 0;
+    
+    if (*p != '\0') // conversion failed (trailing data)
+        return 0;
 
     return 1;
 }
@@ -169,7 +177,8 @@ int numbersOnly(const char *s)
  */
 int isPositiveInteger(char * n) {
 	int num ;
-	if (numbersOnly(n)) {
+
+	if (isInteger(n)) {
 		num = atoi(n);
 		return num >= 0 ? 1 : 0;
 	}
@@ -184,7 +193,7 @@ int isPositiveInteger(char * n) {
  */
 int isNotNegativeInteger(char * n) {
 	int num ;
-	if (numbersOnly(n)) {
+	if (isInteger(n)) {
 		num = atoi(n);
 		return num > 0 ? 1 : 0;
 	}
@@ -202,7 +211,7 @@ int isNotNegativeInteger(char * n) {
  */
 int isInRange(char * n, int low, int high) {
 	int num;
-	if (numbersOnly(n)) {
+	if (isInteger(n)) {
 		num = atoi(n);
 		return ((num >= low) && (num <= high)) ? 1 : 0;
 	}
@@ -413,23 +422,40 @@ void splitEqualAndTrim(const char *s, char * left, int left_size, char * right, 
  */
 int parseLine(const char* config_filename, char* line, int line_number, const SPConfig config, SP_CONFIG_MSG* msg) {
  	char right[CONFIG_MAX_LINE_SIZE]; // todo might need to set to CONFIG_MAX_LINE_SIZE -1 because of trim - check it 
- 	char left[CONFIG_MAX_LINE_SIZE];
- 	splitEqualAndTrim(line, right, CONFIG_MAX_LINE_SIZE, left, CONFIG_MAX_LINE_SIZE);
+    char left[CONFIG_MAX_LINE_SIZE];
+ 	char helper[CONFIG_MAX_LINE_SIZE];
 
  	assert(msg != NULL);
  	*msg = SP_CONFIG_SUCCESS; // default is success
 
- 	// if line is a comment - ignore
- 	if (*left == CONFIG_START_COMMENT_MARK) {
- 		return -2;
- 	}
- 	// ignore empty lines
- 	if ((*left == STRING_NULL_TERMINATOR) && (*right  == STRING_NULL_TERMINATOR)) {
- 		return -2;
- 	}
+    splitEqualAndTrim(line, left, CONFIG_MAX_LINE_SIZE, right, CONFIG_MAX_LINE_SIZE);
+    
+    // if line is a comment - ignore
+    if (*left == CONFIG_START_COMMENT_MARK) {
+        return -2;
+    }
+    
+    // check if line is empty or invalid
+    if ((strlen(right) == 0) ^ (strlen(left) == 0)) { // only one of the sides of the assingment is empty - error
+        printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
+        // *msg = // todo ask
+        return -1;
+    } 
+    else { // two sides of the assignment are empty
+        trimWhitespace(helper, 1024, line ); 
+        if (strlen(helper) != 0)  {
+            printf(ERROR_INVALID_LINE_MSG, config_filename, line_number); // line contains only '=' - error
+            // *msg = // todo ask
+            return -1;
+        }
+        else { // line is empty - ignore
+            return -2;
+        }
+    }
 
 
- 	else if (strcmp(left, SP_IMAGES_DIRECTORY_STR) == 0) {
+    // parse each configuration parameter
+ 	if (strcmp(left, SP_IMAGES_DIRECTORY_STR) == 0) {
 		if (!hasNoWhiteSpace(right)) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			*msg = SP_CONFIG_INVALID_STRING;
@@ -624,7 +650,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 		}
 	}			
 
- 	else {
+ 	else { // parameter name is wrong - error
  		printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
  		// *msg = // todo ask
  		return -1;
