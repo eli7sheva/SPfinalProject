@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "SPConfig.h"
 
 // the configuration parameter name in the configuration file
@@ -77,7 +78,7 @@ typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_me
     (INCREMENTAL == method ? "INCREMENTAL"  :  "unknown")))
 
 
-
+/*
 // typedef int boolean;
 // #define true 1
 // #define false 0
@@ -135,7 +136,7 @@ int hasNoWhiteSpace(const char *s) {
  *         0 otherwise
  */
 int validSuffix(const char * suffix) {
-	int i;
+	unsigned int i;
 	for (i = 0 ; i < sizeof(OPTIONAL_SUFFIX)/sizeof(*OPTIONAL_SUFFIX); i++) {
 	    if (strcmp(OPTIONAL_SUFFIX[i], suffix) == 0) {
 	        return 1;
@@ -264,11 +265,10 @@ bool getBoolean(char * c) {
 	int b = isBoolean(c);
 	assert (b != -1);
 
-	if (b ==1)
+	if (b == 1)
 		return true;
 
-	if (b == 0)
-		return false;
+	return false;
 
 }
 
@@ -296,11 +296,13 @@ int isLoggerLevel(char * c) {
  */
 size_t trimWhitespace(char *out, size_t buffer_size, const char *str)
 {
+  const char *end;
+  size_t out_size;
+  size_t trimmed_string_size;
+
   if(buffer_size == 0)
     return 0;
 
-  const char *end;
-  size_t out_size;
 
   // Trim leading space
   while(isspace(*str)) str++;
@@ -316,8 +318,10 @@ size_t trimWhitespace(char *out, size_t buffer_size, const char *str)
   while(end > str && isspace(*end)) end--;
   end++;
 
+  // if (end - str < 0)
+  trimmed_string_size = end - str;
   // Set output size to minimum of trimmed string length and buffer size minus 1
-  out_size = (end - str) < buffer_size-1 ? (end - str) : buffer_size-1;
+  out_size = trimmed_string_size < buffer_size-1 ? trimmed_string_size : buffer_size-1;
 
   // Copy trimmed string and add null terminator
   memcpy(out, str, out_size);
@@ -342,7 +346,7 @@ size_t trimWhitespace(char *out, size_t buffer_size, const char *str)
  */
 void splitEqualAndTrim(const char *s, char * left, int left_size, char * right, int right_size)
 {
-    int i = 0;
+    unsigned int i = 0;
     char left_temp [left_size];
     char right_temp [right_size];
     
@@ -556,12 +560,13 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 	}
 
 	else if (strcmp(left, SP_KD_TREE_SPLIT_METHOD_STR) == 0) {
-		if ((config->spKDTreeSplitMethod = getTreeSplitMethod(right)) == -1) {
+		if (getTreeSplitMethod(right) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
 			// *msg = // todo ask 
 			return -1;
 		}
 		else {
+			config->spKDTreeSplitMethod = getTreeSplitMethod(right);
 			return SP_KD_TREE_SPLIT_METHOD_INDEX;
 		}
 	}
@@ -651,7 +656,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
  * - SP_CONFIG_SUCCESS - in case of success
  */
 
-int checkMissingAndSetDefaults(char* config_filename, int num_of_lines, SPConfig config, char * set_in_config, SP_CONFIG_MSG* msg) {
+int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SPConfig config, char * set_in_config, SP_CONFIG_MSG* msg) {
 	
  	assert(msg != NULL);
  	*msg = SP_CONFIG_SUCCESS; // default is success
@@ -880,7 +885,22 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config, int i
 	return SP_CONFIG_SUCCESS;
 }
 
-
+/**
+ * The function stores in pcaPath the full path of the pca file.
+ * For example given the values of:
+ *  spImagesDirectory = "./images/"
+ *  spPcaFilename = "pca.yml"
+ *
+ * The functions stores "./images/pca.yml" to the address given by pcaPath.
+ * Thus the address given by pcaPath must contain enough space to
+ * store the resulting string.
+ *
+ * @param imagePath - an address to store the result in, it must contain enough space.
+ * @param config - the configuration structure
+ * @return
+ *  - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
+ *  - SP_CONFIG_SUCCESS - in case of success
+ */
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 	int n; //todo need?
 	if ((pcaPath == NULL) || (config == NULL)) {

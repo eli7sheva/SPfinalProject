@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put your object files here
-OBJS = main.o SPImageProc.o SPConfig.o SPExtractFeatures.o SPLogger.o SPPoint.o 
+OBJS = SPLogger.o SPPoint.o SPConfig.o  SPImageProc.o SPExtractFeatures.o  main.o
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
@@ -23,11 +23,11 @@ main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h SPImageProc
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
-	$(CC) $(COMP_FLAG) -c $*.c	
+	$(CC) $(C_COMP_FLAG) -c $*.c	
 SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.h SPConfig.h
-	$(CC) $(COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
-	$(CC) $(COMP_FLAG) -c $*.c
+	$(CC) $(C_COMP_FLAG) -c $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
 #a rule for building a simple c souorce file
