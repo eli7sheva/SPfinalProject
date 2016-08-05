@@ -15,7 +15,7 @@ struct sp_KDArray_t{
 	int d; // number of dimensions of each point in array_of_points, and number of rows in matrix_of_sorted_indexes
 };
 
-SPKDArray* Init(SPPoint* arr, int size){
+SPKDArray Init(SPPoint* arr, int size){
 	SPKDArray* KDArray = (SPKDArray*)malloc(sizeof(SPKDArray*));
 	int n = sizeof(arr)/sizeof(arr[0]); // n = number of points
 	int d = spPointGetDimension(arr[0]); // d = the dimension of the points (assuming dimension is the same for all points)

@@ -17,7 +17,7 @@ typedef struct sp_KDArray_t* SPKDArray;
  * returns NULL if the call to spPointCopy returned NULL
  * prints error message to logger in case of memory allocation failure
  */
-SPKDArray* Init(SPPoint* arr, int size);
+SPKDArray Init(SPPoint* arr, int size);
 
 /** returns two kd-arrays (kdLeft,kdRight) such that the first n/2 points with
  * respect to the coordinate coor are in kdLeft , and the rest of the points are in kdRight.
