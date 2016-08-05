@@ -164,6 +164,63 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
  */
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);
 
+
+/**
+ * Returns the logger level i.e the value of spLoggerLevel.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return positive integer in success, negative integer otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns the KNN. i.e the value of spKNN.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return positive integer in success, negative integer otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns the number of similar images to find of the PCA. i.e the value of spNumOfSimilarImages
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return positive integer in success, negative integer otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg);
+
+
+/**
+ * The functions stores the logger filname (i.e the value of spLoggerFilename) to the address given by filename.
+ * Thus the address given by filename must contain enough space to
+ * store the resulting string.
+ *
+ * Note: in case the logger file name is "stdout" - NULL is stored in filename
+ *
+ * @param filename - an address to store the result in, it must contain enough space.
+ * @param config - the configuration structure
+ *
+ * @return
+ * - SP_CONFIG_INVALID_ARGUMENT - if filename == NULL or config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+SP_CONFIG_MSG spConfigGetLoggerFileName(char* filename, const SPConfig config);
+
 /**
  * Frees all memory resources associate with config. 
  * If config == NULL nothig is done.

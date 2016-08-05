@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put your object files here
-OBJS = SPLogger.o SPPoint.o SPConfig.o  SPImageProc.o SPExtractFeatures.o  main_aux.o main.o
+OBJS = SPLogger.o SPPoint.o SPConfig.o  SPImageProc.o SPExtractFeatures.o SPKDArray.o KDTreeNode.o main_aux.o main.o
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
@@ -18,13 +18,17 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
-main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h SPImageProc.h main_aux.h #put dependencies here!
+main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h SPImageProc.h main_aux.h KDTreeNode.h #put dependencies here!
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPConfig.o: SPConfig.c SPConfig.h SPLogger.h
 	$(CC) $(C_COMP_FLAG) -c $*.c	
 SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.h SPConfig.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
+KDTreeNode.o: KDTreeNode.h KDTreeNode.c SPKDArray.h 
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPKDArray.o: SPKDArray.h SPKDArray.c SPPoint.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c

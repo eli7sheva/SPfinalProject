@@ -1,3 +1,5 @@
+#ifndef SPEXTRACTFEATUREA_H_
+#define SPEXTRACTFEATUREA_H_
 #include "SPPoint.h"
 #include "SPConfig.h"
 
@@ -25,31 +27,31 @@
  * @param config - the configuration paramethers
  * @param image_index - the index ofo the image which features are given in param features
  * @param features - the features to write to the file
- * @param num_of_featues - the number of features found in param features
+ * @param num_of_features - the number of features found in param features
  *
  * @return 0 on success
  *		   -1 on error	
  */
-int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPPoint* features, int num_of_featue);
+int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPPoint* features, int num_of_features);
 
 
 
 /**
- * Extract the features of the images from the features files that we generated in extraction mode.
- * The features of the spNumOfImages images will be extracted from the features files located in spImagesDirectory.
+ * Extract the features of an image  from the features file that we generated in extraction mode.
  * Filename starts with spImagesPrefix and ends with ".feats"
  *
  * @param config - the configuration parameters
+ * @param image_index - the index ofo the image which features are given in param features
+ * @param num_of_features - will hold the number of feature extracted
  *
  * Note: each image path is of maximun length CONFIG_MAX_LINE_SIZE
  *
  * @return
- * An array of arrays where the ith place is the actual features extracted from the ith image.
+ * An array of the actual features extracted.
  * NULL is returned in case of an error.
  *
  */
-SPPoint** extractFeaturesFromFile(const SPConfig config);
+SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int* num_of_features);
 
 
-// todo doc return NULL on error
-KD_TREE initDataStructures(SPPoint** features) ;	
+#endif

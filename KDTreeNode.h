@@ -7,7 +7,8 @@
 
 #ifndef KDTREENODE_H_
 #define KDTREENODE_H_
-
+#include "SPKDArray.h"
+ 
 typedef struct sp_KDTreeNode_t* KDTreeNode;
 
 /*

@@ -201,12 +201,13 @@ int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPP
  * An array of the actual features extracted. NULL is returned in case of an error.
  *
  */
-SPPoint* readImageFreaturesFromFile(char* features_filename, int* num_of_features) { // todo should return those:  int image_index, int num_of_features?
+SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int* num_of_features) {
 	int i;
 	int j;
 	SPPoint* features;
 	// int image_index; todo need to return this?
 	char line[MAX_LINE_SIZE];
+	char features_filename[MAX_LINE_SIZE];
 	FILE *ifp;
 	int error = 0;
 	// features params
@@ -214,7 +215,8 @@ SPPoint* readImageFreaturesFromFile(char* features_filename, int* num_of_feature
 	int dim;
 	double* coordinates;
 
-	if (features_filename == NULL) {
+	// get image's features file name and open it 
+	if ((spConfigGetImageFeaturesFilePath(config, image_index, features_filename)) != SP_CONFIG_SUCCESS) {
 		return NULL;
 	}
 
@@ -264,61 +266,5 @@ SPPoint* readImageFreaturesFromFile(char* features_filename, int* num_of_feature
 	return features;
 }
 
-SPPoint** extractFeaturesFromFile(const SPConfig config) {
-	int i;
-	int j;
-	int k;
-	int error = 0;
-	char features_filename[MAX_PATH_SIZE];
-	SPPoint** resPoints;
-	int* num_of_features;
-	SP_CONFIG_MSG msg;
-	int num_of_images;
-	
-	num_of_images = spConfigGetNumOfImages(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		// spLoggerPrintError(NUM_OF_IMAGES_ERROR, __FILE__, __func__, __LINE__);
-		// throw Exception(); //todo
-	}
 
-	if ((resPoints = (SPPoint**) malloc(sizeof(*resPoints) * num_of_images)) == NULL) {
-		return NULL;
-	}
-
-	if ((num_of_features = (int*) malloc(sizeof(int) * num_of_images)) == NULL ) {
-		free(resPoints);
-		return NULL;
-	}
-
-	for (i=0; (!error) & (i<num_of_images); i++) {	 
-		msg = spConfigGetImageFeaturesFilePath(config, i, features_filename);
-		error = (msg == SP_CONFIG_SUCCESS);
-		
-		if (!error) {
-			error = ((resPoints[i] = readImageFreaturesFromFile(features_filename, &(num_of_features[i])))==NULL);
-		}
-	}
-
-	// on error - free all allocated features and return 
-	if (error) {
-		for(j=0; j<i; j++) {
-			for (k=0; k<num_of_features[j]; k++) {
-				spPointDestroy(resPoints[j][k]);
-			}
-		}
-		free(num_of_features);
-		free(resPoints);
-		return NULL;
-	}
-	
-	free(num_of_features);
-	return resPoints;
-}
-
-
-// todo dont remove this
-// KD_TREE initDataStructures(SPPoint** features) {
-
-// 	saveAllFeaturesIntoKDTree() //todo wait for elisheva
-// }
 

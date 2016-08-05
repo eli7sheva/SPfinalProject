@@ -78,18 +78,6 @@ typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_me
     (INCREMENTAL == method ? "INCREMENTAL"  :  "unknown")))
 
 
-/*
-// typedef int boolean;
-// #define true 1
-// #define false 0
-
-// todo remove this
-// typedef enum { false, true, BOOL_COUNTER } boolean;
-// #define BOOLEAN_STR(bool)          \
-//     (false == bool ? "false"  :    \
-//     (true  == bool ? "true"   :    "unknown"))))   
-
-
 
 struct sp_config_t{
 	char* spImagesDirectory;
@@ -98,16 +86,15 @@ struct sp_config_t{
 	int spNumOfImages; 
 	int spPCADimension; 
 	char* spPCAFilename; 
-	int spNumOfFeatures; 
+	int spNumOfFeatures; // TODO change every isPositiveInt to unsinged int
 	bool spExtractionMode;
 	int spNumOfSimilarImages;
 	tree_split_method spKDTreeSplitMethod;
 	int spKNN; 
 	bool spMinimalGUI;
-	int spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOY
+	SP_LOGGER_LEVEL spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOY
 	char * spLoggerFilename; 
 };
-
 
 
 
@@ -157,9 +144,9 @@ int validSuffix(const char * suffix) {
 int isInteger(char *s)
 {
     char* p = s;
-    unsigned long val = strtoul(s, &p, 10); // base 10
+    strtoul(s, &p, 10); // base 10
     
-    if (n == p) // conversion failed (no characters consumed)
+    if (s == p) // conversion failed (no characters consumed)
         return 0;
     
     if (*p != '\0') // conversion failed (trailing data)
@@ -327,8 +314,7 @@ size_t trimWhitespace(char *out, size_t buffer_size, const char *str)
   while(end > str && isspace(*end)) end--;
   end++;
 
-  // if (end - str < 0)
-  trimmed_string_size = end - str;
+  trimmed_string_size = end - str; // end - str should be positive int
   // Set output size to minimum of trimmed string length and buffer size minus 1
   out_size = trimmed_string_size < buffer_size-1 ? trimmed_string_size : buffer_size-1;
 
@@ -911,22 +897,7 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config, int i
 	return SP_CONFIG_SUCCESS;
 }
 
-/**
- * The function stores in pcaPath the full path of the pca file.
- * For example given the values of:
- *  spImagesDirectory = "./images/"
- *  spPcaFilename = "pca.yml"
- *
- * The functions stores "./images/pca.yml" to the address given by pcaPath.
- * Thus the address given by pcaPath must contain enough space to
- * store the resulting string.
- *
- * @param imagePath - an address to store the result in, it must contain enough space.
- * @param config - the configuration structure
- * @return
- *  - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
- *  - SP_CONFIG_SUCCESS - in case of success
- */
+
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 	int n; //todo need?
 	if ((pcaPath == NULL) || (config == NULL)) {
@@ -939,6 +910,60 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 	
 	return SP_CONFIG_SUCCESS;
 }
+
+
+SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg){
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+ 	return config->spLoggerLevel;
+}
+
+
+int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+ 	return config->spKNN;
+}
+
+
+int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg){
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return -1;
+	}
+
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
+ 	return config->spNumOfSimilarImages;
+}
+
+SP_CONFIG_MSG spConfigGetLoggerFileName(char* filename, const SPConfig config) {
+	if ((filename == NULL) || (config == NULL))
+		return SP_CONFIG_INVALID_ARGUMENT;
+	
+	if (strcmp(config->spLoggerFilename, DEFAULT_LOGGER_FILENAME) == 0)
+		filename = NULL;
+
+	else
+		strcpy(filename, config->spLoggerFilename);
+	
+	return SP_CONFIG_SUCCESS;
+}
+
+
 
 // todo check this
 void spConfigDestroy(SPConfig config) {
