@@ -34,8 +34,9 @@ SPLogger.o: SPLogger.c SPLogger.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
-main_aux.o: main_aux.h main_aux.c SPLogger.h  #put dependencies here!
+main_aux.o: main_aux.h main_aux.c SPLogger.h KDTreeNode.h #put dependencies here!
 	$(CC) $(C_COMP_FLAG) -I$(INCLUDEPATH) -c $*.c
+
 
 #a rule for building a simple c souorce file
 #use gcc -MM SPPoint.c to see the dependencies

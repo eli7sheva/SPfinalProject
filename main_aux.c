@@ -159,7 +159,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
  *           Then the array returned is {i1,i2,...,i_bestNFeatures}
  */
 int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA, 
-        KD_TREE databaseFeatures, int numberOfImages,
+        KDTreeNode* databaseFeatures, int numberOfImages,
         int* nFeaturesPerImage) {// todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?
 
 
@@ -169,7 +169,6 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
     int total_num_of_features = 0;  // amount of all features in all images
     int feature_counter = 0;        // count number of features passed
     int * best_n_features_images;   // will hold bestNFeatures images indexes
-    
     // return NULL if one of the parameters is not initialized
     if (!featureA || !databaseFeatures || (numberOfImages <=1) || !nFeaturesPerImage) {
         return NULL;
@@ -209,7 +208,9 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
     for (image = 0; image < numberOfImages; image++) {
         for (feature = 0; feature < nFeaturesPerImage[image]; feature++) {
 
-            current_dist = kNearestNeighbor(featureA, databaseFeatures[image][feature]); // compare between two features. todo Elisheve: change function name accourding to yours
+            //todo Elisheve: change kNearestNeighbor to your function (change input and output as well) and
+            // iterate over the points in databaseFeatures
+            current_dist = kNearestNeighbor(featureA, databaseFeatures[image][feature]); // compare between two features.
             // save distance (at index 0) and image index (at index 1) for every feature
             all_features_dist[feature_counter][0] = current_dist;
             all_features_dist[feature_counter][1] = (double)image; // image index
@@ -231,7 +232,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
 }
 
 
-int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KD_TREE databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage) { // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
+int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode* databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage) { // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
     int i;
     int k;
     int* featureClosestImages; // array holds the spKNN indexes of the closest images to a feature of the  query
