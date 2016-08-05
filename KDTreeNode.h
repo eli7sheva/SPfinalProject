@@ -11,10 +11,16 @@
 typedef struct sp_KDTreeNode_t* KDTreeNode;
 
 /*
+ * initialize a new KDTreeNode
+ */
+KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data);
+
+/*
  * creates the KD Tree by calling the recursive function CreateKDTree
  * this is an envelope function for CreateKDTree
  */
 KDTreeNode InitTree(SPPoint* arr, int size);
+
 
 /*
  * the recursive function creating the KD tree
@@ -34,5 +40,9 @@ int getDimentionMaxSpread(SPKDArray KDArray);
  */
 int getDimentionRandom(SPKDArray KDArray);
 
+/*
+ * free all memory of a KDTreeNode object
+ */
+void DestroyKDTreeNode(KDTreeNode node);
 
 #endif /* KDTREENODE_H_ */

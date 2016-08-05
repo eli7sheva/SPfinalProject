@@ -18,23 +18,33 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	Node->Left = left;
 	Node->Right = right;
 	Node->Data = data;
+	return Node;
 }
+
+
 
 KDTreeNode InitTree(SPPoint* arr, int size){
 	SPKDArray KDArray = Init(arr, size);
-	KDTreeNode KDTree = CreateKDTree(KDArray, -1);
+	KDTreeNode KDTree = CreateKDTree(KDArray, -1); //parameter is -1 so that the first splitting dimension will be 0
 	return KDTree;
 }
 
 KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 	int split_dimension;
 	KDTreeNode newNode;
+	KDTreeNode left;
+	KDTreeNode right;
+	SPKDArray* splited_arrays;
+	double split_median;
+	int median_index;
+
 	//if KDArray has only one point
 	if (KDArray->n==1){
 		newNode = InitNode(-1,INFINITY,NULL,NULL,spPointCopy(KDArray.array_of_points[0]));
 		destroyKDArray(KDArray);
 		return newNode;
 	}
+
 	//Assign split_dimension according to value of spKDTreeSplitMethod
 	if(MAX_SPREAD){ //TODO: how to check this?
 		split_dimension = getDimentionMaxSpread(KDArray);
@@ -43,11 +53,23 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 		split_dimension = getDimentionRandom(KDArray);
 	}
 	else if(INCREMENTAL){
-		split_dimension = (last_split_dim+1)%KDArray->d;
+		split_dimension = ((last_split_dim+1) % KDArray->d );
 	}
 
-//TODO: implement
+	splited_arrays = Split(KDArray,split_dimension); //split KDArray according to split_dimension
+	median_index = splited_arrays[0].n -1; //the last index in the left part of the split
+	split_median = splited_arrays[0].array_of_points[median_index]; //get the value of the median
+	// recursive calls to left and right
+	left = CreateKDTree(splited_arrays[0], split_dimension);
+	right = CreateKDTree(splited_arrays[1], split_dimension);
+	//create new node
+	newNode = InitNode(split_dimension, split_median, left, right, NULL);
+	//free unused memory
+	free(splited_arrays);
+	destroyKDArray(KDArray);
+	return newNode;
 }
+
 
 int getDimentionMaxSpread(SPKDArray KDArray){
 	int d = KDArray->d; //number of dimensions
@@ -99,4 +121,12 @@ int getDimentionRandom(SPKDArray KDArray){
 	return rand_dimension;
 }
 
+void DestroyKDTreeNode(KDTreeNode node){
+	if (node ==NULL){
+		return;
+	}
+	DestroyKDTreeNode(node->Left);
+	DestroyKDTreeNode(node->Right);
+	free(node);
+}
 
