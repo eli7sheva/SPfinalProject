@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+//TODO: unit testing for all functions
+
 struct sp_KDTreeNode_t{
 	int Dim; // The splitting dimension
 	double Val;//  The median value of the splitting dimension
@@ -12,7 +14,20 @@ struct sp_KDTreeNode_t{
 };
 
 KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
-	KDTreeNode Node = (KDTreeNode)malloc(sizeof(KDTreeNode));
+	KDTreeNode Node;
+	//allocate memory for Node
+	if ( (Node = (KDTreeNode)malloc(sizeof(KDTreeNode))) == NULL ){
+		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		free(Node);
+		return NULL;
+	}
+	// if the value of the dim parameter is invalid
+	if (dim<0){
+		spLoggerPrintError("value of the parameter dim is invalid, must be dim >= 0", __FILE__, __func__, __LINE__);
+		free(Node);
+		return NULL;
+	}
+	//initialize fields according to the values given in the parameters
 	Node->Dim = dim;
 	Node->Val= val;
 	Node->Left = left;
@@ -21,14 +36,29 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	return Node;
 }
 
-
-
 KDTreeNode InitTree(SPPoint* arr, int size){
-	SPKDArray KDArray = Init(arr, size);
-	KDTreeNode KDTree = CreateKDTree(KDArray, -1); //parameter is -1 so that the first splitting dimension will be 0
+	SPKDArray KDArray;
+	KDTreeNode KDTree;
+
+	// check validation of parameter values, prints error to logger if not valid and returns NULL
+	if (arr==NULL){
+		spLoggerPrintError("arr is NULL", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if (size<1){
+		spLoggerPrintError("value of the parameter size is invalid, must be size > 0", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	KDArray = Init(arr, size);
+	if (KDArray==NULL){
+		spLoggerPrintError("the call to Init of SPKDArray returned NULL", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	KDTree = CreateKDTree(KDArray, -1); //parameter is -1 so that the first splitting dimension will be 0
 	return KDTree;
 }
 
+//TODO: what happens if called functions return Null- need to לסדר
 KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 	int split_dimension;
 	KDTreeNode newNode;
@@ -87,6 +117,7 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 	if ( (dimension_spreads = (double*)malloc(d*sizeof(double))) == NULL){
 		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
 		free(dimension_spreads);
+		return -1;
 	}
 
 	//fill dimension_spreads
@@ -107,6 +138,7 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 			max_spread_index = i;
 		}
 	}
+	free(dimension_spreads);
 	return max_spread_index;
 }
 
@@ -122,7 +154,7 @@ int getDimentionRandom(SPKDArray KDArray){
 }
 
 void DestroyKDTreeNode(KDTreeNode node){
-	if (node ==NULL){
+	if (node == NULL){
 		return;
 	}
 	DestroyKDTreeNode(node->Left);

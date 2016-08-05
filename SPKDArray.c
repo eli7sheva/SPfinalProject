@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+//TODO: unit testing for all functions
+
 struct sp_KDArray_t{
 	SPPoint* array_of_points;
 	int** matrix_of_sorted_indexes;
@@ -17,13 +19,12 @@ struct sp_KDArray_t{
 
 SPKDArray Init(SPPoint* arr, int size){
 	SPKDArray* KDArray = (SPKDArray*)malloc(sizeof(SPKDArray*));
-	int n = sizeof(arr)/sizeof(arr[0]); // n = number of points
 	int d = spPointGetDimension(arr[0]); // d = the dimension of the points (assuming dimension is the same for all points)
 	double** index_val_arr; //double array containing n rows. each row contains the index and the value of a specific coordinate in the point of that index
 	int i,j;
 
 	//check all points have the same dimension
-	for (i=0; i<n; i++){
+	for (i=0; i<size; i++){
 		if (spPointGetDimension(arr[i]) != d){
 			spLoggerPrintError("points don't have the same dimension", __FILE__, __func__, __LINE__);
 			return NULL;
@@ -31,18 +32,18 @@ SPKDArray Init(SPPoint* arr, int size){
 	}
 
 	// initialize n and d
-	KDArray->n = n;
+	KDArray->n = size;
 	KDArray->d = d;
 
 	// allocate memory for KDArray->array_of_points
-	if ( (KDArray->array_of_points = (SPPoint*)malloc(n*sizeof(SPPoint))) == NULL){
+	if ( (KDArray->array_of_points = (SPPoint*)malloc(size*sizeof(SPPoint))) == NULL){
 		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
 		free(KDArray->array_of_points);
 		free(KDArray);
 	}
 
 	//copy each point from arr to KDArray->array_of_points
-	for (i=0; i<n; i++){
+	for (i=0; i<size; i++){
 		KDArray->array_of_points[i] = spPointCopy(arr[i]); //spPointCopy returns NULL if an allocation error occurred
 		if (KDArray->array_of_points[i] == NULL){
 			spLoggerPrintError("spPointCopy returned NULL", __FILE__, __func__, __LINE__);
@@ -63,7 +64,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		free(KDArray);
 	}
 	for (i=0; i<d; i++){
-		if( (KDArray->matrix_of_sorted_indexes[i]=(int*)malloc(n*sizeof(int))) == NULL){
+		if( (KDArray->matrix_of_sorted_indexes[i]=(int*)malloc(size*sizeof(int))) == NULL){
 			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				free(KDArray->matrix_of_sorted_indexes[j]);
@@ -74,7 +75,7 @@ SPKDArray Init(SPPoint* arr, int size){
 	}
 
 	//allocate memory for index_val_arr: n rows, 2 columns
-	if ( (index_val_arr = (double**)malloc(n*sizeof(double*))) == NULL){
+	if ( (index_val_arr = (double**)malloc(size*sizeof(double*))) == NULL){
 		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
 		free(index_val_arr);
 	}
@@ -92,7 +93,7 @@ SPKDArray Init(SPPoint* arr, int size){
 	for (i=0; i<d; i++){ // i=coordinate
 
 		// fill index and value of coordinate to val_index_arr
-		for (j=0; j<n; j++){ //j=index of point
+		for (j=0; j<size; j++){ //j=index of point
 			index_val_arr[j][0] = j;
 			index_val_arr[j][1] = spPointGetAxisCoor(arr[j],i);
 		}
@@ -101,10 +102,10 @@ SPKDArray Init(SPPoint* arr, int size){
 		 * meaning by the value of the coordinate of each point.
 		 * the first column will be the indexes of the points sorted by the values of the coordinate
 		 */
-		qsort(index_val_arr, n, sizeof(double*), copmareByValue);
+		qsort(index_val_arr, size, sizeof(double*), copmareByValue);
 
 		// fill the sorted indexes in to KDArray->Array
-		for (j=0; j<n; j++){ //j=index of point
+		for (j=0; j<size; j++){ //j=index of point
 			KDArray->matrix_of_sorted_indexes[i][j] = index_val_arr[j][0];
 		}
 	}
@@ -118,7 +119,7 @@ int copmareByValue(void* elem1, void* elem2){
 	return (tuple1[1] - tuple2[1]);
 }
 
-SPKDArray** Split(SPKDArray kdArr, int coor){
+SPKDArray* Split(SPKDArray kdArr, int coor){
 
 	SPKDArray** array_of_KDArrays;     // array storing the pointers to left and right KD arrays
 	int n = kdArr->n;                   // number of points in kdArr
@@ -135,7 +136,7 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 	int i, j, k;
 
 	//allocate memory for array_of_KDArrays
-	if ( (array_of_KDArrays = (SPKDArray**)malloc(2*sizeof(SPKDArray*))) == NULL){
+	if ( (array_of_KDArrays = (SPKDArray*)malloc(2*sizeof(SPKDArray))) == NULL){
 		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
 		free(array_of_KDArrays);
 	}
@@ -224,7 +225,7 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 		}
 //fill map_left and map_right
 	for (i=0; i<n; i++){
-//TODO
+
 	}
 
 	//allocate memory for right_sorted_indexes, this will be a d*num_of_right_points matrix
@@ -241,6 +242,7 @@ SPKDArray** Split(SPKDArray kdArr, int coor){
 				free(right_sorted_indexes);
 			}
 		}
+		//TODO: finish function
 }
 
 

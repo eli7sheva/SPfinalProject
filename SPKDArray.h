@@ -11,11 +11,15 @@
 /** Type for defining SPKDArray **/
 typedef struct sp_KDArray_t* SPKDArray;
 
+//TODO: fix comments to @param, @return format
+
 /**
  * Initializes the kd-array with the data given by arr, and returns pointer to the kd-array
  * returns NULL if the points in arr do not have the same dimension
  * returns NULL if the call to spPointCopy returned NULL
  * prints error message to logger in case of memory allocation failure
+ * @param
+ * 		size: the number of points in arr
  */
 SPKDArray Init(SPPoint* arr, int size);
 
