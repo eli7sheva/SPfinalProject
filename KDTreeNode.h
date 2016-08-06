@@ -34,7 +34,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
  * 		size: the number of points in arr
  * @return
  * 		a KDTreeNode which is the root of the tree
- *		NULL if arr==NULL, size<1 or call to other function returned NUL.
+ *		NULL if arr==NULL, size<1 or call to other function returned NULL.
  *		 	 the relevant error message will be sent to Logger
  */
 KDTreeNode InitTree(SPPoint* arr, int size);

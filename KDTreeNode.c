@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define ALLOC_ERROR_MSG "Allocation error"
+#define INVALID_ARG_ERROR "Invalid arguments"
+#define GENERAL_ERROR_MSG "An error occurred"
+
 //TODO: unit testing for all functions
 
 struct sp_KDTreeNode_t{
@@ -15,18 +19,20 @@ struct sp_KDTreeNode_t{
 
 KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
 	KDTreeNode Node;
-	//allocate memory for Node
-	if ( (Node = (KDTreeNode)malloc(sizeof(KDTreeNode))) == NULL ){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
-		free(Node);
-		return NULL;
-	}
 	// if the value of the dim parameter is invalid
 	if (dim<0){
-		spLoggerPrintError("value of the parameter dim is invalid, must be dim >= 0", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter dim is invalid, must be dim >= 0", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+
+	//allocate memory for Node
+	if ( (Node = (KDTreeNode)malloc(sizeof(KDTreeNode))) == NULL ){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(Node);
 		return NULL;
 	}
+
 	//initialize fields according to the values given in the parameters
 	Node->Dim = dim;
 	Node->Val= val;
@@ -42,16 +48,19 @@ KDTreeNode InitTree(SPPoint* arr, int size){
 
 	// check validation of parameter values, prints error to logger if not valid and returns NULL
 	if (arr==NULL){
-		spLoggerPrintError("arr is NULL", __FILE__, __func__, __LINE__); // TODO elisheva: The guidelines are to print informative logs but this is not an informative error log (since the user doesn't know what is "arr"). Moreover, all print logs strings should be consts (#define). You can see in SPImageProc.cpp how they did the logging. Another thing, we can also print Info, Debug and warning logs so if you think it's necessary 
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter arr is invalid, cann't be NULL", __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (size<1){
-		spLoggerPrintError("value of the parameter size is invalid, must be size > 0", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter size is invalid, must be size > 0", __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	KDArray = Init(arr, size);
 	if (KDArray==NULL){
-		spLoggerPrintError("the call to Init of SPKDArray returned NULL", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("the call to Init of SPKDArray returned NULL", __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	KDTree = CreateKDTree(KDArray, -1); //parameter is -1 so that the first splitting dimension will be 0
@@ -115,7 +124,7 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 
 	//allocate memory for dimension_spreads
 	if ( (dimension_spreads = (double*)malloc(d*sizeof(double))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(dimension_spreads);
 		return -1;
 	}

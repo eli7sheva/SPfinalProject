@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define ALLOC_ERROR_MSG "Allocation error"
+#define INVALID_ARG_ERROR "Invalid arguments"
+#define GENERAL_ERROR_MSG "An error occurred"
+
 //TODO: unit testing for all functions
 
 struct sp_KDArray_t{
@@ -23,10 +27,22 @@ SPKDArray Init(SPPoint* arr, int size){
 	double** index_val_arr; //double array containing n rows. each row contains the index and the value of a specific coordinate in the point of that index
 	int i,j;
 
+	//check validation of the parameters
+	if (size<1){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter size is invalid, must be size > 0", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if (arr==NULL){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter arr is invalid, cann't be NULL", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
 	//check all points have the same dimension
 	for (i=0; i<size; i++){
 		if (spPointGetDimension(arr[i]) != d){
-			spLoggerPrintError("points don't have the same dimension", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+			spLoggerPrintspLoggerPrintDebug("value of the parameter arr is invalid, the points don't have the same dimension", __FILE__, __func__, __LINE__);
 			return NULL;
 		}
 	}
@@ -37,16 +53,18 @@ SPKDArray Init(SPPoint* arr, int size){
 
 	// allocate memory for KDArray->array_of_points
 	if ( (KDArray->array_of_points = (SPPoint*)malloc(size*sizeof(SPPoint))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(KDArray->array_of_points);
 		free(KDArray);
+		return NULL;
 	}
 
 	//copy each point from arr to KDArray->array_of_points
 	for (i=0; i<size; i++){
 		KDArray->array_of_points[i] = spPointCopy(arr[i]); //spPointCopy returns NULL if an allocation error occurred
 		if (KDArray->array_of_points[i] == NULL){
-			spLoggerPrintError("spPointCopy returned NULL", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+			spLoggerPrintspLoggerPrintDebug("spPointCopy returned NULL", __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				spPointDestroy(KDArray->array_of_points[j]);
 			}
@@ -58,34 +76,38 @@ SPKDArray Init(SPPoint* arr, int size){
 
 	//allocate memory for KDArray->matrix_of_sorted_indexes, this will be a d*n matrix, the i'th row is the indexes of the points in arr sorted according to their i'th dimension
 	if ( (KDArray->matrix_of_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(KDArray->matrix_of_sorted_indexes);
 		free(KDArray->array_of_points);
 		free(KDArray);
+		return NULL;
 	}
 	for (i=0; i<d; i++){
 		if( (KDArray->matrix_of_sorted_indexes[i]=(int*)malloc(size*sizeof(int))) == NULL){
-			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				free(KDArray->matrix_of_sorted_indexes[j]);
 			}
 			free(KDArray->matrix_of_sorted_indexes);
 			free(KDArray);
+			return NULL;
 		}
 	}
 
 	//allocate memory for index_val_arr: n rows, 2 columns
 	if ( (index_val_arr = (double**)malloc(size*sizeof(double*))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(index_val_arr);
+		return NULL;
 	}
 	for (i=0; i<2; i++){
 		if( (index_val_arr[i]=(double*)malloc(2*sizeof(double))) == NULL){
-			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				free(index_val_arr[j]);
 			}
 			free(index_val_arr);
+			return NULL;
 		}
 	}
 
@@ -109,10 +131,10 @@ SPKDArray Init(SPPoint* arr, int size){
 			KDArray->matrix_of_sorted_indexes[i][j] = index_val_arr[j][0];
 		}
 	}
-	return KDArray; //return the pointer to KDArray
+	return KDArray;
 }
 
-//
+
 int copmareByValue(void* elem1, void* elem2){
 	double* tuple1 = (double*) elem1;
 	double* tuple2 = (double*) elem2;
@@ -135,16 +157,29 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	int* map_right;                    // mapping from the indexes of the points in kdArr to the indexes in right half
 	int i, j, k;
 
+	//check validation of arguments
+	if (coor<0){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter coor is invalid, must be coor>=0", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if (kdArr==NULL){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug("value of the parameter kdArr is invalid,cann't be NULL", __FILE__, __func__, __LINE__);
+		return NULL;
+	}
 	//allocate memory for array_of_KDArrays
 	if ( (array_of_KDArrays = (SPKDArray*)malloc(2*sizeof(SPKDArray))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(array_of_KDArrays);
+		return NULL;
 	}
 
 	//allocate memory for is_index_in_left
 	if ( (is_index_in_left = (int*)malloc(n*sizeof(int))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(is_index_in_left);
+		return NULL;
 	}
 
 	//initialize num_of_leftt_points and num_of_right_points
@@ -166,14 +201,16 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 
 	//allocate memory for left_points
 	if ( (left_points = (SPPoint*)malloc(num_of_left_points*sizeof(SPPoint))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(left_points);
+		return NULL;
 	}
 
 	//allocate memory for right_points
 	if ( (right_points = (SPPoint*)malloc((num_of_right_points)*sizeof(SPPoint))) == NULL){
-			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			free(right_points);
+			return NULL;
 		}
 	j=0; //index counter for left_points
 	k=0; //index counter for right_points
@@ -196,50 +233,56 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	assert (j==num_of_left_points);
 	assert (k==num_of_right_points);
 
-
 	//allocate memory for left_sorted_indexes, this will be a d*num_of_left_points matrix
 	if ( (left_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(left_sorted_indexes);
+		return NULL;
 	}
 	for (i=0; i<d; i++){
 		if( (left_sorted_indexes[i]=(int*)malloc(num_of_left_points*sizeof(int))) == NULL){
-			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				free(left_sorted_indexes[j]);
 			}
 			free(left_sorted_indexes);
+			return NULL;
 		}
 	}
 
 	//allocate memory for map_left
 	if ( (map_left= (int*)malloc(n*sizeof(int)))==NULL ){
-		spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(map_left);
+		return NULL;
 	}
 
 	//allocate memory for map_right
 		if ( (map_right= (int*)malloc(n*sizeof(int)))==NULL ){
-			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			free(map_right);
+			return NULL;
 		}
-//fill map_left and map_right
-	for (i=0; i<n; i++){
 
+	//fill map_left and map_right
+	for (i=0; i<n; i++){
+		//TODO
 	}
 
 	//allocate memory for right_sorted_indexes, this will be a d*num_of_right_points matrix
 		if ( (right_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
-			spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			free(right_sorted_indexes);
+			return NULL;
 		}
 		for (i=0; i<d; i++){
 			if( (right_sorted_indexes[i]=(int*)malloc(num_of_right_points*sizeof(int))) == NULL){
-				spLoggerPrintError("ALLOCATION ERRORR", __FILE__, __func__, __LINE__);
+				spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 				for (j=0; j<=i; j++){
 					free(right_sorted_indexes[j]);
 				}
 				free(right_sorted_indexes);
+				return NULL;
 			}
 		}
 		//TODO: finish function
