@@ -175,9 +175,9 @@ int main(int argc, char *argv[]) {
 				break;//todo print error
 			}
 
-			if ((kd_trees[i] = InitTree(features, num_of_features[i])) == NULL){// todo elisheva is error return NULL?
+			if ((kd_trees[i] = InitTree(features, num_of_features[i])) == NULL){
 				error = 1;
-				break;//todo print error
+				break;//no need to print error log since it is printed inside InitTree
 			}
 
 			// free the current image features
@@ -197,9 +197,9 @@ int main(int argc, char *argv[]) {
 			}
 			last_num_of_features = num_of_features[i];
 			
-			if ((kd_trees[i] = InitTree(features, num_of_features[i])) == NULL){ // todo elisheva error returns NULL?
+			if ((kd_trees[i] = InitTree(features, num_of_features[i])) == NULL){
 				error = 1;
-				break; //todo print error
+				break; //todo no need to print error log since it is printed inside InitTree
 			}
 
 			// free the current image features
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 	if (error)	{	
 		// free the kd tree (all trees until the last one extracted succesfully)
 		for (j=0; j<i; j++) {
-			DestroyKDTreeNode(kd_trees[j]);// todo elisheva handle error of this function if exist(log error and free)
+			DestroyKDTreeNode(kd_trees[j]);
 		}
 		free(kd_trees);
 
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 	if (msg != SP_CONFIG_SUCCESS) { // todo handle error differently
 		// todo print log
 		for (j=0; j<num_of_images; j++) {
-			DestroyKDTreeNode(kd_trees[j]);// todo elisheva handle error of this function if exist(log error and free)
+			DestroyKDTreeNode(kd_trees[j]);
 		}
 		free(kd_trees);
 		free(num_of_features);
@@ -255,7 +255,7 @@ int main(int argc, char *argv[]) {
 	if (msg != SP_CONFIG_SUCCESS) {
 		// todo print log
 		for (j=0; j<num_of_images; j++) {
-			DestroyKDTreeNode(kd_trees[j]);// todo elisheva handle error of this function if exist(log error and free)
+			DestroyKDTreeNode(kd_trees[j]);
 		}
 		free(kd_trees);
 		free(num_of_features);
@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
 		// todo print error log
 		// free everything
 		for (j=0; j<num_of_images; j++) {
-			DestroyKDTreeNode(kd_trees[j]);// todo elisheva handle error of this function if exist(log error and free)
+			DestroyKDTreeNode(kd_trees[j]);
 		}
 		free(kd_trees);
 		free(config);
@@ -296,7 +296,7 @@ int main(int argc, char *argv[]) {
 
 	// free the kd tree
 	for (j=0; j<num_of_images; j++) {
-		DestroyKDTreeNode(kd_trees[j]);// todo elisheva handle error of this function if exist(log error and free)
+		DestroyKDTreeNode(kd_trees[j]);
 	}
 	free(kd_trees);
 

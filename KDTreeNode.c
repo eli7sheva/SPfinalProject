@@ -42,7 +42,7 @@ KDTreeNode InitTree(SPPoint* arr, int size){
 
 	// check validation of parameter values, prints error to logger if not valid and returns NULL
 	if (arr==NULL){
-		spLoggerPrintError("arr is NULL", __FILE__, __func__, __LINE__);
+		spLoggerPrintError("arr is NULL", __FILE__, __func__, __LINE__); // TODO elisheva: The guidelines are to print informative logs but this is not an informative error log (since the user doesn't know what is "arr"). Moreover, all print logs strings should be consts (#define). You can see in SPImageProc.cpp how they did the logging. Another thing, we can also print Info, Debug and warning logs so if you think it's necessary 
 		return NULL;
 	}
 	if (size<1){

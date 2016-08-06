@@ -160,7 +160,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
  */
 int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA, 
         KDTreeNode* databaseFeatures, int numberOfImages,
-        int* nFeaturesPerImage) {// todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?
+        int* nFeaturesPerImage) {
 
 
     int image, feature;             // for iteration
