@@ -254,8 +254,8 @@ int main(int argc, char *argv[]) {
 	query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features); // todo which index to give?
 	
 	// find closest images to the query image
-	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features[i],
-									   kd_trees, num_of_images, num_of_features); todo return this!!
+	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
+									   kd_trees, num_of_images, num_of_features);
 
 	if (closest_images == NULL) { // error todo return this comment
 		// todo print error log
