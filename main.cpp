@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
 	int error = 0;
+	int retval = 0;									//return value - default 0 on success
 
 	// validate command line arguments:
 	// cmd line arguments are ok if there was no arguments specified (argc == 1) or two arguments specified ( -c and filname)
@@ -64,12 +65,12 @@ int main(int argc, char *argv[]) {
 		config = spConfigCreate(config_filename, &msg);
 		if (msg == SP_CONFIG_CANNOT_OPEN_FILE) {
 			printf(ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG, DEFAULT_CONFIG_FILENAME);
-			free(config);
 		}
 
 		if (msg != SP_CONFIG_SUCCESS) {
-			free(config);
-			return -1;
+			//todo add log
+			retval = -1;
+			goto err;
 		}
 	}
 	else { // argc == 3
@@ -77,7 +78,9 @@ int main(int argc, char *argv[]) {
 		// check that second argument is the -c flag
 		if (strcmp(argv[1], CMD_LINE_CONFIG_FILENAME_FLAG) != 0) {
 			printf(INVALID_CMD_LINE_MSG);
-			return -1;
+			//todo add log
+			retval = -1;
+			goto err;
 		}
 	
 		strcpy(config_filename, argv[2]);
@@ -85,12 +88,12 @@ int main(int argc, char *argv[]) {
 		
 		if (msg == SP_CONFIG_CANNOT_OPEN_FILE) {
 			printf(ERROR_OPENING_CONFIG_FILE_MSG, config_filename);
-			free(config);
 		}
 
 		if (msg != SP_CONFIG_SUCCESS) {
-			free(config);
-			return -1;
+			//todo add log
+			retval = -1;
+			goto err;
 		}
 	}
 	
@@ -98,8 +101,9 @@ int main(int argc, char *argv[]) {
 	logger_level = spConfigGetLoggerLevel(config, &msg);
 	if ((msg != SP_CONFIG_SUCCESS) || (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS)) {
 		// spLoggerPrintError(NUM_OF_IMAGES_ERROR, __FILE__, __func__, __LINE__);
-		free(config);
-		return -1; //todo print error msg
+		//todo add log
+		retval = -1;
+		goto err;
 	}
 
 	switch(spLoggerCreate(logger_filename, logger_level)) {
@@ -108,14 +112,16 @@ int main(int argc, char *argv[]) {
 	        break;
 		
 	   case SP_LOGGER_OUT_OF_MEMORY:
+		    //todo change to  log
 		    printf(ALLOCATION_FAILURE_MSG);
-		    free(config);
-			return -1; //todo print error msg	
+			retval = -1;
+			goto err;
 	  
 	  	case SP_LOGGER_CANNOT_OPEN_FILE:
+			//todo change to log
 	  		printf(ERROR_OPENING_LOGGER_FILE_MSG, logger_filename);
-			free(config);
-			return -1; //todo print error msg	
+			retval = -1;
+			goto err;
 		
 		default: 
 			break;
@@ -125,28 +131,31 @@ int main(int argc, char *argv[]) {
 	num_of_images = spConfigGetNumOfImages(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		// spLoggerPrintError(NUM_OF_IMAGES_ERROR, __FILE__, __func__, __LINE__);
-		free(config);
-		return -1; //todo print error msg
+		//todo add log
+		retval = -1;
+		goto err;
 	}
 
 	extraction_mode = spConfigIsExtractionMode(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		free(config);
-		return -1;
+		//todo add log
+		retval = -1;
+		goto err;
 	}
 
 	improc = new sp::ImageProc(config);
 
 	// allocate memory for the array of kd trees
 	if ((kd_trees = (KDTreeNode*)malloc(sizeof(*kd_trees) * num_of_images)) == NULL) {
-		free(config);
-		return -1; //todo print error msg
+		//todo add log
+		retval = -1;
+		goto err;
 	}
 
 	if ((num_of_features = (int*)malloc(sizeof(int) * num_of_images)) == NULL) {
-		free(kd_trees);
-		free(config);
-		return -1; //todo print error msg
+		//todo add log
+		retval = -1;
+		goto err;
 	}
 
 	last_num_of_features = -1;
@@ -211,27 +220,14 @@ int main(int argc, char *argv[]) {
 
 	// if an error occured in extraction mode or non-extraction mode - free everything needed
 	if (error)	{	
-		// free the kd tree (all trees until the last one extracted succesfully)
-		for (j=0; j<i; j++) {
-			DestroyKDTreeNode(kd_trees[j]);
-		}
-		free(kd_trees);
-
 		// free features of the current extracted image
 		for (k=0; k<last_num_of_features; k++) {
 			spPointDestroy(features[k]);
 		}
-		free(features);
-		free(num_of_features);
-
-		// free config struct
-		free(config);
 		//print error  todo
-		return -1;
+		retval = -1;
+		goto err;
 	}
-
-	// free helpers
-	free(features);
 
 	// get a query image from the user
 	printf(ENTER_AN_IMAGE_MSG);
@@ -241,26 +237,16 @@ int main(int argc, char *argv[]) {
 	// get query image's deatures
 	num_of_similar_images_to_find = spConfigGetNumOfSimilarImages(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) { // todo handle error differently
-		// todo print log
-		for (j=0; j<num_of_images; j++) {
-			DestroyKDTreeNode(kd_trees[j]);
-		}
-		free(kd_trees);
-		free(num_of_features);
-		free(config);
-		return -1;
+		// // todo print log
+		retval = -1;
+		goto err;
 	}
 
 	knn = spConfigGetKNN(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		// todo print log
-		for (j=0; j<num_of_images; j++) {
-			DestroyKDTreeNode(kd_trees[j]);
-		}
-		free(kd_trees);
-		free(num_of_features);
-		free(config);
-		return -1;
+		// // todo print log
+		retval = -1;
+		goto err;
 	}
 
 
@@ -270,21 +256,11 @@ int main(int argc, char *argv[]) {
 	// find closest images to the query image
 	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features[i],
 									   kd_trees, num_of_images, num_of_features); todo return this!!
-	free(num_of_features); // done with that
 
 	if (closest_images == NULL) { // error todo return this comment
 		// todo print error log
-		// free everything
-		for (j=0; j<num_of_images; j++) {
-			DestroyKDTreeNode(kd_trees[j]);
-		}
-		free(kd_trees);
-		free(config);
-		for (k=0; k<query_num_of_features; k++) {
-			spPointDestroy(query_features[k]);
-		}
-	 	free(query_features);
-		return -1;
+		retval = -1;
+		goto err;
 	}
 
 	// // todo elisheva - show (display) closest_images images
@@ -292,22 +268,30 @@ int main(int argc, char *argv[]) {
 
 
 	// done - destroy logger and free everything 
-	spLoggerDestroy();
+	err:
+		spLoggerDestroy();
 
-	// free the kd tree
-	for (j=0; j<num_of_images; j++) {
-		DestroyKDTreeNode(kd_trees[j]);
-	}
-	free(kd_trees);
+		// free the kd tree
+		if (kd_trees != NULL) {
+			for (j=0; j<num_of_images; j++) {
+				DestroyKDTreeNode(kd_trees[j]);
+			}
+			free(kd_trees);
+		}
 
-	// free query features
-	for (k=0; k<query_num_of_features; k++) {
-		spPointDestroy(query_features[k]);
-	}
+		// free query features
+		if (query_features != NULL) {
+			for (k=0; k<query_num_of_features; k++) {
+				spPointDestroy(query_features[k]);
+			}
+			free(query_features);
+		}
 
-	free(query_features);
-	free(closest_images); //todo return this
-	free(config);
-	return 0;
+		free(closest_images);
+		free(features);
+		free(num_of_features);
+		spConfigDestroy(config);
+
+	return retval;
 
 }
