@@ -272,7 +272,6 @@ int main(int argc, char *argv[]) {
 
 		spConfigDestroy(config);
 		free(closest_images);
-		free(num_of_features);
 
 		// free query_features
 		if (query_features != NULL) {
@@ -301,8 +300,7 @@ int main(int argc, char *argv[]) {
 			}
 			free(features_per_image);
 		}
-
+		free(num_of_features); // must be freed after features_per_image
 
 	return retval;
-
 }
