@@ -1,13 +1,12 @@
 /*
  * SPKDArray.h
  *
- *  Created on: 19 αιεμ 2016
+ *  Created on: 19  2016
  *      Author: elisheva
  */
 
 #ifndef SPKDARRAY_H_
 #define SPKDARRAY_H_
-
 #include "SPPoint.h"
  
 /** Type for defining SPKDArray **/

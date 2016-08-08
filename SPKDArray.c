@@ -1,7 +1,7 @@
 /*
  * SPKDArray.c
  *
- *  Created on: 19 αιεμ 2016
+ *  Created on: 19  2016
  *      Author: elisheva
  */
 #include "SPKDArray.h"
@@ -11,6 +11,11 @@
 #define ALLOC_ERROR_MSG "Allocation error"
 #define INVALID_ARG_ERROR "Invalid arguments"
 #define GENERAL_ERROR_MSG "An error occurred"
+#define PARAMETER_SIZE_INVALID "value of the parameter size is invalid, must be size > 0"
+#define PARAMETER_ARR_INVALID "value of the parameter arr is invalid, cann't be NULL"
+#define SPPOINTCOPY_RETURNED_NULL "spPointCopy returned NULL"
+#define PARAMETER_COOR_INVALID "value of the parameter coor is invalid, must be coor>=0"
+#define PARAMETER_KDARR_INVALID "value of the parameter kdArr is invalid,cann't be NULL"
 
 //TODO: unit testing for all functions
 
@@ -30,21 +35,13 @@ SPKDArray Init(SPPoint* arr, int size){
 	//check validation of the parameters
 	if (size<1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug("value of the parameter size is invalid, must be size > 0", __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (arr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug("value of the parameter arr is invalid, cann't be NULL", __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
-	}
-	//check all points have the same dimension
-	for (i=0; i<size; i++){
-		if (spPointGetDimension(arr[i]) != d){
-			spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug("value of the parameter arr is invalid, the points don't have the same dimension", __FILE__, __func__, __LINE__);
-			return NULL;
-		}
 	}
 
 	// initialize n and d
@@ -64,7 +61,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		KDArray->array_of_points[i] = spPointCopy(arr[i]); //spPointCopy returns NULL if an allocation error occurred
 		if (KDArray->array_of_points[i] == NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug("spPointCopy returned NULL", __FILE__, __func__, __LINE__);
+			spLoggerPrintspLoggerPrintDebug(SPPOINTCOPY_RETURNED_NULL, __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				spPointDestroy(KDArray->array_of_points[j]);
 			}
@@ -160,12 +157,12 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	//check validation of arguments
 	if (coor<0){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug("value of the parameter coor is invalid, must be coor>=0", __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_COOR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (kdArr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug("value of the parameter kdArr is invalid,cann't be NULL", __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_KDARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	//allocate memory for array_of_KDArrays
