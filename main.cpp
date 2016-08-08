@@ -43,14 +43,14 @@ int main(int argc, char *argv[]) {
 	bool extraction_mode;							 //indicates if extraction mode on or off
 	char current_image_path[CONFIG_FILE_PATH_SIZE];  // the path to the current image
 	int num_of_images;   						     // number of images in the directory given by the user in the configuration file
-	SPPoint* features = NULL;   					 // helper - holds the features of an images
+	SPPoint** features_per_image = NULL;   					 // helper - holds the features for each images
+	SPPoint* all_features = NULL;   				 // holds all features of all images
 	int* num_of_features; 							 // holds number of features extracted for each image
-	int last_num_of_features;						 // helper that holds the number of features of the last succesfully extracted image
-	KDTreeNode* kd_trees;							 // array holds a KDTree for each image
+	int total_num_of_features = 0;						 // the total number of extractred features from all images
+	KDTreeNode kd_tree;							 // array holds a KDTree for each image
 	int* closest_images; 						 // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
-	int error = 0;
 	int retval = 0;									//return value - default 0 on success
 
 	// validate command line arguments:
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 
 	switch(spLoggerCreate(logger_filename, logger_level)) {
 	   case SP_LOGGER_DEFINED:
-	        printf(LOGGER_ALREADY_DEFINED, logger_filename);
+	        printf(LOGGER_ALREADY_DEFINED, logger_filename); // todo should error or just continue(break)?
 	        break;
 		
 	   case SP_LOGGER_OUT_OF_MEMORY:
@@ -145,89 +145,84 @@ int main(int argc, char *argv[]) {
 
 	improc = new sp::ImageProc(config);
 
-	// allocate memory for the array of kd trees
-	if ((kd_trees = (KDTreeNode*)malloc(sizeof(*kd_trees) * num_of_images)) == NULL) {
+	if ((num_of_features = (int*)malloc(sizeof(*num_of_features) * num_of_images)) == NULL) {
 		//todo add log
 		retval = -1;
 		goto err;
 	}
 
-	if ((num_of_features = (int*)malloc(sizeof(int) * num_of_images)) == NULL) {
+	if ((features_per_image = (SPPoint**)malloc(sizeof(*features_per_image) * num_of_images)) == NULL) {
 		//todo add log
 		retval = -1;
 		goto err;
 	}
 
-	last_num_of_features = -1;
+
 	if (extraction_mode) {
 		// extract each image features and write them to file
-		for (i=0; (!error) & (i < num_of_images); i++) {	
+		for (i=0; i < num_of_images; i++) {	
 			// find image path
 			msg = spConfigGetImagePath(current_image_path, config, i);
 			if (msg != SP_CONFIG_SUCCESS) { // should not happen
-				error = 1;
-				break;//todo print error
+				retval = -1;
+				goto err; //todo print error
 			}
 
 			// extract image features
-			features = improc->getImageFeatures(current_image_path, i, &(num_of_features[i]));
-			last_num_of_features = num_of_features[i];
+			features_per_image[i] = improc->getImageFeatures(current_image_path, i, &(num_of_features[i]));
 
-			if (features == NULL) {
-				error = 1;
-				break;//todo print error
+			if (features_per_image[i] == NULL) {
+				retval = -1;
+				goto err; //todo print error
 			}
 
 			// write image features into file
-			if (writeImageFeaturesIntoFile(config, i, features, num_of_features[i]) == -1) {
-				error = 1;
-				break;//todo print error
+			if (writeImageFeaturesIntoFile(config, i, features_per_image[i], num_of_features[i]) == -1) {
+				retval = -1;
+				goto err; //todo print error
 			}
 
-			if ((kd_trees[i] = InitTree(features, num_of_features[i])) == NULL){
-				error = 1;
-				break;//no need to print error log since it is printed inside InitTree
-			}
-
-			// free the current image features
-			for (k=0; k<last_num_of_features; k++) {
-				spPointDestroy(features[k]);
-			}
+			total_num_of_features = total_num_of_features + num_of_features[i];
 		}
 		
 	}
 
 	else { // not extraction mode
-		for (i = 0; (!error) & (i < num_of_images); i++)
+		for (i = 0; i < num_of_images; i++)
 		{
-			if ((features = readImageFreaturesFromFile(config, i, &(num_of_features[i]))) == NULL) {
-				error = 1;
-				break; //todo print error
-			}
-			last_num_of_features = num_of_features[i];
-			
-			if ((kd_trees[i] = InitTree(features, num_of_features[i])) == NULL){
-				error = 1;
-				break; //todo no need to print error log since it is printed inside InitTree
+			if ((features_per_image[i] = readImageFreaturesFromFile(config, i, &(num_of_features[i]))) == NULL) {
+				retval = -1;
+				goto err; //todo print error
 			}
 
-			// free the current image features
-			for (k=0; k<last_num_of_features; k++) {
-				spPointDestroy(features[k]);
-			}
+			total_num_of_features = total_num_of_features + num_of_features[i];
 		}
 	}
 
-	// if an error occured in extraction mode or non-extraction mode - free everything needed
-	if (error)	{	
-		// free features of the current extracted image
-		for (k=0; k<last_num_of_features; k++) {
-			spPointDestroy(features[k]);
-		}
-		//print error  todo
+	if ((all_features = (SPPoint*)malloc(sizeof(*all_features) * total_num_of_features)) == NULL) {
+		//todo add log
 		retval = -1;
 		goto err;
 	}
+
+	// create one SPPoint array for all features images
+	for (i = 0; i < num_of_images; i ++)
+	{
+		for (j = 0; j < num_of_features[i]; j++)
+		{
+			if ((all_features[i*j] = spPointCopy(features_per_image[i][j])) == NULL) {
+				retval = -1;
+				goto err;//todo no need to print error log since it is printed inside InitTree
+			}
+			
+		}
+	}
+
+	if ((kd_tree = InitTree(all_features, total_num_of_features)) == NULL){
+		retval = -1;
+		goto err; //todo no need to print error log since it is printed inside InitTree
+	}
+
 
 	// get a query image from the user
 	printf(ENTER_AN_IMAGE_MSG);
@@ -255,7 +250,7 @@ int main(int argc, char *argv[]) {
 	
 	// find closest images to the query image
 	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
-									   kd_trees, num_of_images, num_of_features);
+									   kd_tree, num_of_images, num_of_features);
 
 	if (closest_images == NULL) { // error todo return this comment
 		// todo print error log
@@ -272,14 +267,13 @@ int main(int argc, char *argv[]) {
 		spLoggerDestroy();
 
 		// free the kd tree
-		if (kd_trees != NULL) {
-			for (j=0; j<num_of_images; j++) {
-				DestroyKDTreeNode(kd_trees[j]);
-			}
-			free(kd_trees);
-		}
+		DestroyKDTreeNode(kd_tree);
 
-		// free query features
+		spConfigDestroy(config);
+		free(closest_images);
+		free(num_of_features);
+
+		// free query_features
 		if (query_features != NULL) {
 			for (k=0; k<query_num_of_features; k++) {
 				spPointDestroy(query_features[k]);
@@ -287,10 +281,26 @@ int main(int argc, char *argv[]) {
 			free(query_features);
 		}
 
-		free(closest_images);
-		free(features);
-		free(num_of_features);
-		spConfigDestroy(config);
+		// free all_features
+		if (all_features != NULL) {
+			for (j=0; j<total_num_of_features; j++) {
+				spPointDestroy(all_features[j]);
+			}
+			free(all_features);
+		}
+
+		if (features_per_image != NULL) {
+			// free features_per_image
+			for (i = 0; i < num_of_images; i ++) {
+				if (features_per_image[i] != NULL) {
+					for (j = 0; j < num_of_features[i]; j++) {
+						spPointDestroy(features_per_image[i][j]);
+					}
+				}
+			}
+			free(features_per_image);
+		}
+
 
 	return retval;
 

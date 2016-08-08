@@ -33,7 +33,7 @@
  *             f2 is a SIFT descriptor of image i2 etc..)
  *           Then the array returned is {i1,i2,...,i_bestNFeatures}
  */
-int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode* databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage); // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
+int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage); // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
 
 
 #endif
