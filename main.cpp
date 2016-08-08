@@ -30,7 +30,6 @@ extern "C"{
 int main(int argc, char *argv[]) {
 	int i;
 	int j;
-	int k;
 	char config_filename[CONFIG_FILE_PATH_SIZE];     // the configuration file name
 	char query_image[CONFIG_FILE_PATH_SIZE];         // the query image 
 	char logger_filename[CONFIG_FILE_PATH_SIZE];	 // the logger filename in configuration file
@@ -275,16 +274,16 @@ int main(int argc, char *argv[]) {
 
 		// free query_features
 		if (query_features != NULL) {
-			for (k=0; k<query_num_of_features; k++) {
-				spPointDestroy(query_features[k]);
+			for (i=0; i<query_num_of_features; i++) {
+				spPointDestroy(query_features[i]);
 			}
 			free(query_features);
 		}
 
 		// free all_features
 		if (all_features != NULL) {
-			for (j=0; j<total_num_of_features; j++) {
-				spPointDestroy(all_features[j]);
+			for (i=0; i<total_num_of_features; i++) {
+				spPointDestroy(all_features[i]);
 			}
 			free(all_features);
 		}
