@@ -30,6 +30,7 @@ extern "C"{
 int main(int argc, char *argv[]) {
 	int i;
 	int j;
+	int counter;									// helper
 	char config_filename[CONFIG_FILE_PATH_SIZE];     // the configuration file name
 	char query_image[CONFIG_FILE_PATH_SIZE];         // the query image 
 	char logger_filename[CONFIG_FILE_PATH_SIZE];	 // the logger filename in configuration file
@@ -205,15 +206,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	// create one SPPoint array for all features images
+	counter = 0;
 	for (i = 0; i < num_of_images; i ++)
 	{
 		for (j = 0; j < num_of_features[i]; j++)
 		{
-			if ((all_features[i*j] = spPointCopy(features_per_image[i][j])) == NULL) {
+			if ((all_features[counter] = spPointCopy(features_per_image[i][j])) == NULL) {
 				retval = -1;
 				goto err;//todo no need to print error log since it is printed inside InitTree
 			}
-			
+			counter++;
 		}
 	}
 
