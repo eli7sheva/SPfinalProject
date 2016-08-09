@@ -205,6 +205,7 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
+
 	// create one SPPoint array for all features images
 	counter = 0;
 	for (i = 0; i < num_of_images; i ++)
@@ -215,6 +216,8 @@ int main(int argc, char *argv[]) {
 				retval = -1;
 				goto err;//todo no need to print error log since it is printed inside InitTree
 			}
+			//set the index of each point (feature) to be the number of the image it belongs to
+			spPointSetIndex(all_features[counter], i);
 			counter++;
 		}
 	}
@@ -230,7 +233,7 @@ int main(int argc, char *argv[]) {
 	fflush(NULL);
 	scanf("%s",query_image);
 
-	// get query image's deatures
+	// get query image's features
 	num_of_similar_images_to_find = spConfigGetNumOfSimilarImages(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) { // todo handle error differently
 		// // todo print log
