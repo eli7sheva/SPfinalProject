@@ -82,6 +82,14 @@ int spPointGetDimension(SPPoint point);
 int spPointGetIndex(SPPoint point);
 
 /**
+ * A setter for the index of the point
+ *
+ * @param point - The source point, index_val- the value to set for index
+ * @assert point != NULL
+ */
+void spPointSetIndex(SPPoint point, int index_val);
+
+/**
  * A getter for specific coordinate value
  *
  * @param point - The source point
@@ -92,6 +100,9 @@ int spPointGetIndex(SPPoint point);
  * The value of the given coordinate (p_axis will be returned)
  */
 double spPointGetAxisCoor(SPPoint point, int axis);
+
+
+
 
 /**
  * Calculates the L2-squared distance between p and q.

@@ -83,6 +83,12 @@ struct sp_point_t{
 		return point->index;
 	}
 
+	void spPointSetIndex(SPPoint point, int index_val){
+		assert (point != NULL);
+		point->index = index_val;
+		return;
+	}
+
 	double spPointGetAxisCoor(SPPoint point, int axis){
 		assert(point!=NULL && axis < point->dim);
 		return point->coordinates[axis];
