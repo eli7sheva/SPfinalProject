@@ -142,7 +142,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
  *
  * @param bestNFeatures     - The number of indexes to return.
  * @param featureA          - the feature which will be compared with the other descriptor
- * @param databaseFeatures  - An KD_ARRAY in which the features of the images are stored.
+ * @param databaseFeatures  - A KD_ARRAY in which the features of the images are stored.
  *                            The ith entry of the array corresponds to the features of the ith image in the database
  * @param numberOfImages    - The number of images in the database. (Number of entries in databaseFeatures)
  * @param nFeaturesPerImage - The number of features for each image. 

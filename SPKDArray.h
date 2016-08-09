@@ -76,7 +76,7 @@ SPKDArray Init(SPPoint* arr, int size);
  * 		NULL if allocation error occurred
  *
  */
-SPKDArray** Split(SPKDArray kdArr, int coor);
+SPKDArray* Split(SPKDArray kdArr, int coor);
 
 
 /**
