@@ -26,6 +26,26 @@ struct sp_KDArray_t{
 	int d; // number of dimensions of each point in array_of_points, and number of rows in matrix_of_sorted_indexes
 };
 
+SPPoint getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index){
+	assert (kdArray != NULL);
+	return spPointCopy(kdArray->array_of_points[index]);
+}
+
+int getValFromMatrixOfSortedIndexes(SPKDArray kdArray, int row, int col){
+	assert (kdArray != NULL);
+	return kdArray->matrix_of_sorted_indexes[row][col];
+}
+
+int getN(SPKDArray kdArray){
+	assert (kdArray != NULL);
+	return kdArray->n;
+}
+
+int getD(SPKDArray kdArray){
+	assert (kdArray != NULL);
+	return kdArray->d;
+}
+
 SPKDArray Init(SPPoint* arr, int size){
 	SPKDArray* KDArray = (SPKDArray*)malloc(sizeof(SPKDArray*));
 	int d = spPointGetDimension(arr[0]); // d = the dimension of the points (assuming dimension is the same for all points)

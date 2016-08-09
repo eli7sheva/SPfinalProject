@@ -12,6 +12,46 @@
 /** Type for defining SPKDArray **/
 typedef struct sp_KDArray_t* SPKDArray;
 
+/*
+ * getter to a point from array_of_points
+ *
+ * @param
+ * 		kdArray- the source SPKDArray
+ * 		index- the index of the point to be returned
+ * @assert kdArray != NULL
+ * @return a copy of the point from array_of_points that is in index index
+ */
+SPPoint getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index);
+
+/*
+ * getter to an index from matrix_of_sorted_indexes
+ * @param
+ * 		kdArray- the source SPKDArray
+ * 		row- the index of the row of the item to be returned
+ * 		col- the index of the column of the item to be returned
+ *  @assert kdArray != NULL
+ *  @return the value in index [row][col] from matrix_of_sorted_indexes
+ */
+int getValFromMatrixOfSortedIndexes(SPKDArray kdArray, int row, int col);
+
+/*
+ * getter to n
+ * @param
+ * 		kdArray- the source SPKDArray
+ * @assert kdArray != NULL
+ * @return kdArray->n
+ */
+int getN(SPKDArray kdArray);
+
+/*
+ * getter to d
+ * @param
+ * 		kdArray- the source SPKDArray
+ * @assert kdArray != NULL
+ * @return kdArray->d
+ */
+int getD(SPKDArray kdArray);
+
 /**
  * Initializes the kd-array with the data given by arr, and returns the kd-array
  * @param
@@ -19,7 +59,6 @@ typedef struct sp_KDArray_t* SPKDArray;
  * 		size: the number of points in arr
  * @return: kd-array object
  * 			NULL if size<1 or arr==NULL
- * 			NULL if the points in arr do not have the same dimension
  * 			NULL if the call to spPointCopy returned NULL
  * 			NULL if allocation error occurred
  */
