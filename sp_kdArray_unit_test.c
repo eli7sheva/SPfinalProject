@@ -60,11 +60,11 @@ static bool InitBasicTest(){
 	return true;
 }
 
-//check Init when size<1
+//check Init when the parameter size<1
 static bool InitInvalidParameterSize(){
 	int i;
 	SPPoint* point_array = getPointArray();
-	SPKDArray kdArray = Init(point_array,-5);
+	SPKDArray kdArray = Init(point_array,-5);// -5 is an invalid size
 	ASSERT_TRUE(kdArray==NULL);
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
@@ -74,7 +74,7 @@ static bool InitInvalidParameterSize(){
 	return true;
 }
 
-//check Init when arr==NULL
+//check Init when the parameter arr==NULL
 static bool InitInvalidParameterArr(){
 	SPPoint* point_array = NULL;
 	SPKDArray kdArray = Init(point_array,5);
@@ -105,13 +105,65 @@ static bool SplitBasicTest(){
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
 	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
-
+	SPPoint p00 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[0],0);
+	SPPoint p02 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[0],2);
+	SPPoint p11 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[1],1);
+	ASSERT_TRUE(getN(array_of_kdArrays[0]) == 3);
+	ASSERT_TRUE(getD(array_of_kdArrays[0]) == 2);
+	ASSERT_TRUE(getN(array_of_kdArrays[1]) == 2);
+	ASSERT_TRUE(getD(array_of_kdArrays[1]) == 2);
+	ASSERT_TRUE(spPointGetAxisCoor(p00, 1)==2.0);
+	ASSERT_TRUE(spPointGetAxisCoor(p02, 0)==3.0);
+	ASSERT_TRUE(spPointGetAxisCoor(p11, 1)==11.0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,2) == 2);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,1) == 2);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],0,1) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],1,0) == 1);
+	for (i=0;i<5;i++){
+		spPointDestroy(point_array[i]);
+	}
+	free(point_array);
+	destroyKDArray(kdArray);
+	destroyKDArray(array_of_kdArrays[0]);
+	destroyKDArray(array_of_kdArrays[1]);
+	free(array_of_kdArrays);
+	free(p00);
+	free(p02);
+	free(p11);
+	return true;
 }
 
+//check split when the parameter coor<0
+static bool SplitInvalidParameterCoor(){
+	int i;
+	SPPoint* point_array = getPointArray();
+	SPKDArray kdArray = Init(point_array,5);
+	SPKDArray* array_of_kdArrays = Split(kdArray, -1); // -1 is an invalid coordinate
+	ASSERT_TRUE(array_of_kdArrays==NULL);
+	for (i=0;i<5;i++){
+		spPointDestroy(point_array[i]);
+	}
+	free(point_array);
+	destroyKDArray(kdArray);
+	destroyKDArray(array_of_kdArrays[0]);
+	destroyKDArray(array_of_kdArrays[1]);
+	free(array_of_kdArrays);
+}
+
+//check split when the parameter kdArr==NULL
+static bool SplitInvalidParameterKdArr(){
+	SPKDArray kdArray=NULL;
+	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
+	ASSERT_TRUE(array_of_kdArrays==NULL);
+}
 
 int main() { //todo: how to run these tests if not with main?
 	RUN_TEST(InitBasicTest);
 	RUN_TEST(InitInvalidParameterSize);
 	RUN_TEST(InitInvalidParameterArr);
+	RUN_TEST(SplitBasicTest);
+	RUN_TEST(SplitInvalidParameterCoor);
+	RUN_TEST(SplitInvalidParameterKdArr);
 	return 0;
 }
