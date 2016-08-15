@@ -149,6 +149,7 @@ static bool SplitInvalidParameterCoor(){
 	destroyKDArray(array_of_kdArrays[0]);
 	destroyKDArray(array_of_kdArrays[1]);
 	free(array_of_kdArrays);
+	return true;
 }
 
 //check split when the parameter kdArr==NULL
@@ -156,6 +157,7 @@ static bool SplitInvalidParameterKdArr(){
 	SPKDArray kdArray=NULL;
 	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
 	ASSERT_TRUE(array_of_kdArrays==NULL);
+	return true;
 }
 
 int main() { //todo: how to run these tests if not with main?

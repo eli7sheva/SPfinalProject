@@ -17,7 +17,6 @@
 #define PARAMETER_COOR_INVALID "value of the parameter coor is invalid, must be coor>=0"
 #define PARAMETER_KDARR_INVALID "value of the parameter kdArr is invalid,cann't be NULL"
 
-//TODO: unit testing for all functions
 
 struct sp_KDArray_t{
 	SPPoint* array_of_points;
@@ -47,7 +46,7 @@ int getD(SPKDArray kdArray){
 }
 
 SPKDArray Init(SPPoint* arr, int size){
-	SPKDArray* KDArray = (SPKDArray*)malloc(sizeof(SPKDArray*));
+	SPKDArray KDArray = (SPKDArray)malloc(sizeof(SPKDArray));
 	int d = spPointGetDimension(arr[0]); // d = the dimension of the points (assuming dimension is the same for all points)
 	double** index_val_arr; //double array containing n rows. each row contains the index and the value of a specific coordinate in the point of that index
 	int i,j;
