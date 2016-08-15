@@ -938,6 +938,18 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
 }
 
 
+tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return MAX_SPREAD; //the default value of SPKDTreeSplitMethod
+	}
+
+	assert(msg != NULL);
+	*msg = SP_CONFIG_SUCCESS; // default is success
+
+	 return config->spKDTreeSplitMethod;
+}
+
 int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg){
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
