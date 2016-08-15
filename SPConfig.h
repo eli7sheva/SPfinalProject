@@ -25,6 +25,9 @@ typedef enum sp_config_msg_t {
 
 typedef struct sp_config_t* SPConfig;
 
+// split method enum
+typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT, ERROR} tree_split_method;
+
 /**
  * Creates a new system configuration struct. The configuration struct
  * is initialized based on the configuration file given by 'filename'.
@@ -190,6 +193,19 @@ SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg
  * - SP_CONFIG_SUCCESS - in case of success
  */
 int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns the value of the SYSTEM VARIABLE spKDTreeSplitMethod
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return RANDOM, MAX_SPREAD or  INCREMENTAL in success, ERROR otherwise.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
  * Returns the number of similar images to find of the PCA. i.e the value of spNumOfSimilarImages

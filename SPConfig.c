@@ -69,9 +69,6 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 #define ERROR_PARMETER_NOT_SET_MSG   "File: %s\nLine: %d\nMessage: Parameter %s is not set\n"
 
 
-// split method enum
-typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_method;
-
 #define SPLIT_METHOD_STR(method)                 \
     (RANDOM      == method ? "RANDOM"       :    \
     (MAX_SPREAD  == method ? "MAX_SPREAD"   :    \
@@ -941,7 +938,7 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
 tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
-		return MAX_SPREAD; //the default value of SPKDTreeSplitMethod
+		return ERROR;
 	}
 
 	assert(msg != NULL);
