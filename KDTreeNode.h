@@ -7,8 +7,10 @@
 
 #ifndef KDTREENODE_H_
 #define KDTREENODE_H_
+
 #include "SPKDArray.h"
 #include "SPBPriorityQueue.h"
+
 
 typedef struct sp_KDTreeNode_t* KDTreeNode;
 
@@ -38,7 +40,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
  *		NULL if arr==NULL, size<1 or call to other function returned NULL.
  *		 	 the relevant error message will be sent to Logger
  */
-KDTreeNode InitTree(SPPoint* arr, int size);
+KDTreeNode InitTree(SPPoint* arr, int size, int method);
 
 /*
  * the recursive function creating the KD tree

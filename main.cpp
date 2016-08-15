@@ -52,6 +52,9 @@ int main(int argc, char *argv[]) {
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
 	int retval = 0;									//return value - default 0 on success
+	int minGui;                                    // 1 if spMinimalGUI==true, 0 if spMinimalGUI==false
+	char* Prefix;                                  // the Prefix of the images path
+	char* Suffix; 									// the Suffix of the images path
 
 	// validate command line arguments:
 	// cmd line arguments are ok if there was no arguments specified (argc == 1) or two arguments specified ( -c and filname)
@@ -264,6 +267,39 @@ int main(int argc, char *argv[]) {
 
 	// // todo elisheva - show (display) closest_images images
 
+	//initialize minGui
+	minGui = spConfigGetpMinimalGUI(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		// // todo print log
+		retval = -1;
+		goto err;
+	}
+
+	//initialize Prefix
+	Prefix = spConfigGetspImagesPrefix(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		// // todo print log
+		retval = -1;
+		goto err;
+	}
+
+	//initialize Suffix
+	Suffix = spConfigGetspImagesSuffix(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		// // todo print log
+		retval = -1;
+		goto err;
+	}
+
+	//need to show images
+	if (minGui==1){
+
+	}
+
+	// i.e. minGui==0,  just need to print images path
+	else{
+
+	}
 
 
 	// done - destroy logger and free everything 
