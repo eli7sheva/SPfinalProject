@@ -3,6 +3,9 @@
 #include "main_aux.h"
 #include "SPLogger.h"
 
+#define ALLOC_ERROR_MSG "Allocation error"
+#define GENERAL_ERROR_MSG "An error occurred"
+
 /*
 * this function is called from qsort and it sorts array which each cell contains array of length two
 * this function sorts in ascending order by the first element of each cell.
@@ -234,6 +237,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
 
 int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage) { // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
     int i;
+    int j;
     int k;
     int* featureClosestImages; // array holds the spKNN indexes of the closest images to a feature of the  query
     double* hintsPerImage;  // array counts number of hints per image
@@ -284,4 +288,55 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 
     } 
     return closestImages;
+}
+
+
+/*@param spKNN             - The number of indexes to return.
+ *@param featureA          - the feature which will be compared with the other descriptor
+ *@param root              - A KDTreeNode representing the root of the KdTree
+ * 								in which the features of the images are stored.
+ * */
+//todo: finish comments on this function
+int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
+	int i;
+	int* best_spKNN_features;   // will hold bestSPKNNFeatures images indexes
+	int knnResult;              //the value returned from the call to knnResult. equals 1 iff the function ran with no problems
+	SPBPQueue bpq;              // the SPBPQueue where the kNearestNeighbors function will store the image indexes
+	SPListElement currElem;     //will hold the current element from bpq
+	SP_BPQUEUE_MSG dequeueMsg;  // the message returned from the call to spBPQueueDequeue
+
+	//create new SPBPQueue
+	bpq = spBPQueueCreate(spKNN);
+
+	//call kNearestNeighbors
+	knnResult = kNearestNeighbors(root, bpq, &featureA);
+	if (knnResult!=1){
+		return NULL;
+	}
+
+	//allocate memory for best_spKNN_features
+	if ((best_spKNN_features = (int*)malloc(spKNN*sizeof(int)))==NULL){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+		free(best_spKNN_features);
+		return NULL;
+	}
+
+	//move data from bpq to best_spKNN_features
+	for(i=0; i<spKNN; i++){
+		currElem =  spBPQueuePeek(bpq);
+		best_spKNN_features[i]=currElem->index; //the index of the element is the index of the image the feature is from
+		spListElementDestroy(currElem);
+		dequeueMsg = spBPQueueDequeue(bpq);
+		// a problem occurred during the call to spBPQueueDequeue
+		if (dequeueMsg!=SP_BPQUEUE_SUCCESS){
+			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+			spLoggerPrintspLoggerPrintDebug(dequeueMsg, __FILE__, __func__, __LINE__);
+			spBPQueueDestroy(bpq);
+			return NULL;
+		}
+
+	}
+	spBPQueueDestroy(bpq);
+
+	return best_spKNN_features;
 }

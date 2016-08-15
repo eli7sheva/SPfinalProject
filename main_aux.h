@@ -16,6 +16,7 @@
  * @param queryFeatures    - the features which will be compared with the other descriptor
  * @param databaseFeatures  - An KD_ARRAY in which the features of the images are stored.
  *                            The ith entry of the array corresponds to the features of the ith image in the database
+ *                            //TODO:reut- it is a kdTree not a kdArray, what do you mean about the ith entry?
  / @param queryNumOfFeatures - number of features in param queryFeatures
  * @param numberOfImages    - The number of images in the database. (Number of entries in databaseFeatures)
  * @param nFeaturesPerImage - The number of features for each image. 
