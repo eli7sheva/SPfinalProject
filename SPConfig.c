@@ -936,6 +936,7 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
 
 
 tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
+	//check config is a valid argument
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return ERROR;
@@ -945,6 +946,51 @@ tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFI
 	*msg = SP_CONFIG_SUCCESS; // default is success
 
 	 return config->spKDTreeSplitMethod;
+}
+
+int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg){
+	//check config is a valid argument
+	if (config == NULL) {
+	*msg = SP_CONFIG_INVALID_ARGUMENT;
+	return -1;
+	}
+
+	assert(msg != NULL);
+	*msg = SP_CONFIG_SUCCESS; // default is success
+
+	 if(config->spMinimalGUI==true){
+		 return 1;
+	 }
+
+	 //when config->spMinimalGUI==false
+	 return 0;
+}
+
+char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg){
+	//check config is a valid argument
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return NULL;
+	}
+
+	assert(msg != NULL);
+	 *msg = SP_CONFIG_SUCCESS; // default is success
+
+	 return config->spImagesPrefix;
+}
+
+
+char* spConfigGetspImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg){
+	//check config is a valid argument
+	if (config == NULL) {
+		*msg = SP_CONFIG_INVALID_ARGUMENT;
+		return NULL;
+	}
+
+	assert(msg != NULL);
+	*msg = SP_CONFIG_SUCCESS; // default is success
+
+	return config->spImagesSuffix;
 }
 
 int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg){

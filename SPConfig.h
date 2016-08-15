@@ -208,6 +208,45 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
 tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
+ * Returns the 0 or 1 based on the value of the SYSTEM VARIABLE MinimalGUI.
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return 1 if MinimalGUI==true,0 if MinimalGUI==false, or -1 if error occurred.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns the images path Prefix i.e. the value of spImagesPrefix
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return a char* representing the images path Prefix on success, or NULL if error occurred.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
+ * Returns the images path Suffix i.e. the value of spImagesSuffix
+ *
+ * @param config - the configuration structure
+ * @assert msg != NULL
+ * @param msg - pointer in which the msg returned by the function is stored
+ * @return a char* representing the images path Suffix on success, or NULL if error occurred.
+ *
+ * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
+ * - SP_CONFIG_SUCCESS - in case of success
+ */
+char* spConfigGetspImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg);
+
+/**
  * Returns the number of similar images to find of the PCA. i.e the value of spNumOfSimilarImages
  *
  * @param config - the configuration structure
