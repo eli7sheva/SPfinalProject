@@ -7,6 +7,11 @@
 #define GENERAL_ERROR_MSG "An error occurred"
 #define ALLOC_ERROR_MSG "An error occurred - allocation failure\n"
 #define INVALID_ARGUMENT "Invalid argument"
+#define PARAMETER_FEATURE_A_INVALID "value of the parameter featureA is invalid, cann't be NULL"
+#define PARAMETER_ROOT_INVALID "value of the parameter root is invalid, cann't be NULL"
+#define PARAMETER_SP_KNN_INVALID "value of the parameter spKNN is invalid, mast be spKNN>=1"
+#define SPBP_QUEUE_CREATE_RETURNED_NULL "the call to spBPQueueCreate returned NULL"
+#define KNN_RETURNED_NULL "the call to kNearestNeighbors returned NULL"
 
 /*
 * this function is called from qsort and it sorts array which each cell contains array of length two
@@ -130,128 +135,9 @@ int* nearestImages(double* arr, int size, int nearestNImages){
     return first_minimums;
 }
 
-
-/**
- * Given sift descriptors of the images in the database (databaseFeatures), finds the
- * closest bestNFeatures to a given SIFT feature (featureA). The function returns the
- * INDEXES of the images to which the closest features belong, stored in ascending order
- * (Closest feature image index is first, second closest feature image index is second, etc...).
- * Assumptions:
- *   - Tie break - In case featureA has the same distance ( k-nearest-neighbor) from two features,
- *     then the feature that corresponds to the smallest image
- *     index in the database is closer.
- *
- *   - The returned result may contain duplicates in case two features belongs to the same image.
- *
- *   - databaseFeatures is an array of two dimensional arrays, the number of elements
- *     in databaseFeatures is numberOfImages.
- *
- *   - Each entry in databaseFeatures corresponds to the features of some image in the database.
- *     The ith entry corresponds to the features of image_i in the database, and it is a two dimensional
- *     array of dimension nFeaturesPerImage[i]X128.
- *
- *   - The number of descriptors for the ith image is nFeaturesPerImage[i]
- *
- * @param bestNFeatures     - The number of indexes to return.
- * @param featureA          - the feature which will be compared with the other descriptor
- * @param databaseFeatures  - A KD_ARRAY in which the features of the images are stored.
- *                            The ith entry of the array corresponds to the features of the ith image in the database
- * @param numberOfImages    - The number of images in the database. (Number of entries in databaseFeatures)
- * @param nFeaturesPerImage - The number of features for each image. 
- *
- * Note: prints errors to logger
- * assumes Logger is initialized
- *
- * @return - NULL if either the following:
- *           * featureA is NULL
- *           * databaseFeatures is NULL
- *           * numberOfImages <= 1
- *           * nFeaturesPerImage is NULL
- *           * allocation error occurred
- *           otherwise, an array of size bestNFeatures is returned such that:
- *           * Given that f1, f2, ... the closest features to featureA (i.e d(featureA,f1) <= d(featureA,f2) <= ...)
- *           * i1, i2, .... are the indexes of the images to which fi belongs (i.e f1 is a SIFT descriptor of image i1,
- *             f2 is a SIFT descriptor of image i2 etc..)
- *           Then the array returned is {i1,i2,...,i_bestNFeatures}
- */
-int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA, 
-        KDTreeNode databaseFeatures, int numberOfImages,
-        int* nFeaturesPerImage) {
-
-
-    int image, feature;             // for iteration
-    double **all_features_dist;     // will hold distance and image index for every feature
-    double current_dist;            // will hold the current features distance
-    int total_num_of_features = 0;  // amount of all features in all images
-    int feature_counter = 0;        // count number of features passed
-    int * best_n_features_images;   // will hold bestNFeatures images indexes
-    // return NULL if one of the parameters is not initialized
-    if (!featureA || !databaseFeatures || (numberOfImages <=1) || !nFeaturesPerImage) {
-        spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
-        return NULL;
-    }
-
-    // find total amount of features (including all images)
-    for (image = 0; image < numberOfImages; image++) {
-        total_num_of_features += nFeaturesPerImage[image];
-    }
-
-    // allocate dynamic memory and return NULL if allocation fails
-    if ((all_features_dist = (double**)malloc(total_num_of_features*sizeof(double*))) == NULL) {
-        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-        fflush(NULL);
-        return NULL;
-    }
-
-
-    for (feature = 0; feature < total_num_of_features; feature++){
-        if ((all_features_dist[feature] = (double *)malloc(2*sizeof(double))) == NULL ) {
-            spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-            fflush(NULL);
-            free(all_features_dist);
-            return NULL;
-        }
-    }
-
-    if ((best_n_features_images = (int *)malloc(bestNFeatures*sizeof(int))) == NULL ){
-        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-        free(all_features_dist);
-        fflush(NULL);
-        return NULL;
-    }
-
-
-    // calc distance of each feature with featureA
-    for (image = 0; image < numberOfImages; image++) {
-        for (feature = 0; feature < nFeaturesPerImage[image]; feature++) {
-
-            //todo Elisheve: change kNearestNeighbor to your function (change input and output as well) and
-            // iterate over the points in databaseFeatures
-            current_dist = kNearestNeighbor(featureA, databaseFeatures[image][feature]); // compare between two features.
-            ///todo handle kNearestNeighbor error and print log
-            // save distance (at index 0) and image index (at index 1) for every feature
-            all_features_dist[feature_counter][0] = current_dist;
-            all_features_dist[feature_counter][1] = (double)image; // image index
-            feature_counter++;
-        }
-    }
-    // now feature_counter is equal to total_num_of_features
-
-    // sort by distances (from lowest to highest) and keep images indexes sorted too
-    qsort(all_features_dist, total_num_of_features, sizeof(double*), compare);
-
-    // take only bestNFeatures first features images indexes 
-    for (feature = 0; feature < bestNFeatures; feature++) {
-        best_n_features_images[feature] = (int)all_features_dist[feature][1]; // imagen index
-    }
-
-    free(all_features_dist); // free unused memory
-    return best_n_features_images;
-}
-
-
 int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage) { // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
-    int i;
+    //todo: is the parameter nFeaturesPerImage needed? i don't need it for knn, but do we need for somthing else?
+	int i;
     int j;
     int k;
     int* featureClosestImages; // array holds the spKNN indexes of the closest images to a feature of the  query
@@ -272,8 +158,8 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
     // for each feature of query calculate the spBestSIFTL2SquaredDistance
     for (i=0; i< queryNumOfFeatures; i++){
     	//todo: in next line replace getNClosestImagesForFeature with getSPKNNClosestFeatures
-        featureClosestImages = getNClosestImagesForFeature(bestNFeatures, queryFeatures[i], //todo find another way to get spKNN
-            databaseFeatures, numberOfImages, nFeaturesPerImage);
+        featureClosestImages = getSPKNNClosestFeatures(bestNFeatures, queryFeatures[i], //todo find another way to get spKNN
+            databaseFeatures);
 
         if (featureClosestImages == NULL) {
             // free everythin
@@ -305,12 +191,40 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 }
 
 
-/*@param spKNN             - The number of indexes to return.
+/**
+ * Given a KDTreeNode containing all points (features), finds the
+ * closest spKNN to a given feature (featureA). The function returns the
+ * INDEXES of the IMAGES to which the closest features belong, stored in an array in ascending order
+ * (Closest feature image index is first, second closest feature image index is second, etc...).
+ * Assumptions:
+ *   - Tie break - In case featureA has the same distance ( k-nearest-neighbor) from two features,
+ *     then the feature that corresponds to the smallest image
+ *     index in the database is closer.
+ *
+ *   - The returned result may contain duplicates in case two features belongs to the same image.
+ *
+ *@param spKNN             - The number of indexes to return.
  *@param featureA          - the feature which will be compared with the other descriptor
  *@param root              - A KDTreeNode representing the root of the KdTree
  * 								in which the features of the images are stored.
- * */
-//todo: finish comments on this function
+ *
+ * Note: prints errors to logger
+ * assumes Logger is initialized
+ *
+ * @return - NULL if either the following:
+ *           	* featureA is NULL
+ *           	* root is NULL
+ *           	* spKNN < 1
+ *           	* call to spBPQueueCreate returned NULL
+ *           	* call to kNearestNeighbors failed
+ *           	* call to spBPQueueDequeue failed
+ *           	* allocation error occurred
+ *           otherwise, an array of size spKNN is returned such that:
+ *           * Given that f1, f2, ... the closest features to featureA (i.e d(featureA,f1) <= d(featureA,f2) <= ...)
+ *           * i1, i2, .... are the indexes of the images to which fi belongs (i.e f1 is a SIFT descriptor of image i1,
+ *             f2 is a SIFT descriptor of image i2 etc..)
+ *           Then the array returned is {i1,i2,...,i_spKNN}
+ */
 int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 	int i;
 	int* best_spKNN_features;   // will hold bestSPKNNFeatures images indexes
@@ -319,12 +233,37 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 	SPListElement currElem;     //will hold the current element from bpq
 	SP_BPQUEUE_MSG dequeueMsg;  // the message returned from the call to spBPQueueDequeue
 
+	//check validation of parameters
+
+	if (spKNN<1){
+		spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_SP_KNN_INVALID, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if (featureA==NULL){
+		spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_FEATURE_A_INVALID, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if (root==NULL){ //|| root==NULL || spKNN<1){
+		spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_ROOT_INVALID, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+
 	//create new SPBPQueue
 	bpq = spBPQueueCreate(spKNN);
+	if (bpq==NULL){
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(SPBP_QUEUE_CREATE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
 
 	//call kNearestNeighbors
 	knnResult = kNearestNeighbors(root, bpq, &featureA);
 	if (knnResult!=1){
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(KNN_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -341,7 +280,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 		best_spKNN_features[i]=currElem->index; //the index of the element is the index of the image the feature is from
 		spListElementDestroy(currElem);
 		dequeueMsg = spBPQueueDequeue(bpq);
-		// a problem occurred during the call to spBPQueueDequeue
+		// if a problem occurred during the call to spBPQueueDequeue
 		if (dequeueMsg!=SP_BPQUEUE_SUCCESS){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintspLoggerPrintDebug(dequeueMsg, __FILE__, __func__, __LINE__);
