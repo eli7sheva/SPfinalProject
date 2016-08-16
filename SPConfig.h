@@ -206,6 +206,7 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
+ // CR: change function name to spConfigGetKDTreeSplitMethod (without sp) (todo)
 tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
@@ -233,6 +234,7 @@ int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg);
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
+ //CR: change function name to spConfigGetImagesPrefix (without the sp) (todo)
 char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
@@ -246,6 +248,7 @@ char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg);
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
+ //CR: change function name to spConfigGetspImagesSuffix (without the sp) (todo)
 char* spConfigGetspImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
