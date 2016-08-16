@@ -25,6 +25,13 @@
 #define MAX_LINE_SIZE		 1024     
 #define STRING_NULL_TERMINATOR 		'\0'
 
+
+#define ERROR_WRITING_TO_FEATURES_FILE "Error writing to features file"
+#define ERROR_OPENING_FEATURES_FILE "Error while opening features file"
+#define ERROR_WHILE_READING_FEATURES_FILE "Error while reading features file"
+#define ERROR_READING_CONFIG_INVALID_ARG "An error occurred - invalid argument" 
+#define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure"
+
 /**
  * replaces the suffix of a string
  *
@@ -72,11 +79,11 @@ void replaceSuffix(const char* input, char* new_suffix, char* output) {
  * - SP_CONFIG_INDEX_OUT_OF_RANGE - if index >= spNumOfImages
  * - SP_CONFIG_SUCCESS - in case of success
  */
-SP_CONFIG_MSG spConfigGetImageFeaturesFilePath(const SPConfig config, int index, char* featuresPath) {
+SP_CONFIG_MSG getImageFeaturesFilePath(const SPConfig config, int index, char* featuresPath) {
 	SP_CONFIG_MSG msg;
 	char imagePath[MAX_PATH_SIZE];
 	if (( msg = spConfigGetImagePath(imagePath, config, index)) != SP_CONFIG_SUCCESS) {
-		// spLoggerPrintError(IMAGE_PATH_ERROR, __FILE__, __func__, __LINE__); todo
+		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG, __FILE__, __func__, __LINE__);
 		return msg;
 	}
 	replaceSuffix(imagePath, FEATURES_FILE_SUFFIX, featuresPath);
@@ -103,6 +110,7 @@ double* parseCoorLineFormat(char* line, int dim) {
 	// allocate coordinates array
 	double* coordinates = (double*)malloc(dim*sizeof(double));
 	if (coordinates == NULL) {
+		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -143,13 +151,15 @@ int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPP
 	int axis;
 
 	// find features file path
-	msg = spConfigGetImageFeaturesFilePath(config, image_index, features_filename);
+	msg = getImageFeaturesFilePath(config, image_index, features_filename);
 	if (msg != SP_CONFIG_SUCCESS) { // should not happen
+		//error is printed inside function
 		return -1;
 	}
 
 	ofp = fopen(features_filename, "w");
     if(ofp == NULL) {
+    	spLoggerPrintError(ERROR_OPENING_FEATURES_FILE, __FILE__, __func__, __LINE__);
     	return -1;
     }
 
@@ -157,6 +167,7 @@ int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPP
     // write header (image index and number of features) to file 
 	if (fprintf(ofp, FEATURES_FILE_HEADER_FORMAT, image_index, num_of_features) < 0) {
 		fclose(ofp);
+    	spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
 		return -1;
 	}
 
@@ -165,6 +176,7 @@ int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPP
 		dim = spPointGetDimension(features[i]);
 		// write dim and index
 		if (fprintf(ofp, FEATURES_FILE_UNIT_FORMAT, spPointGetIndex(features[i]), dim) < 0) {
+    		spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
 			fclose(ofp);
 			return -1;
 		}
@@ -172,6 +184,7 @@ int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPP
 		// write coordinates
 		for (axis = 0 ; axis < dim -1; axis++) {
 			if (fprintf(ofp, FEATURES_FILE_COOR_FORMAT, spPointGetAxisCoor(features[i], axis))< 0) {
+ 		   		spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
 				fclose(ofp);
 				return -1;
 			}
@@ -179,6 +192,7 @@ int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPP
 		
 		// write last coordinate
 		if (fprintf(ofp, FEATURES_FILE_LAST_COOR_FORMAT, spPointGetAxisCoor(features[i], axis))< 0) {
+ 		   	spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
 			fclose(ofp);
 			return -1;
 		}
@@ -216,15 +230,16 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 	double* coordinates;
 
 	// get image's features file name and open it 
-	if ((spConfigGetImageFeaturesFilePath(config, image_index, features_filename)) != SP_CONFIG_SUCCESS) {
+	if ((getImageFeaturesFilePath(config, image_index, features_filename)) != SP_CONFIG_SUCCESS) {
+		//error is printed inside function
 		return NULL;
 	}
 
 	ifp = fopen(features_filename, "r");
 
     if(ifp == NULL) {
-       // *msg = SP_CONFIG_CANNOT_OPEN_FILE; // todo keep msg?
-       return NULL;
+		spLoggerPrintError(ERROR_OPENING_FEATURES_FILE, __FILE__, __func__, __LINE__);
+		return NULL;
     }
 
 
@@ -235,7 +250,7 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 	*num_of_features = atoi(line);
 
 	if ((features = (SPPoint*)malloc(sizeof(*features)*(*num_of_features))) == NULL) { // todo check this is ok
-		// *msg = SP_CONFIG_ALLOC_FAIL; todo remove
+		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		fclose(ifp);
 		return NULL;
 	}
@@ -259,6 +274,7 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 		}
 		fclose(ifp);
 		free(features);
+		spLoggerPrintError(ERROR_WHILE_READING_FEATURES_FILE, __FILE__, __func__, __LINE__);	
 		return NULL;
 	}
 

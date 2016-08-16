@@ -50,7 +50,7 @@ typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT, ERROR} tree_s
  * - SP_CONFIG_MISSING_NUM_IMAGES - if spNumOfImages is missing
  * - SP_CONFIG_SUCCESS - in case of success
  *
- *
+ * Note - error will be printed in all cases but not in case of SP_CONFIG_CANNOT_OPEN_FILE
  */
 SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg);
 

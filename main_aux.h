@@ -21,6 +21,9 @@
  * @param numberOfImages    - The number of images in the database. (Number of entries in databaseFeatures)
  * @param nFeaturesPerImage - The number of features for each image. 
  *
+ * Note: prints errors to logger
+ * assumes Logger is initialized
+ *
  * @return - NULL if either the following:
  *           * queryFeatures is NULL
  *           * databaseFeatures is NULL

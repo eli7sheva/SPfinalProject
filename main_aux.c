@@ -5,6 +5,8 @@
 
 #define ALLOC_ERROR_MSG "Allocation error"
 #define GENERAL_ERROR_MSG "An error occurred"
+#define ALLOC_ERROR_MSG "An error occurred - allocation failure\n"
+#define INVALID_ARGUMENT "Invalid argument"
 
 /*
 * this function is called from qsort and it sorts array which each cell contains array of length two
@@ -58,6 +60,12 @@ int compare(const void *a, const void * b) {
   * @param arr - array of L2-Squared distances 
   * @param size - the size of array arr
   * @param nearestNImages the number of the best (closest) distances to find
+  * 
+  * Note: prints errors to logger
+  * assumes Logger is initialized
+  *
+  * returns an array containing the indexes of the lowest nearestNImages numbers from the original array
+  *         or NULL in case of error
   */
 int* nearestImages(double* arr, int size, int nearestNImages){
     /*
@@ -72,19 +80,20 @@ int* nearestImages(double* arr, int size, int nearestNImages){
 
     // if asked to find miminums more than the values in the array, return NULL
     if (nearestNImages > size) {
+        spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
         return NULL;
     }
 
     // allocate array of minimums (size of nearestNImages)
     first_minimums = (int*) malloc(nearestNImages*sizeof(int));
     if (first_minimums == NULL){
-        printf(ALLOCATION_FAILURE_MSG);
+        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
         fflush(NULL);
         return NULL;
     }
 
     if ((arr_with_indixes = (double**)malloc(size*sizeof(double*))) == NULL) {
-        printf(ALLOCATION_FAILURE_MSG);
+        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
         free(first_minimums);
         fflush(NULL);
         return NULL;
@@ -92,7 +101,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
 
     for (i = 0; i < size; i++){
         if ((arr_with_indixes[i] = (double *)malloc(2*sizeof(double))) == NULL ) {
-            printf(ALLOCATION_FAILURE_MSG);
+            spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
             free(first_minimums);
             for (j=0;j<i;j++){
                 free(arr_with_indixes[j]);
@@ -149,6 +158,10 @@ int* nearestImages(double* arr, int size, int nearestNImages){
  *                            The ith entry of the array corresponds to the features of the ith image in the database
  * @param numberOfImages    - The number of images in the database. (Number of entries in databaseFeatures)
  * @param nFeaturesPerImage - The number of features for each image. 
+ *
+ * Note: prints errors to logger
+ * assumes Logger is initialized
+ *
  * @return - NULL if either the following:
  *           * featureA is NULL
  *           * databaseFeatures is NULL
@@ -174,6 +187,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
     int * best_n_features_images;   // will hold bestNFeatures images indexes
     // return NULL if one of the parameters is not initialized
     if (!featureA || !databaseFeatures || (numberOfImages <=1) || !nFeaturesPerImage) {
+        spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
         return NULL;
     }
 
@@ -184,7 +198,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
 
     // allocate dynamic memory and return NULL if allocation fails
     if ((all_features_dist = (double**)malloc(total_num_of_features*sizeof(double*))) == NULL) {
-        printf(ALLOCATION_FAILURE_MSG);
+        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
         fflush(NULL);
         return NULL;
     }
@@ -192,7 +206,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
 
     for (feature = 0; feature < total_num_of_features; feature++){
         if ((all_features_dist[feature] = (double *)malloc(2*sizeof(double))) == NULL ) {
-            printf(ALLOCATION_FAILURE_MSG);
+            spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
             fflush(NULL);
             free(all_features_dist);
             return NULL;
@@ -200,7 +214,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
     }
 
     if ((best_n_features_images = (int *)malloc(bestNFeatures*sizeof(int))) == NULL ){
-        printf(ALLOCATION_FAILURE_MSG);
+        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
         free(all_features_dist);
         fflush(NULL);
         return NULL;
@@ -214,6 +228,7 @@ int* getNClosestImagesForFeature(int bestNFeatures, SPPoint* featureA,
             //todo Elisheve: change kNearestNeighbor to your function (change input and output as well) and
             // iterate over the points in databaseFeatures
             current_dist = kNearestNeighbor(featureA, databaseFeatures[image][feature]); // compare between two features.
+            ///todo handle kNearestNeighbor error and print log
             // save distance (at index 0) and image index (at index 1) for every feature
             all_features_dist[feature_counter][0] = current_dist;
             all_features_dist[feature_counter][1] = (double)image; // image index
@@ -245,12 +260,12 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 
     // return NULL if one of the parameters is not initialized
     if (!queryFeatures || !databaseFeatures || (queryNumOfFeatures <=1) || (numberOfImages <=1) || !nFeaturesPerImage) {
-     //todo  wrom argument error 
+        spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
         return NULL;
     }
 
     if ((hintsPerImage = (double*)calloc(numberOfImages, sizeof(double))) == NULL) {
-        //todo  allocation error 
+        spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
         return NULL;
     }
 
@@ -261,11 +276,10 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
             databaseFeatures, numberOfImages, nFeaturesPerImage);
 
         if (featureClosestImages == NULL) {
-            // free everything
-            // todo error and print log
+            // free everythin
             free(hintsPerImage);
             free(featureClosestImages);
-            return NULL; // todo log
+            return NULL; // error log is printed inside getNClosestImagesForFeature
         }
 
         // Counting hits
@@ -279,13 +293,12 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
     }
 
     // find the nearest images 
-    closestImages = nearestImages(hintsPerImage, numberOfImages, nearestKImages); // todo fund another way to get spNumOfSimilarImages
+    closestImages = nearestImages(hintsPerImage, numberOfImages, nearestKImages); // todo find another way to get spNumOfSimilarImages
     if (closestImages == NULL) {
-        //todo  allocation error 
         // free everything
         free(hintsPerImage);
         free(featureClosestImages);
-        return NULL; // todo log
+        return NULL; // error log is printed inside nearestImages
 
     } 
     return closestImages;

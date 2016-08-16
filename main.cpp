@@ -12,49 +12,61 @@ extern "C"{
 #include "SPImageProc.h"
 
 
-#define DEFAULT_CONFIG_FILENAME "spcbir.config"
-#define INVALID_CMD_LINE_MSG "Invalid command line : use -c <config_filename>\n"
-#define ERROR_OPENING_CONFIG_FILE_MSG "The configuration file %s couldn’t be open\n"
-#define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG "The default configuration file %s couldn’t be open\n"
-#define ERROR_OPENING_LOGGER_FILE_MSG "The logger file file %s couldn’t be open\n"
-#define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
-#define LOGGER_ALREADY_DEFINED "logger file %s is already defined.\n"
-#define CMD_LINE_CONFIG_FILENAME_FLAG "-c"
-#define ERROR_MEMORY_ALLOC_MSG "Error allocating memory\n"
-#define CONFIG_FILE_PATH_SIZE      1024	 // the path of any file contains no more than 1024 characters
-#define ENTER_AN_IMAGE_MSG "Please enter an image path:\n"
+#define DEFAULT_CONFIG_FILENAME 	  			"spcbir.config"  // default configuration file name
+#define CMD_LINE_CONFIG_FILENAME_FLAG 			"-c"   // the commang ine flag
+#define CONFIG_FILE_PATH_SIZE      	  			1024   // the maximum length  of path to any file
 
+// messaged to print to stdout
+#define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
+#define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn’t be open\n"
+#define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn’t be open\n"
+#define ERROR_OPENING_LOGGER_FILE_MSG			"The logger file file %s couldn’t be open\n"
+#define ALLOCATION_FAILURE_MSG 					"An error occurred - allocation failure\n"
+#define LOGGER_ALREADY_DEFINED 					"logger file %s is already defined.\n"
+#define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
+#define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
+#define ERROR_READING_CONFIG_INVALID_ARG_MSG 	"While reading configuration parameter - invalid argument\n"
 
-
+// logger messages (no new line at the end since it is added automatically by the logger)
+#define ERROR_READING_CONFIG_INVALID_ARG_LOG 	"While reading configuration parameter - invalid argument"
+#define INITIALIZING_LOGGER_INFO_LOG 			"Initializing logger, reading logger parameters from configuration"
+#define CHECK_EXTRACTION_MODE_INFO_LOG 			"Checking if extraction mode is set..."
+#define USE_EXTRACTION_MODE_LOG 				"Extraction mode is set"
+#define USE_NOT_EXTRACTION_MODE_LOG 			"Extraction mode is not set"
+#define EXTRACT_IMAGES_FEATURES_INFO_LOG 		"Extracting the features of each image and storing them into files..."
+#define READ_FEATURES_FROM_FILE_LOG 			"Reading extracted images' features from features files.."
+#define STORE_FEATURES_INTO_KD_TREE_LOG 		"Storing all extracted features into kd tree..."
+#define EXTRACT_QUERY_IMAGE_FEATURES_LOG 		"Extracting query image features..."
+#define DONE_LOG 								"Done."
 
 int main(int argc, char *argv[]) {
 	int i;
 	int j;
 	int counter;									// helper
-	char config_filename[CONFIG_FILE_PATH_SIZE];     // the configuration file name
-	char query_image[CONFIG_FILE_PATH_SIZE];         // the query image 
-	char logger_filename[CONFIG_FILE_PATH_SIZE];	 // the logger filename in configuration file
-	SP_LOGGER_LEVEL logger_level;                    // the logger level in configuration file
-	int knn;										 // the number of similar features in each image to find (spKNN from configuration file)
-	int num_of_similar_images_to_find;               // the number of similar images (to the query) to find (from configuration file)
-	int query_num_of_features;					 // number of features in query image
-	SPPoint* query_features; 					 // all query features
-	SPConfig config;								 // hold configuration parameters
-	bool extraction_mode;							 //indicates if extraction mode on or off
-	char current_image_path[CONFIG_FILE_PATH_SIZE];  // the path to the current image
-	int num_of_images;   						     // number of images in the directory given by the user in the configuration file
-	SPPoint** features_per_image = NULL;   					 // helper - holds the features for each images
-	SPPoint* all_features = NULL;   				 // holds all features of all images
-	int* num_of_features; 							 // holds number of features extracted for each image
-	int total_num_of_features = 0;						 // the total number of extractred features from all images
-	KDTreeNode kd_tree;							 // array holds a KDTree for each image
-	int* closest_images; 						 // array holds the spNumOfSimilarImages indexes of the closest images to the query image
+	char config_filename[CONFIG_FILE_PATH_SIZE];    // the configuration file name
+	char query_image[CONFIG_FILE_PATH_SIZE];        // the query image 
+	char logger_filename[CONFIG_FILE_PATH_SIZE];	// the logger filename in configuration file
+	SP_LOGGER_LEVEL logger_level;                   // the logger level in configuration file
+	int knn;										// the number of similar features in each image to find (spKNN from configuration file)
+	int num_of_similar_images_to_find;              // the number of similar images (to the query) to find (from configuration file)
+	int query_num_of_features;					    // number of features in query image
+	SPPoint* query_features; 					    // all query features
+	SPConfig config;								// hold configuration parameters
+	bool extraction_mode;							// indicates if extraction mode on or off
+	char current_image_path[CONFIG_FILE_PATH_SIZE]; // the path to the current image
+	int num_of_images;   						    // number of images in the directory given by the user in the configuration file
+	SPPoint** features_per_image = NULL;   			// helper - holds the features for each images
+	SPPoint* all_features = NULL;   				// holds all features of all images
+	int* num_of_features; 							// holds number of features extracted for each image
+	int total_num_of_features = 0;					// the total number of extractred features from all images
+	KDTreeNode kd_tree;							    // array holds a KDTree for each image
+	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
+	int retval = 0;									// return value - default 0 on success
+	int minGui;                                     // 1 if spMinimalGUI==true, 0 if spMinimalGUI==false
+	char* prefix;                                   // the prefix of the images path
+	char* suffix; 									// the suffix of the images path
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
-	int retval = 0;									//return value - default 0 on success
-	int minGui;                                    // 1 if spMinimalGUI==true, 0 if spMinimalGUI==false
-	char* Prefix;                                  // the Prefix of the images path
-	char* Suffix; 									// the Suffix of the images path
 
 	// validate command line arguments:
 	// cmd line arguments are ok if there was no arguments specified (argc == 1) or two arguments specified ( -c and filname)
@@ -71,9 +83,8 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (msg != SP_CONFIG_SUCCESS) {
-			//todo add log
 			retval = -1;
-			goto err;
+			goto err; // error is printed inside spConfigCreate
 		}
 	}
 	else { // argc == 3
@@ -81,7 +92,6 @@ int main(int argc, char *argv[]) {
 		// check that second argument is the -c flag
 		if (strcmp(argv[1], CMD_LINE_CONFIG_FILENAME_FLAG) != 0) {
 			printf(INVALID_CMD_LINE_MSG);
-			//todo add log
 			retval = -1;
 			goto err;
 		}
@@ -94,17 +104,16 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (msg != SP_CONFIG_SUCCESS) {
-			//todo add log
 			retval = -1;
-			goto err;
+			goto err; // error is printed inside spConfigCreate
 		}
 	}
 	
 	// initiate logger
+	spLoggerPrintInfo(INITIALIZING_LOGGER_INFO_LOG)
 	logger_level = spConfigGetLoggerLevel(config, &msg);
 	if ((msg != SP_CONFIG_SUCCESS) || (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS)) {
-		// spLoggerPrintError(NUM_OF_IMAGES_ERROR, __FILE__, __func__, __LINE__);
-		//todo add log
+		printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
 		retval = -1;
 		goto err;
 	}
@@ -115,13 +124,11 @@ int main(int argc, char *argv[]) {
 	        break;
 		
 	   case SP_LOGGER_OUT_OF_MEMORY:
-		    //todo change to  log
 		    printf(ALLOCATION_FAILURE_MSG);
 			retval = -1;
 			goto err;
 	  
 	  	case SP_LOGGER_CANNOT_OPEN_FILE:
-			//todo change to log
 	  		printf(ERROR_OPENING_LOGGER_FILE_MSG, logger_filename);
 			retval = -1;
 			goto err;
@@ -133,15 +140,15 @@ int main(int argc, char *argv[]) {
 	// get number of images from configuration
 	num_of_images = spConfigGetNumOfImages(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		// spLoggerPrintError(NUM_OF_IMAGES_ERROR, __FILE__, __func__, __LINE__);
-		//todo add log
+		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
 
+	spLoggerPrintInfo(CHECK_EXTRACTION_MODE_INFO_LOG);
 	extraction_mode = spConfigIsExtractionMode(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		//todo add log
+		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
@@ -149,26 +156,29 @@ int main(int argc, char *argv[]) {
 	improc = new sp::ImageProc(config);
 
 	if ((num_of_features = (int*)malloc(sizeof(*num_of_features) * num_of_images)) == NULL) {
-		//todo add log
+		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
 
 	if ((features_per_image = (SPPoint**)malloc(sizeof(*features_per_image) * num_of_images)) == NULL) {
-		//todo add log
+		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
 
 
 	if (extraction_mode) {
+		spLoggerPrintMsg(USE_EXTRACTION_MODE_LOG);
+		spLoggerPrintInfo(EXTRACT_IMAGES_FEATURES_INFO_LOG);
 		// extract each image features and write them to file
 		for (i=0; i < num_of_images; i++) {	
 			// find image path
 			msg = spConfigGetImagePath(current_image_path, config, i);
 			if (msg != SP_CONFIG_SUCCESS) { // should not happen
+				spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
 				retval = -1;
-				goto err; //todo print error
+				goto err;
 			}
 
 			// extract image features
@@ -176,13 +186,14 @@ int main(int argc, char *argv[]) {
 
 			if (features_per_image[i] == NULL) {
 				retval = -1;
-				goto err; //todo print error
+				goto err; // error is printed inside  getImageFeatures
 			}
 
+			spLoggerPrintDebug("read %d features from image image index %d", num_of_features[i], i, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
 			// write image features into file
 			if (writeImageFeaturesIntoFile(config, i, features_per_image[i], num_of_features[i]) == -1) {
 				retval = -1;
-				goto err; //todo print error
+				goto err; // error is printed inside writeImageFeaturesIntoFile
 			}
 
 			total_num_of_features = total_num_of_features + num_of_features[i];
@@ -191,19 +202,25 @@ int main(int argc, char *argv[]) {
 	}
 
 	else { // not extraction mode
+		spLoggerPrintMsg(USE_NOT_EXTRACTION_MODE_LOG);
+		spLoggerPrintInfo(READ_FEATURES_FROM_FILE_LOG);
 		for (i = 0; i < num_of_images; i++)
 		{
 			if ((features_per_image[i] = readImageFreaturesFromFile(config, i, &(num_of_features[i]))) == NULL) {
 				retval = -1;
-				goto err; //todo print error
+				goto err; // error is printed inside readImageFreaturesFromFile
 			}
 
+			spLoggerPrintDebug("read %d features from image image index %d", num_of_features[i], i, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
 			total_num_of_features = total_num_of_features + num_of_features[i];
 		}
 	}
+	
+	spLoggerPrintDebug("total number of features is %d", total_num_of_features, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
+	spLoggerPrintDebug(STORE_FEATURES_INTO_KD_TREE_LOG, __FILE__, __func__, __LINE__);
 
 	if ((all_features = (SPPoint*)malloc(sizeof(*all_features) * total_num_of_features)) == NULL) {
-		//todo add log
+		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
@@ -216,8 +233,9 @@ int main(int argc, char *argv[]) {
 		for (j = 0; j < num_of_features[i]; j++)
 		{
 			if ((all_features[counter] = spPointCopy(features_per_image[i][j])) == NULL) {
+				spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 				retval = -1;
-				goto err;//todo no need to print error log since it is printed inside InitTree
+				goto err; // error log is printed inside InitTree
 			}
 			//set the index of each point (feature) to be the number of the image it belongs to
 			spPointSetIndex(all_features[counter], i);
@@ -227,7 +245,7 @@ int main(int argc, char *argv[]) {
 
 	if ((kd_tree = InitTree(all_features, total_num_of_features)) == NULL){
 		retval = -1;
-		goto err; //todo no need to print error log since it is printed inside InitTree
+		goto err; // error log is printed inside InitTree
 	}
 
 
@@ -238,29 +256,35 @@ int main(int argc, char *argv[]) {
 
 	// get query image's features
 	num_of_similar_images_to_find = spConfigGetNumOfSimilarImages(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) { // todo handle error differently
-		// // todo print log
+	if (msg != SP_CONFIG_SUCCESS) { 
+		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
 
 	knn = spConfigGetKNN(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		// // todo print log
+		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
 
+	spLoggerPrintDebug("Number of similar images to find is %d, knn is %s", num_of_similar_images_to_find, knn, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
 
-
-	query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features); // todo which index to give?
+	spLoggerPrintMsg(EXTRACT_QUERY_IMAGE_FEATURES_LOG);
+	if ((query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features)) == NULL) {
+		retval = -1;
+		goto err; // error log is printed inside getImageFeatures	
+	} // todo which index to give?
+	spLoggerPrintDebug("Extracted %d features from query image", query_num_of_features, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
 	
+	spLoggerPrintMsg("Find %d closest images", num_of_similar_images_to_find); //todo can print log like that (%d) move to define or remove log
 	// find closest images to the query image
 	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
 									   kd_tree, num_of_images, num_of_features);
 
-	if (closest_images == NULL) { // error todo return this comment
-		// todo print error log
+	if (closest_images == NULL) { 
+		// todo print error log or dont print if its printed inside getKClosestImages
 		retval = -1;
 		goto err;
 	}
@@ -275,16 +299,16 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
-	//initialize Prefix
-	Prefix = spConfigGetspImagesPrefix(config, &msg);
+	//initialize prefix
+	prefix = spConfigGetspImagesPrefix(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		// // todo print log
 		retval = -1;
 		goto err;
 	}
 
-	//initialize Suffix
-	Suffix = spConfigGetspImagesSuffix(config, &msg);
+	//initialize suffix
+	suffix = spConfigGetspImagesSuffix(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		// // todo print log
 		retval = -1;
@@ -300,7 +324,6 @@ int main(int argc, char *argv[]) {
 	else{
 
 	}
-
 
 	// done - destroy logger and free everything 
 	err:
@@ -341,5 +364,6 @@ int main(int argc, char *argv[]) {
 		}
 		free(num_of_features); // must be freed after features_per_image
 
+	spLoggerPrintInfo(DONE_LOG);
 	return retval;
 }

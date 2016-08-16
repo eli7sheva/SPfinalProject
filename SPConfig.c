@@ -67,7 +67,8 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 #define ERROR_INVALID_LINE_MSG       "File: %s\nLine: %d\nMessage: Invalid configuration line\n"
 #define ERROR_INVALID_CONSTRAINT_MSG "File: %s\nLine: %d\nMessage: Invalid value - constraint not met\n"
 #define ERROR_PARMETER_NOT_SET_MSG   "File: %s\nLine: %d\nMessage: Parameter %s is not set\n"
-
+#define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
+#define INVALID_ARGUMENT_MSG "An error occurred - invalild argument\n"
 
 #define SPLIT_METHOD_STR(method)                 \
     (RANDOM      == method ? "RANDOM"       :    \
@@ -381,7 +382,7 @@ void splitEqualAndTrim(const char *s, char * left, int left_size, char * right, 
  * @param msg - pointer in which the msg returned by the function is stored
  *
  * @return -2 in case an empty line or comment line is given
- *		   -1 on any error (error explanation will be stored in msg)
+ *		   -1 on any error (error explanation will be stored in msg and error will be printed)
  *         SP_IMAGES_DIRECTORY_INDEX 	  if a valid parameter SP_IMAGES_DIRECTORY_STR is found in the line
  *         SP_IMAGES_PREFIX_INDEX	   	  if a valid parameter SP_IMAGES_PREFIX_STR is found in the line
  *         SP_IMAGES_SUFFIX_INDEX		  if a valid parameter SP_IMAGES_SUFFIX_STR is found in the line
@@ -421,14 +422,14 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
     // check if line is empty or invalid
     if ((strlen(right) == 0) ^ (strlen(left) == 0)) { // only one of the sides of the assingment is empty - error
         printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
-        // *msg = // todo ask
+        *msg = SP_CONFIG_INVALID_STRING;
         return -1;
     } 
     else { // two sides of the assignment are empty
         trimWhitespace(helper, 1024, line ); 
         if (strlen(helper) != 0)  {
             printf(ERROR_INVALID_LINE_MSG, config_filename, line_number); // line contains only '=' - error
-            // *msg = // todo ask
+        	*msg = SP_CONFIG_INVALID_STRING;
             return -1;
         }
         else { // line is empty - ignore
@@ -447,6 +448,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 		else {
 			if ((config->spImagesDirectory = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 				*msg = SP_CONFIG_ALLOC_FAIL;
+				printf(ALLOCATION_FAILURE_MSG);
 				return -1; 
 			}
 
@@ -465,6 +467,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 		else {
 			if ((config->spImagesPrefix = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 				*msg = SP_CONFIG_ALLOC_FAIL;
+				printf(ALLOCATION_FAILURE_MSG);
 				return -1;
 			}
 
@@ -482,6 +485,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 		else {
 			if ((config->spImagesSuffix = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 				*msg = SP_CONFIG_ALLOC_FAIL;
+				printf(ALLOCATION_FAILURE_MSG);
 				return -1;
 
 			}
@@ -524,6 +528,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 		else {
 			if ((config->spPCAFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 				*msg = SP_CONFIG_ALLOC_FAIL;
+				printf(ALLOCATION_FAILURE_MSG);
 				return -1;
 			}
 
@@ -547,8 +552,8 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 	else if (strcmp(left, SP_EXTRACTION_MODE_STR) == 0) {
 		if (isBoolean(right) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
-			// *msg = //todo ask
-			return -1;
+			*msg = SP_CONFIG_INVALID_STRING;
+            return -1;
 		}
 		else {
 			config->spExtractionMode = getBoolean(right);
@@ -571,8 +576,8 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 	else if (strcmp(left, SP_KD_TREE_SPLIT_METHOD_STR) == 0) {
 		if (getTreeSplitMethod(right) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
-			// *msg = // todo ask 
-			return -1;
+			*msg = SP_CONFIG_INVALID_STRING;
+            return -1;
 		}
 		else {
 			config->spKDTreeSplitMethod = getTreeSplitMethod(right);
@@ -595,8 +600,8 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 	else if (strcmp(left, SP_MINIMAL_GUI_STR) == 0) {
 		if (isBoolean(right) == -1) {
 			printf(ERROR_INVALID_CONSTRAINT_MSG, config_filename, line_number);
-			// *msg = // TODO ask
-			return -1;
+			*msg = SP_CONFIG_INVALID_STRING;
+            return -1;
 		}
 		else {
 			config->spMinimalGUI = getBoolean(right);
@@ -625,6 +630,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 		else {
 			if ((config->spLoggerFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 				*msg = SP_CONFIG_ALLOC_FAIL;
+				printf(ALLOCATION_FAILURE_MSG);
 				return -1;
 			}
 
@@ -635,8 +641,8 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 
  	else { // parameter name is wrong - error
  		printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
- 		// *msg = // todo ask
- 		return -1;
+ 		*msg = SP_CONFIG_INVALID_STRING;
+        return -1;
  	}
  }
 
@@ -654,7 +660,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
  * @assert msg != NULL	
  * @param msg - pointer in which the msg returned by the function is stored
  *
- * @return -1 on any error (error explanation will be stored in msg)
+ * @return -1 on any error (error explanation will be stored in msg and error will be printed)
  *          configuration parameter index of the parameter found in the given line
  * 
  * The resulting value stored in msg is as follow:
@@ -701,6 +707,7 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
 	if (!set_in_config[SP_PCA_FILENAME_INDEX]) {
 		if ((config->spPCAFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 			*msg = SP_CONFIG_ALLOC_FAIL;
+			printf(ALLOCATION_FAILURE_MSG);
 			return -1;
 		}
 		strcpy(config->spPCAFilename, DEFAULT_PCA_FILENAME);
@@ -738,6 +745,7 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
 		// todo do we need this? stdout as a string name?
 		if ((config->spLoggerFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 			*msg = SP_CONFIG_ALLOC_FAIL;
+			printf(ALLOCATION_FAILURE_MSG);
 			return -1;
 		}
 		strcpy(config->spLoggerFilename, DEFAULT_LOGGER_FILENAME);
@@ -759,6 +767,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
  	*msg = SP_CONFIG_SUCCESS; // default is success
 
 	if (filename == NULL) {
+		printf(INVALID_ARGUMENT_MSG);
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return NULL;
 	}
@@ -768,12 +777,13 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
     fp = fopen(filename, "r");
     if(fp == NULL) {
        *msg = SP_CONFIG_CANNOT_OPEN_FILE;
-       return NULL;
+       return NULL; // the only case where error is not printed
     }
 
     if ((config = (SPConfig)malloc(sizeof(*config))) == NULL) {
     	fclose(fp);
     	*msg = SP_CONFIG_ALLOC_FAIL;
+    	printf(ALLOCATION_FAILURE_MSG);
         return NULL;
     }
 
@@ -787,7 +797,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		if (parameter_found_index == -1) {
     		fclose(fp);	
     		spConfigDestroy(config); //free config
-			return NULL;
+			return NULL; // error is printed inside parseLine
 		}
 
 		// set configuration param if line is valid (and not comment or empty line)
@@ -802,7 +812,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
     // no default value for them - error, if there is a default value - set it in config.
 	if (checkMissingAndSetDefaults(filename, line_number, config, parameter_found, msg) == -1 ) {
 		spConfigDestroy(config); // free config
-		return NULL;
+		return NULL; // error is printed inside checkMissingAndSetDefaults
 	}
 
 	return config;
