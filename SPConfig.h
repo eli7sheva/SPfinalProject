@@ -26,9 +26,7 @@ typedef enum sp_config_msg_t {
 
 typedef struct sp_config_t* SPConfig;
 
-// split method enum
-// CR: remove ERROR since it is not one of split methods options (todo)
-typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT, ERROR} tree_split_method; 
+typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_method;
 
 /**
  * Creates a new system configuration struct. The configuration struct
@@ -199,32 +197,18 @@ SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg
 int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
- * Returns the value of the SYSTEM VARIABLE spKDTreeSplitMethod
+ * Returns an int value corresponding to the value of the SYSTEM VARIABLE spKDTreeSplitMethod
  *
  * @param config - the configuration structure
  * @assert msg != NULL
  * @param msg - pointer in which the msg returned by the function is stored
- * @return RANDOM, MAX_SPREAD or  INCREMENTAL in success, ERROR otherwise.
+ * @return 0 (if RANDOM) , 1 (if MAX_SPREAD) or  2 (if INCREMENTAL) in success, -1 otherwise.
  *
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
- // CR: change function name to spConfigGetKDTreeSplitMethod (without sp) (todo)
-tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg);
+int spConfigGetKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg);
 
-/**
- * Returns the 0 or 1 based on the value of the SYSTEM VARIABLE MinimalGUI.
- *
- * @param config - the configuration structure
- * @assert msg != NULL
- * @param msg - pointer in which the msg returned by the function is stored
- * @return 1 if MinimalGUI==true,0 if MinimalGUI==false, or -1 if error occurred.
- *
- * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
- * - SP_CONFIG_SUCCESS - in case of success
- */
- //CR: (todo) use spConfigMinimalGui and delete this function
-int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
  * Returns the images path Prefix i.e. the value of spImagesPrefix
@@ -237,8 +221,7 @@ int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg);
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
- //CR: change function name to spConfigGetImagesPrefix (without the sp) (todo)
-char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg);
+char* spConfigGetImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
  * Returns the images path Suffix i.e. the value of spImagesSuffix
@@ -251,8 +234,7 @@ char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg);
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
- //CR: change function name to spConfigGetspImagesSuffix (without the sp) (todo)
-char* spConfigGetspImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg);
+char* spConfigGetImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
  * Returns the number of similar images to find of the PCA. i.e the value of spNumOfSimilarImages

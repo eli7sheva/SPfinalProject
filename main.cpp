@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 	KDTreeNode kd_tree;							    // array holds a KDTree for each image
 	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int retval = 0;									// return value - default 0 on success
-	int minGui;                                     // 1 if spMinimalGUI==true, 0 if spMinimalGUI==false
+	bool minGui;                                     // value of the system variable MinimalGui
 	char* prefix;                                   // the prefix of the images path
 	char* suffix; 									// the suffix of the images path
 	sp::ImageProc *improc;
@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 	// // todo elisheva - show (display) closest_images images
 
 	//initialize minGui
-	minGui = spConfigGetpMinimalGUI(config, &msg);
+	minGui = spConfigMinimalGui(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		// // todo print log
 		retval = -1;
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//initialize prefix
-	prefix = spConfigGetspImagesPrefix(config, &msg);
+	prefix = spConfigGetImagesPrefix(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		// // todo print log
 		retval = -1;
@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//initialize suffix
-	suffix = spConfigGetspImagesSuffix(config, &msg);
+	suffix = spConfigGetImagesSuffix(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		// // todo print log
 		retval = -1;
@@ -316,11 +316,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	//need to show images
-	if (minGui==1){
+	if (minGui==true){
 
 	}
 
-	// i.e. minGui==0,  just need to print images path
+	// i.e. minGui==false,  just need to print images path
 	else{
 
 	}

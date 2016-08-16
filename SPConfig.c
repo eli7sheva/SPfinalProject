@@ -945,70 +945,50 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
  	return config->spKNN;
 }
 
-// CR: change function name to spConfigGetKDTreeSplitMethod (without sp) (todo)
-tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
+int spConfigGetKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
 	//check config is a valid argument
 	if (config == NULL) {
+		assert(msg != NULL);
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
-		/**
-		* CR: ERROR  is not a split method. You can change the function to return an int indicating a success or failiure
-		* and pass the split method enum by reference as a function parameter (the same as you pass "msg")  (todo)
-		*/
-		return ERROR;
+		return -1;
 	}
 
-	assert(msg != NULL);  // CR: move this assert above the assignment of *msg = SP_CONFIG_INVALID_ARGUMENT (is msg is NULL the mentioned assignment will throw exception) (todo)
 	*msg = SP_CONFIG_SUCCESS; // default is success
 
-	// CR: delete the redundent space at the begiging of the following lines (todo)
-	 return config->spKDTreeSplitMethod;
-}
-
-//CR: use function spConfigMinimalGui and delete this function (they supplied this function signature so we should use it) (todo)
-int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg){
-	//check config is a valid argument
-	if (config == NULL) {
-		// CR: fix the  two following lines indentatin (todo)
-	*msg = SP_CONFIG_INVALID_ARGUMENT;
-	return -1;
+	// return int value of the enum
+	if (config->spKDTreeSplitMethod==RANDOM){
+		return 0;
 	}
-
-	assert(msg != NULL);
-	*msg = SP_CONFIG_SUCCESS; // default is success
-
-	// CR: remove redundent whitespace at the begining of the following lines (todo)
-	 if(config->spMinimalGUI==true){
-		 return 1;
-	 }
-
-	 //when config->spMinimalGUI==false
-	 return 0;
+	else if (config->spKDTreeSplitMethod==MAX_SPREAD){
+		return 1;
+	}
+	else{        // (config->spKDTreeSplitMethod==INCREMENTAL)
+		return 2;
+	}
 }
 
-//CR: change function name to spConfigGetImagesPrefix (without the sp) (todo)
-char* spConfigGetspImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg){
+
+char* spConfigGetImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg){
 	//check config is a valid argument
 	if (config == NULL) {
+		assert(msg != NULL);
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return NULL;
 	}
 
-	assert(msg != NULL); // CR: move this assert above the assignment of *msg = SP_CONFIG_INVALID_ARGUMENT (is msg is NULL the mentioned assignment will throw exception) (todo)
-	// CR: delete the redundent space at the begiging of the following lines (todo)
-	 *msg = SP_CONFIG_SUCCESS; // default is success
+	*msg = SP_CONFIG_SUCCESS; // default is success
 
-	 return config->spImagesPrefix;
+	return config->spImagesPrefix;
 }
 
-//CR: change function name to spConfigGetspImagesSuffix (without the sp) (todo)
-char* spConfigGetspImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg){
+char* spConfigGetImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg){
 	//check config is a valid argument
 	if (config == NULL) {
+		assert(msg != NULL);
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return NULL;
 	}
 
-	assert(msg != NULL);  // CR: move this assert above the assignment of *msg = SP_CONFIG_INVALID_ARGUMENT (is msg is NULL the mentioned assignment will throw exception) (todo)
 	*msg = SP_CONFIG_SUCCESS; // default is success
 
 	return config->spImagesSuffix;
