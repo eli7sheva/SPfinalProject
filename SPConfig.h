@@ -20,7 +20,8 @@ typedef enum sp_config_msg_t {
 	SP_CONFIG_INVALID_STRING,
 	SP_CONFIG_INVALID_ARGUMENT,
 	SP_CONFIG_INDEX_OUT_OF_RANGE,
-	SP_CONFIG_SUCCESS
+	SP_CONFIG_SUCCESS,
+	SP_CONFIG_INTERNAL_ERROR
 } SP_CONFIG_MSG;
 
 typedef struct sp_config_t* SPConfig;
@@ -145,6 +146,7 @@ int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg);
  * @return
  * - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
  * - SP_CONFIG_INDEX_OUT_OF_RANGE - if index >= spNumOfImages
+ * - SP_CONFIG_INTERNAL_ERROR - on other error
  * - SP_CONFIG_SUCCESS - in case of success
  */
 SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
@@ -164,6 +166,7 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config,
  * @param config - the configuration structure
  * @return
  *  - SP_CONFIG_INVALID_ARGUMENT - if imagePath == NULL or config == NULL
+ *  - SP_CONFIG_INTERNAL_ERROR - on other error
  *  - SP_CONFIG_SUCCESS - in case of success
  */
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config);

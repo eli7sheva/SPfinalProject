@@ -90,7 +90,7 @@ struct sp_config_t{
 	tree_split_method spKDTreeSplitMethod;
 	int spKNN; 
 	bool spMinimalGUI;
-	SP_LOGGER_LEVEL spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOY
+	SP_LOGGER_LEVEL spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOT
 	char * spLoggerFilename; 
 };
 
@@ -405,7 +405,7 @@ void splitEqualAndTrim(const char *s, char * left, int left_size, char * right, 
  * - SP_CONFIG_SUCCESS - in case of success
  */
 int parseLine(const char* config_filename, char* line, int line_number, const SPConfig config, SP_CONFIG_MSG* msg) {
- 	char right[CONFIG_MAX_LINE_SIZE]; // todo might need to set to CONFIG_MAX_LINE_SIZE -1 because of trim - check it 
+ 	char right[CONFIG_MAX_LINE_SIZE];
     char left[CONFIG_MAX_LINE_SIZE];
  	char helper[CONFIG_MAX_LINE_SIZE];
 
@@ -891,7 +891,7 @@ int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg){
 }
 
 SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config, int index) {
-	int n; //todo need?
+	int n;
 	if ((imagePath == NULL) || (config == NULL)) {
 		return SP_CONFIG_INVALID_ARGUMENT;
 	}
@@ -900,20 +900,20 @@ SP_CONFIG_MSG spConfigGetImagePath(char* imagePath, const SPConfig config, int i
 		return SP_CONFIG_INDEX_OUT_OF_RANGE;
 	}
 	if ((n = sprintf(imagePath, IMAGE_PATH_FORMAT, config->spImagesDirectory, config->spImagesPrefix, index, config->spImagesSuffix)) < 0) {
-		// todo what to return on error here?
+		return SP_CONFIG_INTERNAL_ERROR;
 	}
 	return SP_CONFIG_SUCCESS;
 }
 
 
 SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
-	int n; //todo need?
+	int n;
 	if ((pcaPath == NULL) || (config == NULL)) {
 		return SP_CONFIG_INVALID_ARGUMENT;
 	}
 	
 	if ((n = sprintf(pcaPath, PCA_PATH_FORMAT, config->spImagesDirectory, config->spPCAFilename)) < 0) {
-		// todo what to return on error here? maybe just ignore?
+		return SP_CONFIG_INTERNAL_ERROR;
 	}
 	
 	return SP_CONFIG_SUCCESS;
