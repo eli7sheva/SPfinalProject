@@ -70,6 +70,9 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 #define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
 #define INVALID_ARGUMENT_MSG "An error occurred - invalild argument\n"
 
+// split method enum
+typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_method;
+
 #define SPLIT_METHOD_STR(method)                 \
     (RANDOM      == method ? "RANDOM"       :    \
     (MAX_SPREAD  == method ? "MAX_SPREAD"   :    \
@@ -967,7 +970,7 @@ int spConfigGetKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
 	}
 }
 
-
+//todo delete this function (also from .h) if not used
 char* spConfigGetImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg){
 	//check config is a valid argument
 	if (config == NULL) {
@@ -981,6 +984,7 @@ char* spConfigGetImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg){
 	return config->spImagesPrefix;
 }
 
+//todo delete this function (also from .h) if not used
 char* spConfigGetImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg){
 	//check config is a valid argument
 	if (config == NULL) {
