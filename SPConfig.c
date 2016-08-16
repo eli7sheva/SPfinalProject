@@ -853,38 +853,39 @@ bool spConfigMinimalGui(const SPConfig config, SP_CONFIG_MSG* msg){
 
 
 int spConfigGetNumOfImages(const SPConfig config, SP_CONFIG_MSG* msg) {
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
-
-	assert(msg != NULL);
- 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	return config->spNumOfImages;
 
 }
 
 int spConfigGetNumOfFeatures(const SPConfig config, SP_CONFIG_MSG* msg){
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+	
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
 
-	assert(msg != NULL);
- 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	return config->spNumOfFeatures;
 }
 
 int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg){
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
-
-	assert(msg != NULL);
- 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	return config->spPCADimension;
 }
@@ -920,26 +921,26 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 
 
 SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg){
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
-
-	assert(msg != NULL);
- 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	return config->spLoggerLevel;
 }
 
 
 int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
-
-	assert(msg != NULL);
- 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	return config->spKNN;
 }
@@ -1014,13 +1015,13 @@ char* spConfigGetspImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg){
 }
 
 int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg){
+	assert(msg != NULL);
+ 	*msg = SP_CONFIG_SUCCESS; // default is success
+
 	if (config == NULL) {
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
-
-	assert(msg != NULL);
- 	*msg = SP_CONFIG_SUCCESS; // default is success
 
  	return config->spNumOfSimilarImages;
 }
