@@ -26,7 +26,8 @@ typedef enum sp_config_msg_t {
 typedef struct sp_config_t* SPConfig;
 
 // split method enum
-typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT, ERROR} tree_split_method;
+// CR: remove ERROR since it is not one of split methods options (todo)
+typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT, ERROR} tree_split_method; 
 
 /**
  * Creates a new system configuration struct. The configuration struct
@@ -218,6 +219,7 @@ tree_split_method spConfigGetSPKDTreeSplitMethod(const SPConfig config, SP_CONFI
  * - SP_CONFIG_INVALID_ARGUMENT - if config == NULL
  * - SP_CONFIG_SUCCESS - in case of success
  */
+ //CR: (todo) use spConfigMinimalGui and delete this function
 int spConfigGetpMinimalGUI(const SPConfig config, SP_CONFIG_MSG* msg);
 
 /**
