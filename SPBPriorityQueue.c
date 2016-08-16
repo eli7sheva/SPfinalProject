@@ -20,6 +20,23 @@ struct sp_bp_queue_t {
 	SPList head; 	// points to a SPList which will hold queues elements
 };
 
+
+int spBPQueueMaxIndex(SPBPQueue source) {
+	assert(source!=NULL);
+	SPListElement currentElement;
+	SPListElement nextElement;
+	// iterate to one before last
+	currentElement = spListGetFirst(source->head);
+
+	nextElement = spListGetNext(source->head);
+	while (nextElement) {
+		currentElement = nextElement;
+		nextElement = spListGetNext(source->head);
+	}
+ 
+	return spListElementGetIndex(currentElement);
+}
+
 SPBPQueue spBPQueueCreate(int maxSize){
 	SPBPQueue queue;
 	if (maxSize <= 0) {
@@ -100,8 +117,11 @@ SP_BPQUEUE_MSG convertListMsgToQueueMsg(SP_LIST_MSG msg) {
 
 SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue source, SPListElement element) {
 	double newVal; // the value of the new element to enqueue
+	int newIndex;  // the index of the new element to enqueue
 	double maxVal; // the maximum value of the queue before inserting the new element
+	int maxIndex;  // the index of the element with the maximum value
 	double eVal;   // iterates over all values in the queue
+	int eIndex;    // iterates over all values in the queue
 	SP_BPQUEUE_MSG msg;
 	bool success = false; // true if enqueued successfully
 	SPListElement currentElement; // for iterating list
@@ -118,9 +138,13 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue source, SPListElement element) {
 	} 
 
 	newVal = spListElementGetValue(element);
+	newIndex = spListElementGetIndex(element);
 	maxVal = spBPQueueMaxValue(source);
-	// if new value to insert is bigger than the maximum value - insert it to the end of the queue if it's not full
-	if (newVal >= maxVal) {
+	maxIndex = spBPQueueMaxIndex(source);
+	// if new value to insert is bigger than the maximum value 
+	// or if they are equal but the new element's index is bigger
+	//- insert the new element to the end of the queue if it's not full
+	if ((newVal > maxVal) || ((newVal == maxVal) && (newIndex >= maxIndex))) {
 		// if queue is full don't insert the new element
 		if (spBPQueueIsFull(source)) {
 			return SP_BPQUEUE_FULL;
@@ -136,7 +160,12 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue source, SPListElement element) {
 
 	while ((!success) && (currentElement)) {
   		eVal = spListElementGetValue(currentElement);
-  		if ((newVal < eVal)) {
+		eIndex = spListElementGetIndex(currentElement);
+  		
+  		// if the new value is smaller than the current value 
+  		// or if the new value is equal to the current value but it's index is smaller than the current index
+  		// insert it before the current element
+  		if ((newVal < eVal) || ((newVal == eVal) && (newIndex <= eIndex))) {
 			msg = convertListMsgToQueueMsg(spListInsertBeforeCurrent(source->head, element));
 			// return in case of failure
 			// keep iterating till the end of the queue in case of success insert
