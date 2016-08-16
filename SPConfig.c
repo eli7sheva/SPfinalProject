@@ -970,34 +970,6 @@ int spConfigGetKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
 	}
 }
 
-//todo delete this function (also from .h) if not used
-char* spConfigGetImagesPrefix(const SPConfig config, SP_CONFIG_MSG* msg){
-	//check config is a valid argument
-	if (config == NULL) {
-		assert(msg != NULL);
-		*msg = SP_CONFIG_INVALID_ARGUMENT;
-		return NULL;
-	}
-
-	*msg = SP_CONFIG_SUCCESS; // default is success
-
-	return config->spImagesPrefix;
-}
-
-//todo delete this function (also from .h) if not used
-char* spConfigGetImagesSuffix(const SPConfig config, SP_CONFIG_MSG* msg){
-	//check config is a valid argument
-	if (config == NULL) {
-		assert(msg != NULL);
-		*msg = SP_CONFIG_INVALID_ARGUMENT;
-		return NULL;
-	}
-
-	*msg = SP_CONFIG_SUCCESS; // default is success
-
-	return config->spImagesSuffix;
-}
-
 int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg){
 	assert(msg != NULL);
  	*msg = SP_CONFIG_SUCCESS; // default is success

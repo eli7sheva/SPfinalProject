@@ -27,6 +27,7 @@ extern "C"{
 #define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
 #define ERROR_READING_CONFIG_INVALID_ARG_MSG 	"While reading configuration parameter - invalid argument\n"
 
+
 // logger messages (no new line at the end since it is added automatically by the logger)
 #define ERROR_READING_CONFIG_INVALID_ARG_LOG 	"While reading configuration parameter - invalid argument"
 #define INITIALIZING_LOGGER_INFO_LOG 			"Initializing logger, reading logger parameters from configuration"
@@ -42,6 +43,7 @@ extern "C"{
 int main(int argc, char *argv[]) {
 	int i;
 	int j;
+	int n;
 	int counter;									// helper
 	char config_filename[CONFIG_FILE_PATH_SIZE];    // the configuration file name
 	char query_image[CONFIG_FILE_PATH_SIZE];        // the query image 
@@ -65,6 +67,7 @@ int main(int argc, char *argv[]) {
 	bool minGui;                                     // value of the system variable MinimalGui
 	char* prefix;                                   // the prefix of the images path
 	char* suffix; 									// the suffix of the images path
+	char* best_candidate_msg;                       // holds the string “Best candidates for - <query image path> - are:\n”
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
 
@@ -289,8 +292,7 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
-	// // todo elisheva - show (display) closest_images images
-
+	// show (display) closest_images images
 	//initialize minGui
 	minGui = spConfigMinimalGui(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
@@ -299,30 +301,43 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
-	//initialize prefix
-	prefix = spConfigGetImagesPrefix(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		// // todo print log
-		retval = -1;
-		goto err;
-	}
-
-	//initialize suffix
-	suffix = spConfigGetImagesSuffix(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		// // todo print log
-		retval = -1;
-		goto err;
-	}
-
 	//need to show images
 	if (minGui==true){
-
+		for (i=0; i<num_of_similar_images_to_find; i++){
+			//get file path of the images by the indexes in closest_images
+			msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
+			if (msg != SP_CONFIG_SUCCESS) { // should not happen
+				spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+				retval = -1;
+				goto err;
+			}
+			improc->showImage(current_image_path);
+		}
 	}
 
 	// i.e. minGui==false,  just need to print images path
 	else{
-
+		// initialize best_candidate_msg
+		if ((n = sprintf(best_candidate_msg,"Best candidates for - %s -are:\n",query_image)) < 0) {
+			// // todo print log
+			retval = -1;
+			goto err;
+		}
+		//print best_candidate_msg
+		printf(best_candidate_msg);
+		fflush(NULL);
+		//print the candidates paths, first path is the closest image
+		for (i=0; i<num_of_similar_images_to_find; i++){
+		//get file path of the images by the indexes in closest_images
+		msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
+		if (msg != SP_CONFIG_SUCCESS) { // should not happen
+			spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+			retval = -1;
+			goto err;
+		}
+		printf(current_image_path);
+		fflush(NULL);
+		}
 	}
 
 	// done - destroy logger and free everything 
