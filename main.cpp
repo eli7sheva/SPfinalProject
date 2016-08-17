@@ -18,9 +18,9 @@ extern "C"{
 
 // messaged to print to stdout
 #define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
-#define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn’t be open\n"
-#define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn’t be open\n"
-#define ERROR_OPENING_LOGGER_FILE_MSG			"The logger file file %s couldn’t be open\n"
+#define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn't be open\n"
+#define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn't be open\n"
+#define ERROR_OPENING_LOGGER_FILE_MSG			"The logger file file %s couldn't be open\n"
 #define ALLOCATION_FAILURE_MSG 					"An error occurred - allocation failure\n"
 #define LOGGER_ALREADY_DEFINED 					"logger file %s is already defined.\n"
 #define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
@@ -65,9 +65,7 @@ int main(int argc, char *argv[]) {
 	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int retval = 0;									// return value - default 0 on success
 	bool minGui;                                     // value of the system variable MinimalGui
-	char* prefix;                                   // the prefix of the images path
-	char* suffix; 									// the suffix of the images path
-	char* best_candidate_msg;                       // holds the string “Best candidates for - <query image path> - are:\n”
+	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];                       // holds the string "Best candidates for - <query image path> - are:\n"
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
 
@@ -318,29 +316,26 @@ int main(int argc, char *argv[]) {
 	// i.e. minGui==false,  just need to print images path
 	else{
 		// initialize best_candidate_msg
-		// CR: 1. if you print current_image_path with LOGGER - there is no need to \n at the end of the msg (LOGGER adds \n bu itself)
-		// CR: 2. did you mean to use  best_candidate_msg (and not current_image_path)? 
-		// CR: 3. why is there a "printf" inside sprintf? is it OK?
-		// CR: 4. Move ""Best candidates for ..." to #define
-		if ((n = sprintf(printf(current_image_path),"Best candidates for - %s -are:\n",query_image)) < 0) { 
+		//todo: find better way to print next line
+		if ((n = sprintf(best_candidate_msg,"Best candidates for - %s -are:\n",query_image)) < 0) {
 			// // todo print log
 			retval = -1;
 			goto err;
 		}
 		//print best_candidate_msg
-		printf(best_candidate_msg); //CR: TODO replace this with LOGGER. (if you saw earlier that I used printf it was because logger was not defined but in this point it is defined so it better to use the logger)
+		printf(best_candidate_msg);
 		fflush(NULL);
 		//print the candidates paths, first path is the closest image
-		for (i=0; i<num_of_similar_images_to_find; i++){ // CR: todo fix indentation inside for loop
-		//get file path of the images by the indexes in closest_images
-		msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
-		if (msg != SP_CONFIG_SUCCESS) { // should not happen
-			spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-			retval = -1;
-			goto err;
-		}
-		printf(current_image_path); //CR: use looger here too (unless the instruction say differently) (if you use logger - remove fflush too) 
-		fflush(NULL);
+		for (i=0; i<num_of_similar_images_to_find; i++){
+			//get file path of the images by the indexes in closest_images
+			msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
+			if (msg != SP_CONFIG_SUCCESS) { // should not happen
+				spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+				retval = -1;
+				goto err;
+			}
+			printf(current_image_path);
+			fflush(NULL);
 		}
 	}
 
