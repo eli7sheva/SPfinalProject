@@ -17,8 +17,8 @@ typedef struct sp_KDTreeNode_t* KDTreeNode;
 /*
  * initialize a new KDTreeNode
  * @param
- * 		dim: the splitting dimension
- * 		val: the median value of the splitting dimension
+ * 		dim: the splitting dimension, -1 represents invalid value
+ * 		val: the median value of the splitting dimension. infinity represents invalid value
  *		left: a pointer to the left subtree
  *		right: a pointer to the right subtree
  *		data: a pointer to a point (only if the current node is a leaf) otherwise this field value is NULL
@@ -28,6 +28,42 @@ typedef struct sp_KDTreeNode_t* KDTreeNode;
  *			 the relevant error message will be sent to Logger
  */
 KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data);
+
+/*
+ * getter for Dim
+ * @param node: KDTreeNode to get the Dim of
+ * @return node->Dim
+ */
+int KDTreeNodegetDim(KDTreeNode node);
+
+/*
+ * getter for Val
+ * @param node: KDTreeNode to get the Val of
+ * @return node->Val
+ */
+double KDTreeNodegetVal(KDTreeNode node);
+
+/*
+ * getter for Left
+ * @param node: KDTreeNode to get the Left of
+ * @return pointer to node->Left
+ */
+KDTreeNode KDTreeNodegetLeft(KDTreeNode node);
+
+/*
+ * getter for Right
+ * @param node: KDTreeNode to get the Right of
+ * @return pointer to node->Right
+ */
+KDTreeNode KDTreeNodegetRight(KDTreeNode node);
+
+/*
+ * returns a SPPoint copy of node->Data
+ * @param node: KDTreeNode to get the Data of
+ * @return NULL if node->Data==NULL,
+ *			copy of node->Data otherwise.
+ */
+SPPoint KDTreeNodegetData(KDTreeNode node);
 
 /*
  * creates the KD Tree by calling the recursive function CreateKDTree
@@ -45,8 +81,16 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 KDTreeNode InitTree(SPPoint* arr, int size, int split_method);
 
 /*
- * free all memory of a KDTreeNode object
+ * free all memory of a KDTree including all its nodes
  * @param node: a node which is the root of the tree to be destroyed
+ * 				if node is NULL nothing will happen
+ */
+void DestroyKDTree(KDTreeNode node);
+
+/*
+ * free all memory of a KDTreeNode object
+ * @param node: a node to be destroyed
+ * 				if node is NULL nothing will happen
  */
 void DestroyKDTreeNode(KDTreeNode node);
 
