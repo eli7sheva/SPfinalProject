@@ -30,62 +30,70 @@ struct sp_KDTreeNode_t{
 	SPPoint Data; // Pointer to a point (only if the current node is a leaf) otherwise this field value is NULL
 };
 
+/*
+ * finds the dimension with the highest spread
+ * @param KDArray a SPKDArray object
+ * @return the dimension to split by if the parameter is MAX_SPREAD
+ * 		   if there are several candidates returns the lowest dimension
+ * 		   returns -1 if an allocation error occurred
+ */
+int getDimentionMaxSpread(SPKDArray KDArray){
+	int d = KDArray->d; //number of dimensions
+	int n = KDArray->n; //number of points
+	double* dimension_spreads; //array where index i contains the spread value of dimension i
+	int index_of_lowest; // index to the point with the lowest value of a specific dimension
+	int index_of_highest; // index to the point with the highest value of a specific dimension
+	double lowest_value;   //value of the point in index index_of_lowest
+	double highest_value; //value of the point in index index_of_highest
+	double max_spread_val;  //will store the value of max_spread
+	int max_spread_index;   // will store the index corresponding to the dimension with the max_spread
+	int i;
 
-KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
-	KDTreeNode Node;
-	// if the value of the dim parameter is invalid
-	if (dim<0){
-		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
-		return NULL;
-	}
-
-	//allocate memory for Node
-	if ( (Node = (KDTreeNode)malloc(sizeof(KDTreeNode))) == NULL ){
+	//allocate memory for dimension_spreads
+	if ( (dimension_spreads = (double*)malloc(d*sizeof(double))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		free(Node);
-		return NULL;
+		free(dimension_spreads);
+		return -1;
 	}
 
-	//initialize fields according to the values given in the parameters
-	Node->Dim = dim;
-	Node->Val= val;
-	Node->Left = left;
-	Node->Right = right;
-	Node->Data = data;
-	return Node;
+	//fill dimension_spreads
+	for (i=0; i<d; i++){
+		index_of_lowest = KDArray->matrix_of_sorted_indexes[i][0];
+		index_of_highest = KDArray->matrix_of_sorted_indexes[i][n-1];
+		lowest_value = spPointGetAxisCoor(KDArray->array_of_points[index_of_lowest], i);
+		highest_value = spPointGetAxisCoor(KDArray->array_of_points[index_of_highest], i);
+		dimension_spreads[i] = highest_value - lowest_value;
+	}
+
+	// find highest spread from dimension_spreads
+	max_spread_val = dimension_spreads[0];
+	max_spread_index = 0;
+	for (i=1; i<d; i++){
+		if (max_spread_index[i]>max_spread_val){
+			max_spread_val = dimension_spreads[i];
+			max_spread_index = i;
+		}
+	}
+	free(dimension_spreads);
+	return max_spread_index;
 }
 
-
-KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
-	SPKDArray KDArray;
-	KDTreeNode KDTree;
-
-	// check validation of parameter values, prints error to logger if not valid and returns NULL
-	if (arr==NULL){
-		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
-		return NULL;
-	}
-	if (size<1){
-		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
-		return NULL;
-	}
-	KDArray = Init(arr, size);
-	if (KDArray==NULL){
-		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
-		return NULL;
-	}
-	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
-	if (KDTree==NULL){
-		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
-		return NULL;
-	}
-	return KDTree;
+/*
+ * returns the dimension to split by if the parameter is RANDOM
+ * @param KDArray a SPKDArray object
+ * @return a random int between 0 and KDArray->d -1
+ */
+int getDimentionRandom(SPKDArray KDArray){
+	int t;
+	int rand_dimension;
+	int d = KDArray->d;
+	//Initialize random number generator
+	srand((unsigned) time(&t));
+	//get random number between 0 and d-1
+	rand_dimension = rand()%d;
+	return rand_dimension;
 }
+
 
 /*
  * the recursive function creating the KD tree
@@ -175,69 +183,61 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	return newNode;
 }
 
-/*
- * finds the dimension with the highest spread
- * @param KDArray a SPKDArray object
- * @return the dimension to split by if the parameter is MAX_SPREAD
- * 		   if there are several candidates returns the lowest dimension
- * 		   returns -1 if an allocation error occurred
- */
-int getDimentionMaxSpread(SPKDArray KDArray){
-	int d = KDArray->d; //number of dimensions
-	int n = KDArray->n; //number of points
-	double* dimension_spreads; //array where index i contains the spread value of dimension i
-	int index_of_lowest; // index to the point with the lowest value of a specific dimension
-	int index_of_highest; // index to the point with the highest value of a specific dimension
-	double lowest_value;   //value of the point in index index_of_lowest
-	double highest_value; //value of the point in index index_of_highest
-	double max_spread_val;  //will store the value of max_spread
-	int max_spread_index;   // will store the index corresponding to the dimension with the max_spread
-	int i;
+KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
+	KDTreeNode Node;
+	// if the value of the dim parameter is invalid
+	if (dim<0){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
 
-	//allocate memory for dimension_spreads
-	if ( (dimension_spreads = (double*)malloc(d*sizeof(double))) == NULL){
+	//allocate memory for Node
+	if ( (Node = (KDTreeNode)malloc(sizeof(KDTreeNode))) == NULL ){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		free(dimension_spreads);
-		return -1;
+		free(Node);
+		return NULL;
 	}
 
-	//fill dimension_spreads
-	for (i=0; i<d; i++){
-		index_of_lowest = KDArray->matrix_of_sorted_indexes[i][0];
-		index_of_highest = KDArray->matrix_of_sorted_indexes[i][n-1];
-		lowest_value = spPointGetAxisCoor(KDArray->array_of_points[index_of_lowest], i);
-		highest_value = spPointGetAxisCoor(KDArray->array_of_points[index_of_highest], i);
-		dimension_spreads[i] = highest_value - lowest_value;
-	}
-
-	// find highest spread from dimension_spreads
-	max_spread_val = dimension_spreads[0];
-	max_spread_index = 0;
-	for (i=1; i<d; i++){
-		if (max_spread_index[i]>max_spread_val){
-			max_spread_val = dimension_spreads[i];
-			max_spread_index = i;
-		}
-	}
-	free(dimension_spreads);
-	return max_spread_index;
+	//initialize fields according to the values given in the parameters
+	Node->Dim = dim;
+	Node->Val= val;
+	Node->Left = left;
+	Node->Right = right;
+	Node->Data = data;
+	return Node;
 }
 
-/*
- * returns the dimension to split by if the parameter is RANDOM
- * @param KDArray a SPKDArray object
- * @return a random int between 0 and KDArray->d -1
- */
-int getDimentionRandom(SPKDArray KDArray){
-	int t;
-	int rand_dimension;
-	int d = KDArray->d;
-	//Initialize random number generator
-	srand((unsigned) time(&t));
-	//get random number between 0 and d-1
-	rand_dimension = rand()%d;
-	return rand_dimension;
+KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
+	SPKDArray KDArray;
+	KDTreeNode KDTree;
+
+	// check validation of parameter values, prints error to logger if not valid and returns NULL
+	if (arr==NULL){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if (size<1){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	KDArray = Init(arr, size);
+	if (KDArray==NULL){
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
+	if (KDTree==NULL){
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		spLoggerPrintspLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	return KDTree;
 }
+
 
 
 void DestroyKDTreeNode(KDTreeNode node){
