@@ -160,7 +160,7 @@ static bool SplitInvalidParameterKdArr(){
 	return true;
 }
 
-int main() { //todo: how to run these tests if not with main?
+int main() {
 	RUN_TEST(InitBasicTest);
 	RUN_TEST(InitInvalidParameterSize);
 	RUN_TEST(InitInvalidParameterArr);
