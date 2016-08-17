@@ -8,7 +8,7 @@
 #define ALLOC_ERROR_MSG "Allocation error"
 #define INVALID_ARG_ERROR "Invalid arguments"
 #define GENERAL_ERROR_MSG "An error occurred"
-#define PARAMETER_DIM_INVALID "value of the parameter dim is invalid, must be dim >= 0"
+#define PARAMETER_DIM_INVALID "value of the parameter dim is invalid, must be dim >= -1"
 #define PARAMETER_ARR_INVALID "value of the parameter arr is invalid, cann't be NULL"
 #define PARAMETER_SIZE_INVALID "value of the parameter size is invalid, must be size > 0"
 #define INIT_RETURNED_NULL "the call to Init of SPKDArray returned NULL"
@@ -29,6 +29,7 @@ struct sp_KDTreeNode_t{
 	KDTreeNode Right; // Pointer to the right subtree
 	SPPoint Data; // Pointer to a point (only if the current node is a leaf) otherwise this field value is NULL
 };
+
 
 /*
  * finds the dimension with the highest spread
@@ -186,7 +187,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
 	KDTreeNode Node;
 	// if the value of the dim parameter is invalid
-	if (dim<0){
+	if (dim<-1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintspLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
@@ -206,6 +207,29 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	Node->Right = right;
 	Node->Data = data;
 	return Node;
+}
+
+int KDTreeNodegetDim(KDTreeNode node){
+	return node->Dim;
+}
+
+double KDTreeNodegetVal(KDTreeNode node){
+	return node->Val;
+}
+
+KDTreeNode KDTreeNodegetLeft(KDTreeNode node){
+	return node->Left;
+}
+
+KDTreeNode KDTreeNodegetRight(KDTreeNode node){
+	return node->Right;
+}
+
+SPPoint KDTreeNodegetData(KDTreeNode node){
+	if (node->Data==NULL){
+		return NULL;
+	}
+	return spPointCopy(node->Data);
 }
 
 KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
@@ -238,15 +262,25 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	return KDTree;
 }
 
-
-
 void DestroyKDTreeNode(KDTreeNode node){
 	if (node == NULL){
 		return;
 	}
-	DestroyKDTreeNode(node->Left);
-	DestroyKDTreeNode(node->Right);
-	free(node);
+	free(node->Left);
+	free(node->Right);
+	if (node->Data!=NULL){
+		spPointDestroy(node->Data);
+	}
+	return;
+}
+
+void DestroyKDTree(KDTreeNode node){
+	if (node == NULL){
+		return;
+	}
+	DestroyKDTree(node->Left);
+	DestroyKDTree(node->Right);
+	DestroyKDTreeNode(node);
 }
 
 
