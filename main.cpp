@@ -18,9 +18,9 @@ extern "C"{
 
 // messaged to print to stdout
 #define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
-#define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldnâ€™t be open\n"
-#define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldnâ€™t be open\n"
-#define ERROR_OPENING_LOGGER_FILE_MSG			"The logger file file %s couldnâ€™t be open\n"
+#define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn’t be open\n"
+#define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn’t be open\n"
+#define ERROR_OPENING_LOGGER_FILE_MSG			"The logger file file %s couldn’t be open\n"
 #define ALLOCATION_FAILURE_MSG 					"An error occurred - allocation failure\n"
 #define LOGGER_ALREADY_DEFINED 					"logger file %s is already defined.\n"
 #define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
@@ -318,9 +318,10 @@ int main(int argc, char *argv[]) {
 	// i.e. minGui==false,  just need to print images path
 	else{
 		// initialize best_candidate_msg
-		// CR: if you print current_image_path with LOGGER - there is no need to \n at the end of the msg (LOGGER adds \n bu itself)
-		// CR: did you mean to use  best_candidate_msg (and not current_image_path)? 
-		// CR: why is there a "printf" inside sprintf?
+		// CR: 1. if you print current_image_path with LOGGER - there is no need to \n at the end of the msg (LOGGER adds \n bu itself)
+		// CR: 2. did you mean to use  best_candidate_msg (and not current_image_path)? 
+		// CR: 3. why is there a "printf" inside sprintf? is it OK?
+		// CR: 4. Move ""Best candidates for ..." to #define
 		if ((n = sprintf(printf(current_image_path),"Best candidates for - %s -are:\n",query_image)) < 0) { 
 			// // todo print log
 			retval = -1;
