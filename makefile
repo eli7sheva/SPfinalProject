@@ -28,14 +28,21 @@ SPExtractFeatures.o: SPExtractFeatures.c SPExtractFeatures.h SPLogger.h SPPoint.
 	$(CC) $(C_COMP_FLAG) -c $*.c
 KDTreeNode.o: KDTreeNode.h KDTreeNode.c SPKDArray.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
-SPKDArray.o: SPKDArray.h SPKDArray.c SPPoint.h
+SPKDArray.o: SPKDArray.h SPKDArray.c SPPoint.h SPLogger.h SPBPriorityQueue.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
+SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h SPList.h SPListElement.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPList.o: SPList.c SPList.h SPListElement.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPListElement.o: SPListElement.c SPListElement.h
+	$(CC) $(C_COMP_FLAG) -c $*.c
 main_aux.o: main_aux.h main_aux.c SPLogger.h KDTreeNode.h #put dependencies here!
 	$(CC) $(C_COMP_FLAG) -I$(INCLUDEPATH) -c $*.c
+	
 
 
 #a rule for building a simple c souorce file
