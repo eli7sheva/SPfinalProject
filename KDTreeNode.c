@@ -57,7 +57,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 }
 
 
-KDTreeNode InitTree(SPPoint* arr, int size){
+KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	SPKDArray KDArray;
 	KDTreeNode KDTree;
 
@@ -78,7 +78,7 @@ KDTreeNode InitTree(SPPoint* arr, int size){
 		spLoggerPrintspLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
-	KDTree = CreateKDTree(KDArray, -1); //parameter is -1 so that the first splitting dimension will be 0
+	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
 	if (KDTree==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintspLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
@@ -87,8 +87,18 @@ KDTreeNode InitTree(SPPoint* arr, int size){
 	return KDTree;
 }
 
-
-KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
+/*
+ * the recursive function creating the KD tree
+ * @param
+ * 		KDArray: a SPKDArray object
+ * 		last_split_dim: the dimension that was used for split in the last recursive call
+ * 		split_method: an int representing the method to split by
+ * 					 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
+ * @return
+ * 		a KDTreeNode which is the root of the tree
+ * 		NULL if an error occurred while calling other functions
+ */
+KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method){
 	int split_dimension;
 	KDTreeNode newNode;
 	KDTreeNode left;
@@ -111,7 +121,10 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 	}
 
 	//Assign split_dimension according to value of spKDTreeSplitMethod
-	if(MAX_SPREAD){ //TODO: how to check this?
+	if(split_method==0){   //0==RANDOM
+			split_dimension = getDimentionRandom(KDArray);
+		}
+	else if(split_method==1){  // 1==MAX_SPREAD
 		split_dimension = getDimentionMaxSpread(KDArray);
 		if (split_dimension==-1){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -120,14 +133,12 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 			return NULL;
 		}
 	}
-	else if(RANDOM){
-		split_dimension = getDimentionRandom(KDArray);
-	}
-	else if(INCREMENTAL){
+	else if(split_method==2){   //2==INCREMENTAL){
 		split_dimension = ((last_split_dim+1) % KDArray->d );
 	}
 
-	splited_arrays = Split(KDArray,split_dimension); //split KDArray according to split_dimension
+	//split KDArray according to split_dimension
+	splited_arrays = Split(KDArray,split_dimension);
 	if (splited_arrays==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintspLoggerPrintDebug(SPLIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
@@ -136,6 +147,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 	}
 	median_index = splited_arrays[0]->n -1; //the last index in the left part of the split
 	split_median = splited_arrays[0]->array_of_points[median_index]; //get the value of the median
+
 	// recursive calls to left and right
 	left = CreateKDTree(splited_arrays[0], split_dimension);
 	if (left==NULL){
@@ -163,7 +175,13 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim){
 	return newNode;
 }
 
-
+/*
+ * finds the dimension with the highest spread
+ * @param KDArray a SPKDArray object
+ * @return the dimension to split by if the parameter is MAX_SPREAD
+ * 		   if there are several candidates returns the lowest dimension
+ * 		   returns -1 if an allocation error occurred
+ */
 int getDimentionMaxSpread(SPKDArray KDArray){
 	int d = KDArray->d; //number of dimensions
 	int n = KDArray->n; //number of points
@@ -205,7 +223,11 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 	return max_spread_index;
 }
 
-
+/*
+ * returns the dimension to split by if the parameter is RANDOM
+ * @param KDArray a SPKDArray object
+ * @return a random int between 0 and KDArray->d -1
+ */
 int getDimentionRandom(SPKDArray KDArray){
 	int t;
 	int rand_dimension;

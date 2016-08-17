@@ -35,39 +35,14 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
  * @param
  * 		arr: an array of points (each point represents a feature)
  * 		size: the number of points in arr
+ * 		split_method: an int representing the method to split by
+ * 					 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
  * @return
  * 		a KDTreeNode which is the root of the tree
  *		NULL if arr==NULL, size<1 or call to other function returned NULL.
  *		 	 the relevant error message will be sent to Logger
  */
-KDTreeNode InitTree(SPPoint* arr, int size, int method);
-
-/*
- * the recursive function creating the KD tree
- * @param
- * 		KDArray: a SPKDArray object
- * 		last_split_dim: the dimension that was used for split in the last recursive call
- * @return
- * 		a KDTreeNode which is the root of the tree
- * 		NULL if an error occurred while calling other functions
- */
-KDTreeNode CreateKDTree(SPKDArray KDArray,int last_split_dim);
-
-/*
- * finds the dimension with the highest spread
- * @param KDArray a SPKDArray object
- * @return the dimension to split by if the parameter is MAX_SPREAD
- * 		   if there are several candidates returns the lowest dimension
- * 		   returns -1 if an allocation error occurred
- */
-int getDimentionMaxSpread(SPKDArray KDArray);
-
-/*
- * returns the dimension to split by if the parameter is RANDOM
- * @param KDArray a SPKDArray object
- * @return a random int between 0 and KDArray->d -1
- */
-int getDimentionRandom(SPKDArray KDArray);
+KDTreeNode InitTree(SPPoint* arr, int size, int split_method);
 
 /*
  * free all memory of a KDTreeNode object
