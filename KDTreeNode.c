@@ -298,6 +298,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 	SP_BPQUEUE_MSG msg;
 	int return_val;
 	char subtree_searched;
+	double hypersphere;
 
 	//reached end of tree
 	if (curr==NULL){
@@ -343,7 +344,8 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		}
 	}
 	//if bpq is not full or the candidate's hypersphere crosses the splitting plane
-	if ( (!spBPQueueIsFull(bpq)) || ( abs(curr->Val- spPointGetAxisCoor(P,curr->Dim)) < spBPQueueMaxValue(bpq)) ){
+	hypersphere = curr->Val - spPointGetAxisCoor(P,curr->Dim);
+	if ( (!spBPQueueIsFull(bpq)) || ((hypersphere*hypersphere) < spBPQueueMaxValue(bpq)) ){
 		//search the subtree that wasn't searched yet
 		if (subtree_searched=='L'){
 			return_val = kNearestNeighbors(curr->Right, bpq, P);
