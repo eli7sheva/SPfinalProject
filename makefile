@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put your object files here
-OBJS = SPLogger.o SPPoint.o SPConfig.o  SPImageProc.o SPExtractFeatures.o SPKDArray.o KDTreeNode.o main_aux.o main.o
+OBJS = SPListElement.o SPList.o SPBPriorityQueue.o SPLogger.o SPPoint.o SPConfig.o  SPImageProc.o SPExtractFeatures.o SPKDArray.o KDTreeNode.o main_aux.o main.o
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
