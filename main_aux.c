@@ -240,7 +240,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint featureA, KDTreeNode root){
 }
 
 int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage) { // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
-    //todo: is the parameter nFeaturesPerImage needed? i don't need it for knn, but do we need for somthing else?
+    //todo: reut- is the parameter nFeaturesPerImage needed? i don't need it for knn, but do we need for somthing else?
 	int i;
     int j;
     int k;
@@ -261,7 +261,6 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 
     // for each feature of query calculate the spBestSIFTL2SquaredDistance
     for (i=0; i< queryNumOfFeatures; i++){
-    	//todo: in next line replace getNClosestImagesForFeature with getSPKNNClosestFeatures
         featureClosestImages = getSPKNNClosestFeatures(bestNFeatures, queryFeatures[i], //todo find another way to get spKNN
             databaseFeatures);
 

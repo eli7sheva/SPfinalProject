@@ -15,6 +15,7 @@ extern "C"{
 #define DEFAULT_CONFIG_FILENAME 	  			"spcbir.config"  // default configuration file name
 #define CMD_LINE_CONFIG_FILENAME_FLAG 			"-c"   // the commang ine flag
 #define CONFIG_FILE_PATH_SIZE      	  			1024   // the maximum length  of path to any file
+#define FILE_PATH_SIZE_PLUS						1060
 
 // messaged to print to stdout
 #define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
@@ -43,6 +44,7 @@ extern "C"{
 #define READ_FEATURES_FROM_FILE_LOG 			"Reading extracted images' features from features files.."
 #define STORE_FEATURES_INTO_KD_TREE_LOG 		"Storing all extracted features (%d) into kd tree..."
 #define EXTRACT_QUERY_IMAGE_FEATURES_LOG 		"Extracting query image features..."
+#define BEST_CADIDATES 							"Best candidates for - %s -are:\n"
 
 int main(int argc, char *argv[]) {
 	int i;
@@ -69,7 +71,7 @@ int main(int argc, char *argv[]) {
 	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int retval = 0;									// return value - default 0 on success
 	bool minGui;                                     // value of the system variable MinimalGui
-	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];   //CR: todo elisheva - what is 35? if it is needed it should be in define...                    // holds the string "Best candidates for - <query image path> - are:\n"
+	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
 	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
 	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
 	sp::ImageProc *improc;
@@ -322,7 +324,7 @@ int main(int argc, char *argv[]) {
 
 
 	if (closest_images == NULL) { 
-		// todo elisheva print error log or dont print if its printed inside getKClosestImages
+		// error is printed to inside getKClosestImages
 		retval = -1;
 		goto err;
 	}
@@ -331,7 +333,7 @@ int main(int argc, char *argv[]) {
 	//initialize minGui
 	minGui = spConfigMinimalGui(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		// // todo elisheva print log
+		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
 	}
@@ -353,11 +355,8 @@ int main(int argc, char *argv[]) {
 	// i.e. minGui==false,  just need to print images path
 	else{
 		// initialize best_candidate_msg
-		//todo: find better way to print next line
-		//CR: todo elisheva "Best candidates for.." should be in define.. (do the same as i did in line 314)
-		if ((n = sprintf(best_candidate_msg,"Best candidates for - %s -are:\n",query_image)) < 0) {
-			// // todo print log 
-			// CR: todo elisheva you can print GENERAL_ERROR_MSG
+		if ((n = sprintf(best_candidate_msg,BEST_CADIDATES,query_image)) < 0) {
+			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			retval = -1;
 			goto err;
 		}
