@@ -417,6 +417,6 @@ int main(int argc, char *argv[]) {
 		}
 		free(num_of_features); // must be freed after features_per_image
 
-	sprintf(DONE_MSG);
+	printf(DONE_MSG);
 	return retval;
 }
