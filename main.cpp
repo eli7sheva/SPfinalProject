@@ -26,7 +26,7 @@ extern "C"{
 #define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
 #define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
 #define ERROR_READING_CONFIG_INVALID_ARG_MSG 	"While reading configuration parameter - invalid argument\n"
-#define DONE_LOG 								"Done.\n"
+#define DONE_MSG 								"Done.\n"
 
 
 // logger messages (no new line at the end since it is added automatically by the logger)
