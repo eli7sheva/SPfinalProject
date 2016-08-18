@@ -26,9 +26,14 @@ extern "C"{
 #define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
 #define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
 #define ERROR_READING_CONFIG_INVALID_ARG_MSG 	"While reading configuration parameter - invalid argument\n"
+#define DONE_LOG 								"Done.\n"
 
 
 // logger messages (no new line at the end since it is added automatically by the logger)
+#define NUM_OF_SIMILAR_IMAGES_DEBUG_LOG 		"Number of similar images to find is %d, knn is %d"
+#define GENERAL_ERROR_MSG 						"An error occured - internal error"
+#define NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG 	"Extracted %d features from query image"
+#define SEARCING_SIMILAR_IMAGES_MSG 			"Searching for %d closest images..."
 #define ERROR_READING_CONFIG_INVALID_ARG_LOG 	"While reading configuration parameter - invalid argument"
 #define INITIALIZING_LOGGER_INFO_LOG 			"Initializing logger, reading logger parameters from configuration"
 #define CHECK_EXTRACTION_MODE_INFO_LOG 			"Checking if extraction mode is set..."
@@ -36,9 +41,8 @@ extern "C"{
 #define USE_NOT_EXTRACTION_MODE_LOG 			"Extraction mode is not set"
 #define EXTRACT_IMAGES_FEATURES_INFO_LOG 		"Extracting the features of each image and storing them into files..."
 #define READ_FEATURES_FROM_FILE_LOG 			"Reading extracted images' features from features files.."
-#define STORE_FEATURES_INTO_KD_TREE_LOG 		"Storing all extracted features into kd tree..."
+#define STORE_FEATURES_INTO_KD_TREE_LOG 		"Storing all extracted features (%d) into kd tree..."
 #define EXTRACT_QUERY_IMAGE_FEATURES_LOG 		"Extracting query image features..."
-#define DONE_LOG 								"Done."
 
 int main(int argc, char *argv[]) {
 	int i;
@@ -65,7 +69,8 @@ int main(int argc, char *argv[]) {
 	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int retval = 0;									// return value - default 0 on success
 	bool minGui;                                     // value of the system variable MinimalGui
-	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];   //CR:what is 35? if it is needed it should be in define...                    // holds the string "Best candidates for - <query image path> - are:\n"
+	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];   //CR: todo elisheva - what is 35? if it is needed it should be in define...                    // holds the string "Best candidates for - <query image path> - are:\n"
+	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
 	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
@@ -122,7 +127,7 @@ int main(int argc, char *argv[]) {
 
 	switch(spLoggerCreate(logger_filename, logger_level)) {
 	   case SP_LOGGER_DEFINED:
-	        printf(LOGGER_ALREADY_DEFINED, logger_filename); // todo should error or just continue(break)?
+	        printf(LOGGER_ALREADY_DEFINED, logger_filename); // todo reut should error or just continue(break)?
 	        break;
 		
 	   case SP_LOGGER_OUT_OF_MEMORY:
@@ -191,7 +196,6 @@ int main(int argc, char *argv[]) {
 				goto err; // error is printed inside  getImageFeatures
 			}
 
-			spLoggerPrintDebug("read %d features from image image index %d", num_of_features[i], i, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
 			// write image features into file
 			if (writeImageFeaturesIntoFile(config, i, features_per_image[i], num_of_features[i]) == -1) {
 				retval = -1;
@@ -213,14 +217,20 @@ int main(int argc, char *argv[]) {
 				goto err; // error is printed inside readImageFreaturesFromFile
 			}
 
-			spLoggerPrintDebug("read %d features from image image index %d", num_of_features[i], i, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
 			total_num_of_features = total_num_of_features + num_of_features[i];
 		}
 	}
 	
-	spLoggerPrintDebug("total number of features is %d", total_num_of_features, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
-	spLoggerPrintDebug(STORE_FEATURES_INTO_KD_TREE_LOG, __FILE__, __func__, __LINE__);
 
+	//  print debug log
+	if ((n = sprintf(string_holder, STORE_FEATURES_INTO_KD_TREE_LOG, total_num_of_features)) < 0) {
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		retval = -1;
+		goto err;
+	}
+	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
+
+	// hold all features
 	if ((all_features = (SPPoint*)malloc(sizeof(*all_features) * total_num_of_features)) == NULL) {
 		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		retval = -1;
@@ -247,6 +257,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// initiate kd tree with all features of all images
 	if ((kd_tree = InitTree(all_features, total_num_of_features,split_method)) == NULL){
 		retval = -1;
 		goto err; // error log is printed inside InitTree
@@ -273,22 +284,45 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
-	spLoggerPrintDebug("Number of similar images to find is %d, knn is %s", num_of_similar_images_to_find, knn, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
+	// print debug log
+	if ((n = sprintf(string_holder, NUM_OF_SIMILAR_IMAGES_DEBUG_LOG, num_of_similar_images_to_find, knn)) < 0) {
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		retval = -1;
+		goto err;
+	}
+	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__); 
 
+
+	// extract query image features
 	spLoggerPrintMsg(EXTRACT_QUERY_IMAGE_FEATURES_LOG);
 	if ((query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features)) == NULL) {
 		retval = -1;
 		goto err; // error log is printed inside getImageFeatures	
-	} // todo which index to give?
-	spLoggerPrintDebug("Extracted %d features from query image", query_num_of_features, __FILE__, __func__, __LINE__); // todo is it possible to write a log with %d or should we use sprintf? move to define or remove this log
+	}
 	
-	spLoggerPrintMsg("Find %d closest images", num_of_similar_images_to_find); //todo can print log like that (%d) move to define or remove log
+	// print debug log
+	if ((n = sprintf(string_holder, NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG, query_num_of_features)) < 0) {
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		retval = -1;
+		goto err;
+	}
+	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
+	
+	//  print log message
+	if ((n = sprintf(string_holder, SEARCING_SIMILAR_IMAGES_MSG, num_of_similar_images_to_find)) < 0) {
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		retval = -1;
+		goto err;
+	}
+	spLoggerPrintMsg(string_holder);
+
 	// find closest images to the query image
 	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
-									   kd_tree, num_of_images, num_of_features);
+									   kd_tree, query_num_of_features, num_of_images, num_of_features);
+
 
 	if (closest_images == NULL) { 
-		// todo print error log or dont print if its printed inside getKClosestImages
+		// todo elisheva print error log or dont print if its printed inside getKClosestImages
 		retval = -1;
 		goto err;
 	}
@@ -297,7 +331,7 @@ int main(int argc, char *argv[]) {
 	//initialize minGui
 	minGui = spConfigMinimalGui(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
-		// // todo print log
+		// // todo elisheva print log
 		retval = -1;
 		goto err;
 	}
@@ -320,10 +354,10 @@ int main(int argc, char *argv[]) {
 	else{
 		// initialize best_candidate_msg
 		//todo: find better way to print next line
-		//CR: todo elisheva "Best candidates for.." should be in define or MACRO..
+		//CR: todo elisheva "Best candidates for.." should be in define.. (do the same as i did in line 314)
 		if ((n = sprintf(best_candidate_msg,"Best candidates for - %s -are:\n",query_image)) < 0) {
 			// // todo print log 
-			// CR: you can print GENERAL_ERROR_MSG
+			// CR: todo elisheva you can print GENERAL_ERROR_MSG
 			retval = -1;
 			goto err;
 		}
@@ -383,7 +417,6 @@ int main(int argc, char *argv[]) {
 		}
 		free(num_of_features); // must be freed after features_per_image
 
-	spLoggerPrintInfo(DONE_LOG); // TODO remove this - logger is undefined here - replace to printf or move this line above the err part
-
+	sprintf(DONE_MSG);
 	return retval;
 }
