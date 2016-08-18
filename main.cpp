@@ -66,6 +66,7 @@ int main(int argc, char *argv[]) {
 	int retval = 0;									// return value - default 0 on success
 	bool minGui;                                     // value of the system variable MinimalGui
 	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];                       // holds the string "Best candidates for - <query image path> - are:\n"
+	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
 
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// initiate logger
-	spLoggerPrintInfo(INITIALIZING_LOGGER_INFO_LOG)
+	spLoggerPrintInfo(INITIALIZING_LOGGER_INFO_LOG);
 	logger_level = spConfigGetLoggerLevel(config, &msg);
 	if ((msg != SP_CONFIG_SUCCESS) || (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS)) {
 		printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
@@ -226,6 +227,8 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
+	//get split method value
+	split_method = spConfigGetKDTreeSplitMethod(config, &msg);
 
 	// create one SPPoint array for all features images
 	counter = 0;
@@ -244,7 +247,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if ((kd_tree = InitTree(all_features, total_num_of_features)) == NULL){
+	if ((kd_tree = InitTree(all_features, total_num_of_features,split_method)) == NULL){
 		retval = -1;
 		goto err; // error log is printed inside InitTree
 	}
@@ -323,7 +326,7 @@ int main(int argc, char *argv[]) {
 			goto err;
 		}
 		//print best_candidate_msg
-		printf(best_candidate_msg);
+		printf("%s", best_candidate_msg);
 		fflush(NULL);
 		//print the candidates paths, first path is the closest image
 		for (i=0; i<num_of_similar_images_to_find; i++){
@@ -334,7 +337,7 @@ int main(int argc, char *argv[]) {
 				retval = -1;
 				goto err;
 			}
-			printf(current_image_path);
+			printf("%s", current_image_path);
 			fflush(NULL);
 		}
 	}

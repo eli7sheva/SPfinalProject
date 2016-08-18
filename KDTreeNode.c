@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <time.h>
 
 
 #define ALLOC_ERROR_MSG "Allocation error"
@@ -39,8 +40,8 @@ struct sp_KDTreeNode_t{
  * 		   returns -1 if an allocation error occurred
  */
 int getDimentionMaxSpread(SPKDArray KDArray){
-	int d = KDArray->d; //number of dimensions
-	int n = KDArray->n; //number of points
+	int d = getD(KDArray); //number of dimensions
+	int n = getN(KDArray); //number of points
 	double* dimension_spreads; //array where index i contains the spread value of dimension i
 	int index_of_lowest; // index to the point with the lowest value of a specific dimension
 	int index_of_highest; // index to the point with the highest value of a specific dimension
@@ -48,6 +49,7 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 	double highest_value; //value of the point in index index_of_highest
 	double max_spread_val;  //will store the value of max_spread
 	int max_spread_index;   // will store the index corresponding to the dimension with the max_spread
+	SPPoint tmp_point;      // holds copy of a point to use temporarily
 	int i;
 
 	//allocate memory for dimension_spreads
@@ -59,10 +61,14 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 
 	//fill dimension_spreads
 	for (i=0; i<d; i++){
-		index_of_lowest = KDArray->matrix_of_sorted_indexes[i][0];
-		index_of_highest = KDArray->matrix_of_sorted_indexes[i][n-1];
-		lowest_value = spPointGetAxisCoor(KDArray->array_of_points[index_of_lowest], i);
-		highest_value = spPointGetAxisCoor(KDArray->array_of_points[index_of_highest], i);
+		index_of_lowest = getValFromMatrixOfSortedIndexes(KDArray, i, 0);
+		index_of_highest = getValFromMatrixOfSortedIndexes(KDArray, i, n-1);
+		tmp_point = getCopyOfPointfromArrayOfPoints(KDArray, index_of_lowest);
+		lowest_value = spPointGetAxisCoor(tmp_point, i);
+		spPointDestroy(tmp_point);
+		tmp_point =  getCopyOfPointfromArrayOfPoints(KDArray, index_of_highest);
+		highest_value = spPointGetAxisCoor(tmp_point, i);
+		spPointDestroy(tmp_point);
 		dimension_spreads[i] = highest_value - lowest_value;
 	}
 
@@ -70,7 +76,7 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 	max_spread_val = dimension_spreads[0];
 	max_spread_index = 0;
 	for (i=1; i<d; i++){
-		if (max_spread_index[i]>max_spread_val){
+		if (dimension_spreads[i]>max_spread_val){
 			max_spread_val = dimension_spreads[i];
 			max_spread_index = i;
 		}
@@ -85,11 +91,10 @@ int getDimentionMaxSpread(SPKDArray KDArray){
  * @return a random int between 0 and KDArray->d -1
  */
 int getDimentionRandom(SPKDArray KDArray){
-	int t;
 	int rand_dimension;
-	int d = KDArray->d;
+	int d = getD(KDArray);
 	//Initialize random number generator
-	srand((unsigned) time(&t));
+	srand(time(NULL));
 	//get random number between 0 and d-1
 	rand_dimension = rand()%d;
 	return rand_dimension;
@@ -115,10 +120,14 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	SPKDArray* splited_arrays;
 	double split_median;
 	int median_index;
+	SPPoint p;
+	int n = getN(KDArray); //number of point in KDArray
+	int d = getD(KDArray); //number of dimensions in KDArray
 
 	//if KDArray has only one point
-	if (KDArray->n==1){
-		newNode = InitNode(-1,INFINITY,NULL,NULL,spPointCopy(KDArray->array_of_points[0]));
+	if (n==1){
+		p = getCopyOfPointfromArrayOfPoints(KDArray, 0);
+		newNode = InitNode(-1,INFINITY,NULL,NULL,p);
 		if (newNode==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
@@ -143,7 +152,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 		}
 	}
 	else if(split_method==2){   //2==INCREMENTAL){
-		split_dimension = ((last_split_dim+1) % KDArray->d );
+		split_dimension = ((last_split_dim+1) % d);
 	}
 
 	//split KDArray according to split_dimension
@@ -154,16 +163,16 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 		destroyKDArray(KDArray);
 		return NULL;
 	}
-	median_index = splited_arrays[0]->n -1; //the last index in the left part of the split
-	split_median = splited_arrays[0]->array_of_points[median_index]; //get the value of the median
+	median_index = getN(splited_arrays[0])-1; //the last index in the left part of the split
+	split_median = getValFromMatrixOfSortedIndexes(splited_arrays[0], split_dimension, median_index); //get the value of the median
 
 	// recursive calls to left and right
-	left = CreateKDTree(splited_arrays[0], split_dimension);
+	left = CreateKDTree(splited_arrays[0], split_dimension, split_method);
 	if (left==NULL){
 		destroyKDArray(KDArray);
 		return NULL;
 	}
-	right = CreateKDTree(splited_arrays[1], split_dimension);
+	right = CreateKDTree(splited_arrays[1], split_dimension, split_method);
 	if (right==NULL){
 		destroyKDArray(KDArray);
 		return NULL;
@@ -256,7 +265,7 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
 	if (KDTree==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		LoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	return KDTree;
@@ -298,7 +307,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 	if (curr->Data==NULL){
 		//create new ListElement:
 		//index=index of the point that is the Data of curr. value=distance between the point of curr to P
-		newElement = spListElementCreate(curr->Data->index, spPointL2SquaredDistance(P,curr->Data));
+		newElement = spListElementCreate(spPointGetIndex(curr->Data), spPointL2SquaredDistance(P,curr->Data));
 		//if there was a problem creating newElement
 		if (newElement==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
