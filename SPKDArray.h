@@ -89,7 +89,7 @@ SPKDArray* Split(SPKDArray kdArr, int coor);
  * 		return value = 0: if the second value in elem1 and elem2 are equal
  * 		return value < 0: if the second value in elem1 is smaller than the second value in elem2
  */
-int copmareByValue(void* elem1, void* elem2);
+int copmareByValue(const void* elem1, const void* elem2);
 
 /**
  * Free all memory allocation associated with KDArray,

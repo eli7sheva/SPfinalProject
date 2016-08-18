@@ -121,7 +121,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 		newNode = InitNode(-1,INFINITY,NULL,NULL,spPointCopy(KDArray->array_of_points[0]));
 		if (newNode==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+			spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 			destroyKDArray(KDArray);
 			return NULL;
 		}
@@ -137,7 +137,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 		split_dimension = getDimentionMaxSpread(KDArray);
 		if (split_dimension==-1){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug(GETDIMENSIONMAXSPREAD_RETURNED_MINUS1 , __FILE__, __func__, __LINE__);
+			spLoggerPrintDebug(GETDIMENSIONMAXSPREAD_RETURNED_MINUS1 , __FILE__, __func__, __LINE__);
 			destroyKDArray(KDArray);
 			return NULL;
 		}
@@ -150,7 +150,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	splited_arrays = Split(KDArray,split_dimension);
 	if (splited_arrays==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(SPLIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(SPLIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		destroyKDArray(KDArray);
 		return NULL;
 	}
@@ -173,7 +173,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	newNode = InitNode(split_dimension, split_median, left, right, NULL);
 	if (newNode==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		destroyKDArray(KDArray);
 		return NULL;
 	}
@@ -189,7 +189,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	// if the value of the dim parameter is invalid
 	if (dim<-1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -239,24 +239,24 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	// check validation of parameter values, prints error to logger if not valid and returns NULL
 	if (arr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (size<1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	KDArray = Init(arr, size);
 	if (KDArray==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
 	if (KDTree==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		LoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	return KDTree;
@@ -302,7 +302,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		//if there was a problem creating newElement
 		if (newElement==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug(SPLISTELEMENTCREATE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+			spLoggerPrintDebug(SPLISTELEMENTCREATE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 			return 0;
 		}
 		// add newElement to bpq
@@ -310,7 +310,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		//if here was a problem adding newElement to bpq
 		if (msg!=SP_BPQUEUE_SUCCESS && msg!=SP_BPQUEUE_FULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug(SPBPQUEUEENGUEUE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+			spLoggerPrintDebug(SPBPQUEUEENGUEUE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 			return 0;
 		}
 	}

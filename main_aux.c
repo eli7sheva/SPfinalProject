@@ -31,7 +31,7 @@
 *
 
 */
-// TOdo elisheve - this function is taken from ex_2 - if you also use this make sure there is not duplicated code and mive this function to a place both of s can use
+
 int compare(const void *a, const void * b) {
     double* p1 = *(double**) a;
     double* p2 = *(double**) b;
@@ -237,17 +237,17 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 
 	if (spKNN<1){
 		spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_SP_KNN_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_SP_KNN_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (featureA==NULL){
 		spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_FEATURE_A_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_FEATURE_A_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (root==NULL){ //|| root==NULL || spKNN<1){
 		spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_ROOT_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_ROOT_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -255,7 +255,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 	bpq = spBPQueueCreate(spKNN);
 	if (bpq==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(SPBP_QUEUE_CREATE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(SPBP_QUEUE_CREATE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -263,7 +263,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 	knnResult = kNearestNeighbors(root, bpq, &featureA);
 	if (knnResult!=1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(KNN_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(KNN_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -283,7 +283,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint* featureA, KDTreeNode root){
 		// if a problem occurred during the call to spBPQueueDequeue
 		if (dequeueMsg!=SP_BPQUEUE_SUCCESS){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug(dequeueMsg, __FILE__, __func__, __LINE__);
+			spLoggerPrintDebug(dequeueMsg, __FILE__, __func__, __LINE__);
 			spBPQueueDestroy(bpq);
 			return NULL;
 		}

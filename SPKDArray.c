@@ -54,12 +54,12 @@ SPKDArray Init(SPPoint* arr, int size){
 	//check validation of the parameters
 	if (size<1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (arr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
@@ -80,7 +80,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		KDArray->array_of_points[i] = spPointCopy(arr[i]); //spPointCopy returns NULL if an allocation error occurred
 		if (KDArray->array_of_points[i] == NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-			spLoggerPrintspLoggerPrintDebug(SPPOINTCOPY_RETURNED_NULL, __FILE__, __func__, __LINE__);
+			spLoggerPrintDebug(SPPOINTCOPY_RETURNED_NULL, __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
 				spPointDestroy(KDArray->array_of_points[j]);
 			}
@@ -151,7 +151,7 @@ SPKDArray Init(SPPoint* arr, int size){
 }
 
 
-int copmareByValue(void* elem1, void* elem2){
+int copmareByValue(const void* elem1, const void* elem2){
 	double* tuple1 = (double*) elem1;
 	double* tuple2 = (double*) elem2;
 	return (tuple1[1] - tuple2[1]);
@@ -177,12 +177,12 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	//check validation of arguments
 	if (coor<0){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_COOR_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_COOR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 	if (kdArr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		spLoggerPrintspLoggerPrintDebug(PARAMETER_KDARR_INVALID, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(PARAMETER_KDARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
