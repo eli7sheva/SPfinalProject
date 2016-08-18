@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int retval = 0;									// return value - default 0 on success
 	bool minGui;                                     // value of the system variable MinimalGui
-	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];                       // holds the string "Best candidates for - <query image path> - are:\n"
+	char best_candidate_msg[CONFIG_FILE_PATH_SIZE+35];   //CR:what is 35? if it is needed it should be in define...                    // holds the string "Best candidates for - <query image path> - are:\n"
 	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;
@@ -320,8 +320,10 @@ int main(int argc, char *argv[]) {
 	else{
 		// initialize best_candidate_msg
 		//todo: find better way to print next line
+		//CR: todo elisheva "Best candidates for.." should be in define or MACRO..
 		if ((n = sprintf(best_candidate_msg,"Best candidates for - %s -are:\n",query_image)) < 0) {
-			// // todo print log
+			// // todo print log 
+			// CR: you can print GENERAL_ERROR_MSG
 			retval = -1;
 			goto err;
 		}
