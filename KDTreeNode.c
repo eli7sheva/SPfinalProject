@@ -188,7 +188,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	}
 
 	//free unused memory
-	free(splited_arrays);
+	free(splited_arrays);// splited_arrays[0] and splited_arrays[1] should already be freed in the recursive calls
 	destroyKDArray(KDArray);
 	return newNode;
 }

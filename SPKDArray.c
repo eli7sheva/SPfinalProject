@@ -244,8 +244,6 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 			k++;
 		}
 	}
-	//TODO: i copied the points do we need the original or to erase it?
-	//TODO: in general can we clear kdArr in the end?
 
 	// assertions on j and k after previous for loop
 	assert(j==num_of_left_points);
@@ -342,18 +340,25 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 
 void destroyKDArray(SPKDArray KDArray){
 	int i;
+	int n = KDArray->n; //number of points
+	int d = KDArray->d; //number of dimensions
 	if (KDArray==NULL){
 		return;
 	}
 	if (KDArray->array_of_points!=NULL){
+		for (i=0; i<n; i++){
+			spPointDestroy(KDArray->array_of_points[i]);
+		}
 		free(KDArray->array_of_points);
 	}
-	for(i=0; i<KDArray->d;i++){
-		if (KDArray->matrix_of_sorted_indexes[i]!=NULL){
-			free(KDArray->matrix_of_sorted_indexes[i]);
+	if (KDArray->matrix_of_sorted_indexes!=NULL){
+		for(i=0; i<d;i++){
+			if (KDArray->matrix_of_sorted_indexes[i]!=NULL){
+				free(KDArray->matrix_of_sorted_indexes[i]);
+			}
 		}
+		free(KDArray->matrix_of_sorted_indexes);
 	}
-	free(KDArray->matrix_of_sorted_indexes);
 	free(KDArray);
 }
 
