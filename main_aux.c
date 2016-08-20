@@ -4,15 +4,24 @@
 #include "SPLogger.h"
 
 //#define ALLOC_ERROR_MSG "Allocation error" - already defined in files that are included
-#define GENERAL_ERROR_MSG "An error occurred"
-#define ALLOC_ERROR_MSG "An error occurred - allocation failure\n"
-#define INVALID_ARGUMENT "Invalid argument"
-#define PARAMETER_FEATURE_A_INVALID "value of the parameter featureA is invalid, cann't be NULL"
-#define PARAMETER_ROOT_INVALID "value of the parameter root is invalid, cann't be NULL"
-#define PARAMETER_SP_KNN_INVALID "value of the parameter spKNN is invalid, mast be spKNN>=1"
+#define GENERAL_ERROR_MSG               "An error occurred"
+#define ALLOC_ERROR_MSG                 "An error occurred - allocation failure"
+#define INVALID_ARGUMENT                "Invalid argument"
+#define PARAMETER_FEATURE_A_INVALID     "value of the parameter featureA is invalid, cann't be NULL"
+#define PARAMETER_ROOT_INVALID          "value of the parameter root is invalid, cann't be NULL"
+#define PARAMETER_SP_KNN_INVALID        "value of the parameter spKNN is invalid, must be spKNN>=1"
 #define SPBP_QUEUE_CREATE_RETURNED_NULL "the call to spBPQueueCreate returned NULL"
-#define KNN_RETURNED_NULL "the call to kNearestNeighbors returned NULL"
-#define ERR_DEQUEUE "a problem occurred during the call to spBPQueueDequeue"
+#define KNN_RETURNED_NULL               "the call to kNearestNeighbors returned NULL"
+#define ERR_DEQUEUE                     "a problem occurred during the call to spBPQueueDequeue"
+
+
+#define CONFIG_FILE_PATH_SIZE                   1024   // the maximum length  of path to any file
+#define ERROR_READING_CONFIG_INVALID_ARG_MSG    "While reading configuration parameter - invalid argument\n"
+#define LOGGER_ALREADY_DEFINED                  "logger file %s is already defined.\n"
+#define ERROR_OPENING_LOGGER_FILE_MSG           "The logger file file %s couldn't be open\n"
+#define ALLOCATION_FAILURE_MSG                  "An error occurred - allocation failure\n"
+#define ALLOCATION_FAILURE_LOG                  "An error occurred - allocation failure"
+#define ERROR_READING_CONFIG_INVALID_ARG_LOG    "While reading configuration parameter - invalid argument"
 
 /*
 * this function is called from qsort and it sorts array which each cell contains array of length two
@@ -294,3 +303,160 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 }
 
 
+
+// looger is set
+int getConfigParameters(const SPConfig config, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui)
+    SP_CONFIG_MSG msg;
+
+    extraction_mode = spConfigIsExtractionMode(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    *num_of_similar_images = spConfigGetNumOfSimilarImages(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) { 
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    *knn = spConfigGetKNN(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    // todo add debug log?
+    // #define NUM_OF_SIMILAR_IMAGES_DEBUG_LOG         "Number of similar images to find is %d, knn is %d"
+    //     // print debug log
+    // if ((n = sprintf(string_holder, NUM_OF_SIMILAR_IMAGES_DEBUG_LOG, num_of_similar_images_to_find, knn)) < 0) {
+    //     spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+    //     retval = -1;
+    //     goto err;
+    // }
+    // spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__); 
+
+
+    
+
+    *split_method = spConfigGetKDTreeSplitMethod(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    *min_gui = spConfigMinimalGui(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    return 0;
+}
+
+
+
+int initiateLoggerByConfig(const SPConfig config) {
+    SP_CONFIG_MSG msg;
+    SP_LOGGER_LEVEL logger_level;                   // the logger level in configuration file
+    char logger_filename[CONFIG_FILE_PATH_SIZE];    // the logger filename in configuration file
+
+    logger_level = spConfigGetLoggerLevel(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
+        return -1;
+    }
+
+    if (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS)) {
+        printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
+        return -1;
+    }
+
+    switch(spLoggerCreate(logger_filename, logger_level)) {
+       case SP_LOGGER_DEFINED:
+            printf(LOGGER_ALREADY_DEFINED, logger_filename); // todo reut should error or just continue(break)?
+            break;
+        
+       case SP_LOGGER_OUT_OF_MEMORY:
+            printf(ALLOCATION_FAILURE_MSG);
+            return -1;
+      
+        case SP_LOGGER_CANNOT_OPEN_FILE:
+            printf(ERROR_OPENING_LOGGER_FILE_MSG, logger_filename);
+            return -1;
+        
+        default: 
+            break;
+    }
+
+    return 0;
+}
+
+/*
+ * returns list of the full path of all images paths specified in configuration file
+ * and stores in num_of_images the number of images specified in the configuration file
+ *
+ * For example:
+ * Given that the value of:
+ *  spImagesDirectory = "./images/"
+ *  spImagesPrefix = "img"
+ *  spImagesSuffix = ".png"
+ *  spNumOfImages = 17
+ *  index = 10
+ *
+ * The functions returns ["./images/img1.png",...,"./images/img17.png"]
+ * and stores in num_of_images 17
+ *
+ * @param config - the configuration structure
+ * @param num_of_images - an address to store the number of images in
+ *
+ * Note - assumes spLogger is initiated
+ *
+ * @return a list of all images path on success
+ *         NULL on error
+ */
+char** getAllImagesPaths(const SPConfig config, int* num_of_images) {
+    char** images_paths;
+    SP_CONFIG_MSG msg;
+    int i;
+    int j;
+    int error = 0;
+
+    *num_of_images = spConfigGetNumOfImages(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return NULL;
+    }
+
+    if ((images_paths = (char**)malloc(sizeof(*images_paths) * num_of_images)) == NULL) {
+        spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
+        return NULL;
+    }
+
+    for(i=0; i< num_of_images; i++) {
+        if ((images_paths[i] = (char*)malloc(sizeof(*(images_paths[i])) * CONFIG_FILE_PATH_SIZE)) == NULL) {
+            spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
+            for (j=0; j<i; j++) {
+                free(images_paths[j]);
+            }
+            free(images_paths);
+            return NULL;
+        }
+    }
+
+    for(i=0; error & (i< num_of_images); i++) {
+        msg = spConfigGetImagePath(images_paths[i], config, i);
+        error = (msg != SP_CONFIG_SUCCESS);
+    }
+
+    if (error) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        for (j=0; j<num_of_images; j++) {
+            free(images_paths[j]);
+        }
+        free(images_paths);
+        return NULL;
+    }
+
+    return images_paths
+}

@@ -38,4 +38,8 @@
 int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage); // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
 
 
+// todo add doc
+int initiateLoggerByConfig(const SPConfig config);
+char** getAllImagesPaths(const SPConfig config, int* num_of_images);
+int getConfigParameters(const SPConfig config, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui);
 #endif

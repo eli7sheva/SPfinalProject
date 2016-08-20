@@ -23,22 +23,18 @@ extern "C"{
 #define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
 #define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn't be open\n"
 #define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn't be open\n"
-#define ERROR_OPENING_LOGGER_FILE_MSG			"The logger file file %s couldn't be open\n"
-#define ALLOCATION_FAILURE_MSG 					"An error occurred - allocation failure\n"
-#define LOGGER_ALREADY_DEFINED 					"logger file %s is already defined.\n"
 #define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
 #define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
-#define ERROR_READING_CONFIG_INVALID_ARG_MSG 	"While reading configuration parameter - invalid argument\n"
+#define INITIALIZING_LOGGER_INFO_MSG 			"Initializing logger, reading logger parameters from configuration\n"
 #define DONE_MSG 								"Done.\n"
 
 
 // logger messages (no new line at the end since it is added automatically by the logger)
-#define NUM_OF_SIMILAR_IMAGES_DEBUG_LOG 		"Number of similar images to find is %d, knn is %d"
+#define EXTRACT_CONFIG_PARAM_LOG				"Extrating parameters from configuration file..."
+#define ALLOCATION_FAILURE_MSG 					"An error occurred - allocation failure"
 #define GENERAL_ERROR_MSG 						"An error occured - internal error"
 #define NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG 	"Extracted %d features from query image"
 #define SEARCING_SIMILAR_IMAGES_MSG 			"Searching for %d closest images..."
-#define ERROR_READING_CONFIG_INVALID_ARG_LOG 	"While reading configuration parameter - invalid argument"
-#define INITIALIZING_LOGGER_INFO_LOG 			"Initializing logger, reading logger parameters from configuration"
 #define CHECK_EXTRACTION_MODE_INFO_LOG 			"Checking if extraction mode is set..."
 #define USE_EXTRACTION_MODE_LOG 				"Extraction mode is set"
 #define USE_NOT_EXTRACTION_MODE_LOG 			"Extraction mode is not set"
@@ -55,8 +51,6 @@ int main(int argc, char *argv[]) {
 	int counter;									// helper
 	char config_filename[CONFIG_FILE_PATH_SIZE];    // the configuration file name
 	char query_image[CONFIG_FILE_PATH_SIZE];        // the query image 
-	char logger_filename[CONFIG_FILE_PATH_SIZE];	// the logger filename in configuration file
-	SP_LOGGER_LEVEL logger_level;                   // the logger level in configuration file
 	int knn;										// the number of similar features in each image to find (spKNN from configuration file)
 	int num_of_similar_images_to_find;              // the number of similar images (to the query) to find (from configuration file)
 	int query_num_of_features;					    // number of features in query image
@@ -64,7 +58,8 @@ int main(int argc, char *argv[]) {
 	SPConfig config;								// hold configuration parameters
 	bool extraction_mode;							// indicates if extraction mode on or off
 	char current_image_path[CONFIG_FILE_PATH_SIZE]; // the path to the current image
-	int num_of_images;   						    // number of images in the directory given by the user in the configuration file
+	char** all_images_paths;						// array with the paths to all the images
+	int num_of_images = 0;   						    // number of images in the directory given by the user in the configuration file
 	SPPoint** features_per_image = NULL;   			// helper - holds the features for each images
 	SPPoint* all_features = NULL;   				// holds all features of all images
 	int* num_of_features; 							// holds number of features extracted for each image
@@ -72,7 +67,7 @@ int main(int argc, char *argv[]) {
 	KDTreeNode kd_tree;							    // array holds a KDTree for each image
 	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int retval = 0;									// return value - default 0 on success
-	bool minGui;                                     // value of the system variable MinimalGui
+	bool minGui = false;                            // value of the system variable MinimalGui
 	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
 	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
 	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
@@ -121,51 +116,29 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// initiate logger
-	spLoggerPrintInfo(INITIALIZING_LOGGER_INFO_LOG);
-	logger_level = spConfigGetLoggerLevel(config, &msg);
-	if ((msg != SP_CONFIG_SUCCESS) || (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS)) {
-		printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
+	printf(INITIALIZING_LOGGER_INFO_MSG);
+	if (initiateLoggerByConfig(config) == -1) {
 		retval = -1;
-		goto err;
+		goto err; // error is printed inside  initiateLoggerByConfig
 	}
 
-	switch(spLoggerCreate(logger_filename, logger_level)) {
-	   case SP_LOGGER_DEFINED:
-	        printf(LOGGER_ALREADY_DEFINED, logger_filename); // todo reut should error or just continue(break)?
-	        break;
-		
-	   case SP_LOGGER_OUT_OF_MEMORY:
-		    printf(ALLOCATION_FAILURE_MSG);
-			retval = -1;
-			goto err;
-	  
-	  	case SP_LOGGER_CANNOT_OPEN_FILE:
-	  		printf(ERROR_OPENING_LOGGER_FILE_MSG, logger_filename);
-			retval = -1;
-			goto err;
-		
-		default: 
-			break;
-	}
-
-	// get number of images from configuration
-	num_of_images = spConfigGetNumOfImages(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+	// extract parameters from configuration file 
+	spLoggerPrintInfo(EXTRACT_CONFIG_PARAM_LOG);
+	if (getConfigParameters(config, &num_of_similar_images_to_find, &knn, &split_method, &extraction_mode, &minGui) == -1) {
 		retval = -1;
-		goto err;
+		goto err; // error is printed inside getConfigParameters
 	}
 
-	spLoggerPrintInfo(CHECK_EXTRACTION_MODE_INFO_LOG);
-	extraction_mode = spConfigIsExtractionMode(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+	// get all images paths
+	if ((all_images_paths =  getAllImagesPaths(config, &num_of_images)) == NULL) {
 		retval = -1;
-		goto err;
+		goto err; // error is printed inside getAllImagesPaths
 	}
 
+	// initiate image proc
 	improc = new sp::ImageProc(config);
 
+	// extract images features
 	if ((num_of_features = (int*)malloc(sizeof(*num_of_features) * num_of_images)) == NULL) {
 		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		retval = -1;
@@ -179,21 +152,15 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	if (extraction_mode) {
+	spLoggerPrintInfo(CHECK_EXTRACTION_MODE_INFO_LOG);
+	if (extraction_mode) {	// exztraction mode is chosen
 		spLoggerPrintMsg(USE_EXTRACTION_MODE_LOG);
 		spLoggerPrintInfo(EXTRACT_IMAGES_FEATURES_INFO_LOG);
 		// extract each image features and write them to file
 		for (i=0; i < num_of_images; i++) {	
-			// find image path
-			msg = spConfigGetImagePath(current_image_path, config, i);
-			if (msg != SP_CONFIG_SUCCESS) { // should not happen
-				spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-				retval = -1;
-				goto err;
-			}
 
 			// extract image features
-			features_per_image[i] = improc->getImageFeatures(current_image_path, i, &(num_of_features[i]));
+			features_per_image[i] = improc->getImageFeatures(all_images_paths[i], i, &(num_of_features[i]));
 
 			if (features_per_image[i] == NULL) {
 				retval = -1;
@@ -241,8 +208,6 @@ int main(int argc, char *argv[]) {
 		goto err;
 	}
 
-	//get split method value
-	split_method = spConfigGetKDTreeSplitMethod(config, &msg);
 
 	// create one SPPoint array for all features images
 	counter = 0;
@@ -267,28 +232,6 @@ int main(int argc, char *argv[]) {
 		goto err; // error log is printed inside InitTree
 	}
 
-	// get parameters for k-nearest-images algorithm
-	num_of_similar_images_to_find = spConfigGetNumOfSimilarImages(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) { 
-		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-
-	knn = spConfigGetKNN(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-
-	// print debug log
-	if ((n = sprintf(string_holder, NUM_OF_SIMILAR_IMAGES_DEBUG_LOG, num_of_similar_images_to_find, knn)) < 0) {
-		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__); 
 
 	while(1) {
 		// get a query image from the user
@@ -338,25 +281,12 @@ int main(int argc, char *argv[]) {
 		}
 
 		// show (display) closest_images images
-		//initialize minGui
-		minGui = spConfigMinimalGui(config, &msg);
-		if (msg != SP_CONFIG_SUCCESS) {
-			spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-			retval = -1;
-			goto err;
-		}
 
 		//need to show images
 		if (minGui==true){ 
 			for (i=0; i<num_of_similar_images_to_find; i++){
 				//get file path of the images by the indexes in closest_images
-				msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
-				if (msg != SP_CONFIG_SUCCESS) { // should not happen
-					spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-					retval = -1;
-					goto err;
-				}
-				improc->showImage(current_image_path);
+				improc->showImage(all_images_paths[closest_images[i]]);
 			}
 		}
 
@@ -374,13 +304,7 @@ int main(int argc, char *argv[]) {
 			//print the candidates paths, first path is the closest image
 			for (i=0; i<num_of_similar_images_to_find; i++){
 				//get file path of the images by the indexes in closest_images
-				msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
-				if (msg != SP_CONFIG_SUCCESS) { // should not happen
-					spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-					retval = -1;
-					goto err;
-				}
-				printf("%s", current_image_path);
+				printf("%s", current_image_path[closest_images[i]]);
 				fflush(NULL);
 			}
 		}
@@ -395,6 +319,14 @@ int main(int argc, char *argv[]) {
 
 		spConfigDestroy(config);
 		free(closest_images);
+
+		// free all images paths
+		if (all_images_paths != NULL) {
+			for (i = 0; i < num_of_images; i ++) {
+				free(all_images_paths[i]);
+			}
+			free(all_images_paths);
+		}
 
 		// free query_features
 		if (query_features != NULL) {
