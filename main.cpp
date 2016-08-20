@@ -16,8 +16,10 @@ extern "C"{
 #define CMD_LINE_CONFIG_FILENAME_FLAG 			"-c"   // the commang ine flag
 #define CONFIG_FILE_PATH_SIZE      	  			1024   // the maximum length  of path to any file
 #define FILE_PATH_SIZE_PLUS						1060
+#define EXIT_SIGN 								"<>"   // when user enters this input the program will exit
 
 // messaged to print to stdout
+#define EXIT_MSG 								"Exiting...\n"
 #define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
 #define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn't be open\n"
 #define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn't be open\n"
@@ -265,13 +267,7 @@ int main(int argc, char *argv[]) {
 		goto err; // error log is printed inside InitTree
 	}
 
-
-	// get a query image from the user
-	printf(ENTER_AN_IMAGE_MSG);
-	fflush(NULL);
-	scanf("%s",query_image);
-
-	// get query image's features
+	// get parameters for k-nearest-images algorithm
 	num_of_similar_images_to_find = spConfigGetNumOfSimilarImages(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) { 
 		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
@@ -294,86 +290,99 @@ int main(int argc, char *argv[]) {
 	}
 	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__); 
 
+	while(1) {
+		// get a query image from the user
+		printf(ENTER_AN_IMAGE_MSG);
+		fflush(NULL);
+		scanf("%s",query_image);
 
-	// extract query image features
-	spLoggerPrintMsg(EXTRACT_QUERY_IMAGE_FEATURES_LOG);
-	if ((query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features)) == NULL) {
-		retval = -1;
-		goto err; // error log is printed inside getImageFeatures	
-	}
-	
-	// print debug log
-	if ((n = sprintf(string_holder, NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG, query_num_of_features)) < 0) {
-		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
-	
-	//  print log message
-	if ((n = sprintf(string_holder, SEARCING_SIMILAR_IMAGES_MSG, num_of_similar_images_to_find)) < 0) {
-		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-	spLoggerPrintMsg(string_holder);
-
-	// find closest images to the query image
-	closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
-									   kd_tree, query_num_of_features, num_of_images, num_of_features);
-
-
-	if (closest_images == NULL) { 
-		// error is printed to inside getKClosestImages
-		retval = -1;
-		goto err;
-	}
-
-	// show (display) closest_images images
-	//initialize minGui
-	minGui = spConfigMinimalGui(config, &msg);
-	if (msg != SP_CONFIG_SUCCESS) {
-		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-
-	//need to show images
-	if (minGui==true){ 
-		for (i=0; i<num_of_similar_images_to_find; i++){
-			//get file path of the images by the indexes in closest_images
-			msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
-			if (msg != SP_CONFIG_SUCCESS) { // should not happen
-				spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-				retval = -1;
-				goto err;
-			}
-			improc->showImage(current_image_path);
+		// exit if user asked
+		if (strcmp (query_image,EXIT_SIGN) == 0) {
+			printf(EXIT_MSG);
+			fflush(NULL);
+			goto err; // free memory and quit 
 		}
-	}
 
-	// i.e. minGui==false,  just need to print images path
-	else{
-		// initialize best_candidate_msg
-		if ((n = sprintf(best_candidate_msg,BEST_CADIDATES,query_image)) < 0) {
+		// extract query image features
+		spLoggerPrintMsg(EXTRACT_QUERY_IMAGE_FEATURES_LOG);
+		if ((query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features)) == NULL) {
+			retval = -1;
+			goto err; // error log is printed inside getImageFeatures	
+		}
+		
+		// print debug log
+		if ((n = sprintf(string_holder, NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG, query_num_of_features)) < 0) {
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			retval = -1;
 			goto err;
 		}
-		//print best_candidate_msg
-		printf("%s", best_candidate_msg);
-		fflush(NULL);
-		//print the candidates paths, first path is the closest image
-		for (i=0; i<num_of_similar_images_to_find; i++){
-			//get file path of the images by the indexes in closest_images
-			msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
-			if (msg != SP_CONFIG_SUCCESS) { // should not happen
-				spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+		spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
+		
+		//  print log message
+		if ((n = sprintf(string_holder, SEARCING_SIMILAR_IMAGES_MSG, num_of_similar_images_to_find)) < 0) {
+			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+			retval = -1;
+			goto err;
+		}
+		spLoggerPrintMsg(string_holder);
+
+		// find closest images to the query image
+		closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
+										   kd_tree, query_num_of_features, num_of_images, num_of_features);
+
+
+		if (closest_images == NULL) { 
+			// error is printed to inside getKClosestImages
+			retval = -1;
+			goto err;
+		}
+
+		// show (display) closest_images images
+		//initialize minGui
+		minGui = spConfigMinimalGui(config, &msg);
+		if (msg != SP_CONFIG_SUCCESS) {
+			spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+			retval = -1;
+			goto err;
+		}
+
+		//need to show images
+		if (minGui==true){ 
+			for (i=0; i<num_of_similar_images_to_find; i++){
+				//get file path of the images by the indexes in closest_images
+				msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
+				if (msg != SP_CONFIG_SUCCESS) { // should not happen
+					spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+					retval = -1;
+					goto err;
+				}
+				improc->showImage(current_image_path);
+			}
+		}
+
+		// i.e. minGui==false,  just need to print images path
+		else{
+			// initialize best_candidate_msg
+			if ((n = sprintf(best_candidate_msg,BEST_CADIDATES,query_image)) < 0) {
+				spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 				retval = -1;
 				goto err;
 			}
-			printf("%s", current_image_path);
+			//print best_candidate_msg
+			printf("%s", best_candidate_msg);
 			fflush(NULL);
+			//print the candidates paths, first path is the closest image
+			for (i=0; i<num_of_similar_images_to_find; i++){
+				//get file path of the images by the indexes in closest_images
+				msg = spConfigGetImagePath(current_image_path, config, closest_images[i]);
+				if (msg != SP_CONFIG_SUCCESS) { // should not happen
+					spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+					retval = -1;
+					goto err;
+				}
+				printf("%s", current_image_path);
+				fflush(NULL);
+			}
 		}
 	}
 
