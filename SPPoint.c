@@ -18,7 +18,6 @@ struct sp_point_t{
 };
 
 	SPPoint spPointCreate(double* data, int dim, int index){
-
 		SPPoint point;
 		int i;
 		printf("spPointCreate 1\n"); //todo remove this

@@ -27,10 +27,12 @@ struct sp_KDArray_t{
 };
 
 SPPoint getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index){
+	SPPoint p;
 	printf("getCopyOfPointfromArrayOfPoints 1\n"); //todo remove this
 	assert (kdArray != NULL);
 	printf("getCopyOfPointfromArrayOfPoints 2\n"); //todo remove this
-	return spPointCopy(kdArray->array_of_points[index]);
+	p = spPointCopy(kdArray->array_of_points[index]);
+	return p;
 }
 
 int getValFromMatrixOfSortedIndexes(SPKDArray kdArray, int row, int col){
