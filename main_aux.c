@@ -635,7 +635,7 @@ int PrintMinGuiFalse(char* query_image,int num_of_similar_images_to_find, char**
 		//get file path of the images by the indexes in closest_images
 		printf("%s", all_images_paths[closest_images[i]]);
 		fflush(NULL);
-		}
+	}
 	printf("step 19\n"); // todo remove
 	return 1;
 }

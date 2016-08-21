@@ -254,12 +254,13 @@ int main(int argc, char *argv[]) {
 		else{
 			print_result = PrintMinGuiFalse(query_image, num_of_similar_images_to_find, all_images_paths, closest_images);
 			if (print_result == 0) {
-				spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 				retval = -1;
-				goto err;
+				goto err; // error is printed inside PrintMinGuiFalse
 			}
 
 		}
+		// todo need to free stuff before starting while loop again?
+	}
 
 			
 	// done - destroy logger and free everything 
@@ -313,5 +314,4 @@ int main(int argc, char *argv[]) {
 
 	printf(DONE_MSG);
 	return retval;
-}
 }
