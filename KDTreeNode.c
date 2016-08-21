@@ -128,15 +128,21 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	printf("CreateKDTree 2\n"); //todo remove this
 	//if KDArray has only one point
 	if (n==1){
+		printf("CreateKDTree 2.0\n"); //todo remove this
 		p = getCopyOfPointfromArrayOfPoints(KDArray, 0);
+		printf("CreateKDTree 2.05\n"); //todo remove this
 		newNode = InitNode(-1,INFINITY,NULL,NULL,p);
+		printf("CreateKDTree 2.1\n"); //todo remove this
 		if (newNode==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+			printf("CreateKDTree 2.2\n"); //todo remove this
 			destroyKDArray(KDArray);
 			return NULL;
 		}
+		printf("CreateKDTree 2.3\n"); //todo remove this
 		destroyKDArray(KDArray);
+		printf("CreateKDTree 2.4\n"); //todo remove this
 		return newNode;
 	}
 
@@ -175,11 +181,13 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	left = CreateKDTree(splited_arrays[0], split_dimension, split_method);
 	if (left==NULL){
 		destroyKDArray(KDArray);
+		//todo add destroyKDArray(splited_arrays[1])? and free(splited_arrays)?
 		return NULL;
 	}
 	right = CreateKDTree(splited_arrays[1], split_dimension, split_method);
 	if (right==NULL){
 		destroyKDArray(KDArray);
+		//todo add destroyKDArray(splited_arrays[0])? and free(splited_arrays)?
 		return NULL;
 	}
 

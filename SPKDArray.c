@@ -27,7 +27,9 @@ struct sp_KDArray_t{
 };
 
 SPPoint getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index){
+	printf("getCopyOfPointfromArrayOfPoints 1\n"); //todo remove this
 	assert (kdArray != NULL);
+	printf("getCopyOfPointfromArrayOfPoints 2\n"); //todo remove this
 	return spPointCopy(kdArray->array_of_points[index]);
 }
 
