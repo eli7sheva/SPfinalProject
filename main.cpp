@@ -259,7 +259,7 @@ int main(int argc, char *argv[]) {
 				goto err;
 			}
 
-	}
+		}
 
 			
 	// done - destroy logger and free everything 
@@ -313,4 +313,5 @@ int main(int argc, char *argv[]) {
 
 	printf(DONE_MSG);
 	return retval;
+}
 }
