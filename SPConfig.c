@@ -796,7 +796,9 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		// error if line is invalid (msg error code is set in the called function)
 		if (parameter_found_index == -1) {
     		fclose(fp);	
+    		printf("11\n");////todo remove this
     		spConfigDestroy(config); //free config
+    		printf("22\n"); //todo remove this
 			return NULL; // error is printed inside parseLine
 		}
 
@@ -921,13 +923,18 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 
 
 SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg){
+	printf("yay1\n");
 	assert(msg != NULL);
+	printf("yay2\n");
  	*msg = SP_CONFIG_SUCCESS; // default is success
+	printf("yay3\n");
 
 	if (config == NULL) {
+		printf("yay3.1\n");
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
+	printf("yay4 done\n");
 
  	return config->spLoggerLevel;
 }
@@ -994,7 +1001,7 @@ SP_CONFIG_MSG spConfigGetLoggerFileName(char* filename, const SPConfig config) {
 
 
 
-// todo check this
+// todo check this should 
 void spConfigDestroy(SPConfig config) {
 	if (config != NULL) {
 		free(config->spImagesDirectory);

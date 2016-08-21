@@ -95,12 +95,13 @@ int* nearestImages(double* arr, int size, int nearestNImages){
     int* first_minimums;        // the nearestNImages indexes that are the minimum values
     int i;
     int j;
-
+    printf("nearest 1\n");//todo remove this
     // if asked to find miminums more than the values in the array, return NULL
     if (nearestNImages > size) {
         spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
         return NULL;
     }
+    printf("nearest2\n");//todo remove this
 
     // allocate array of minimums (size of nearestNImages)
     first_minimums = (int*) malloc(nearestNImages*sizeof(int));
@@ -109,6 +110,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
         fflush(NULL);
         return NULL;
     }
+    printf("nearest3\n");//todo remove this
 
     if ((arr_with_indixes = (double**)malloc(size*sizeof(double*))) == NULL) {
         spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -116,6 +118,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
         fflush(NULL);
         return NULL;
     }
+    printf("nearest4\n");//todo remove this
 
     for (i = 0; i < size; i++){
         if ((arr_with_indixes[i] = (double *)malloc(2*sizeof(double))) == NULL ) {
@@ -130,12 +133,14 @@ int* nearestImages(double* arr, int size, int nearestNImages){
         }
     }
 
+    printf("nearest5\n");//todo remove this
     // initialize arr_with_indexes
     for(i = 0; i < size; i++){
         arr_with_indixes[i][0] = arr[i];    // copy value from arr
         arr_with_indixes[i][1] = i;         // set index before sorting
     }
 
+    printf("nearest6\n");//todo remove this
     // sort
     qsort(arr_with_indixes, size, sizeof(double*), compare);
 
@@ -143,6 +148,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
     for (i=0; i<nearestNImages; i++) {
         first_minimums[i] = (int)arr_with_indixes[i][1];
     }
+    printf("nearest7\n");//todo remove this
 
     free(arr_with_indixes);
     return first_minimums;
@@ -156,19 +162,13 @@ KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_feat
     int i;      
     int j;
 
+    printf("init 1\n");//todo remove this
     for (i=0; i < num_of_images; i++) { 
         total_num_of_features = total_num_of_features + num_of_features_per_image[i];
     }
 
-// // todo -  print debug log?
-// #define STORE_FEATURES_INTO_KD_TREE_LOG      "Storing all extracted features (%d) into kd tree..."
-//     if ((n = sprintf(string_holder, STORE_FEATURES_INTO_KD_TREE_LOG, total_num_of_features)) < 0) {
-//         spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-//         retval = -1;
-//         goto err;
-//     }
-//     spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
-
+    printf("init 2 total num of features in all images is %d\n", total_num_of_features);//todo remove this
+    
 
     if ((all_features = (SPPoint*)malloc(sizeof(*all_features) * total_num_of_features)) == NULL) {
         spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
@@ -176,27 +176,33 @@ KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_feat
     }
 
 
+    printf("init 3\n");//todo remove this
     // create one SPPoint array for all features images
     for (i = 0; i < num_of_images; i ++)
     {
+        printf("init 3.1\n");//todo remove this
         for (j = 0; j < num_of_features_per_image[i]; j++)
         {
+            printf("init 3.2\n");//todo remove this
             if ((all_features[counter] = spPointCopy(features_per_image[i][j])) == NULL) {
                 spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
                 goto err;
             }
+            printf("init 3.3\n");//todo remove this
             //set the index of each point (feature) to be the number of the image it belongs to
             spPointSetIndex(all_features[counter], i);
             counter++;
         }
     }
 
+    printf("init 4\n");//todo remove this
     // initiate kd tree with all features of all images
     if ((kd_tree = InitTree(all_features, total_num_of_features, split_method)) == NULL){
         kd_tree = NULL;
         goto err; // error log is printed inside InitTree
     }
 
+    printf("init 5\n");//todo remove this
 
     err:
         // free all_features
@@ -375,20 +381,27 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
  * @return -1 on failure (and prints the errors) and 0 on success
  */
 int initiateLoggerByConfig(const SPConfig config) {
+    printf("inside1\n"); //todo remove
     SP_CONFIG_MSG msg;
     SP_LOGGER_LEVEL logger_level;                   // the logger level in configuration file
     char logger_filename[CONFIG_FILE_PATH_SIZE];    // the logger filename in configuration file
-
+    printf("inside2\n"); //todo remove
+    
     logger_level = spConfigGetLoggerLevel(config, &msg);
+    printf("inside3\n"); //todo remove
     if (msg != SP_CONFIG_SUCCESS) {
         printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
         return -1;
     }
+    printf("inside4\n");// logger level is %u\n" %logger_level); //todo remove
+    
 
     if (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS) {
         printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
         return -1;
     }
+    printf("inside5 logger file name is %s\n", logger_filename); //todo remove
+    
 
     switch(spLoggerCreate(logger_filename, logger_level)) {
        case SP_LOGGER_DEFINED:
@@ -407,6 +420,7 @@ int initiateLoggerByConfig(const SPConfig config) {
             break;
     }
 
+    printf("here4\n"); //todo remove
     return 0;
 }
 
@@ -433,18 +447,20 @@ int getConfigParameters(const SPConfig config, int* num_of_similar_images, int* 
         spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
         return -1;
     }
-
+    printf("extraction_mode is %d\n", *extraction_mode); //todo remove this
     *num_of_similar_images = spConfigGetNumOfSimilarImages(config, &msg);
     if (msg != SP_CONFIG_SUCCESS) { 
         spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
         return -1;
     }
 
+    printf("num_of_similar_images is %d\n", *num_of_similar_images); //todo remove this
     *knn = spConfigGetKNN(config, &msg);
     if (msg != SP_CONFIG_SUCCESS) {
         spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
         return -1;
     }
+    printf("knn is %d\n", *knn); //todo remove this
 
 
     *split_method = spConfigGetKDTreeSplitMethod(config, &msg);
@@ -453,11 +469,14 @@ int getConfigParameters(const SPConfig config, int* num_of_similar_images, int* 
         return -1;
     }
 
+    printf("split_method is %d\n", *split_method); //todo remove this
     *min_gui = spConfigMinimalGui(config, &msg);
     if (msg != SP_CONFIG_SUCCESS) {
         spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
         return -1;
     }
+
+    printf("min_gui is %d\n", *min_gui); //todo remove this
 
     return 0;
 }
@@ -494,17 +513,20 @@ char** getAllImagesPaths(const SPConfig config, int* num_of_images) {
     int j;
     int error = 0;
 
+    printf("ho 1\n"); //todo remove
     *num_of_images = spConfigGetNumOfImages(config, &msg);
     if (msg != SP_CONFIG_SUCCESS) {
         spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
         return NULL;
     }
+    printf("ho 2\n"); //todo remove
 
     if ((images_paths = (char**)malloc(sizeof(*images_paths) * (*num_of_images))) == NULL) {
         spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
         return NULL;
     }
 
+    printf("ho 3\n"); //todo remove
     for(i=0; i< (*num_of_images); i++) {
         if ((images_paths[i] = (char*)malloc(sizeof(*(images_paths[i])) * CONFIG_FILE_PATH_SIZE)) == NULL) {
             spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
@@ -545,12 +567,16 @@ int initFromConfig(const SPConfig config, int* num_of_images, int* num_of_simila
     if (getConfigParameters(config, num_of_similar_images, knn, split_method, extraction_mode, min_gui) == -1) {
         return -1;// error is printed inside getConfigParameters
     }
+    printf("extraction_mode is --%d\n", *extraction_mode); //todo remove this
+    printf("num_of_similar_images is --%d\n", *num_of_similar_images); //todo remove this
+    printf("knn is --%d\n", *knn); //todo remove this
+    printf("split_method is --%d\n", *split_method); //todo remove this
+    printf("min_gui is --%d\n", *min_gui); //todo remove this
 
     // get all images paths
     if ((*all_images_paths =  getAllImagesPaths(config, num_of_images)) == NULL) {
         return -1; // error is printed inside getAllImagesPaths
     }
-
     return 0;
 }
 

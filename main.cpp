@@ -101,12 +101,14 @@ int main(int argc, char *argv[]) {
 	
 		strcpy(config_filename, argv[2]);
 		config = spConfigCreate(config_filename, &msg);
-		
+		printf("here1\n"); //todo remove this
 		if (msg == SP_CONFIG_CANNOT_OPEN_FILE) {
+			printf("here2\n"); //todo remove this
 			printf(ERROR_OPENING_CONFIG_FILE_MSG, config_filename);
 		}
 
 		if (msg != SP_CONFIG_SUCCESS) {
+			printf("here3\n"); //todo remove this
 			retval = -1;
 			goto err; // error is printed inside spConfigCreate
 		}
@@ -119,8 +121,16 @@ int main(int argc, char *argv[]) {
 	}
 
 
+	//TODO REMOVE THIS FOR
+    printf("images paths are:\n"); //todo remove this
+    for(i=0; i< num_of_images; i++) {
+        printf("%s\n",all_images_paths[i]); //todo remove this
+    }
+
+	printf("done images paths!!\nstep 1\n"); // todo remove
 	// initiate image proc
 	improc = new sp::ImageProc(config);
+	printf("step 1.5\n"); // todo remove
 
 	// extract images features
 	if ((num_of_features_per_image = (int*)malloc(sizeof(*num_of_features_per_image) * num_of_images)) == NULL) {
@@ -128,6 +138,7 @@ int main(int argc, char *argv[]) {
 		retval = -1;
 		goto err;
 	}
+	printf("step 2\n"); // todo remove
 
 
 	spLoggerPrintInfo(CHECK_EXTRACTION_MODE_INFO_LOG);
@@ -135,15 +146,16 @@ int main(int argc, char *argv[]) {
 		spLoggerPrintMsg(USE_EXTRACTION_MODE_LOG);
 		spLoggerPrintInfo(EXTRACT_IMAGES_FEATURES_INFO_LOG);
 
+		printf("step 3\n"); // todo remove
 		if ((features_per_image = (SPPoint**)malloc(sizeof(*features_per_image) * num_of_images)) == NULL) {
 			spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 			retval = -1;
 			goto err;
 		}
+		printf("step 4\n"); // todo remove
 
 		// extract each image features and write them to file
 		for (i=0; i < num_of_images; i++) {	
-
 			// extract image features
 			if ((features_per_image[i] = improc->getImageFeatures(all_images_paths[i], i, &(num_of_features_per_image[i]))) == NULL) {
 				last_extracted_feature = i;
@@ -151,27 +163,33 @@ int main(int argc, char *argv[]) {
 				goto err; // error is printed inside  getImageFeatures
 			}
 		}
+		printf("step 5\n"); // todo remove
 
 		if (saveToDirectory(config, features_per_image, num_of_features_per_image, num_of_images) == -1) {
 			retval = -1;
 			goto err; // error is printed inside  saveToDirectory
 		}
+		printf("step 6\n"); // todo remove
 	}
 
 	else { // not extraction mode
 		spLoggerPrintMsg(USE_NOT_EXTRACTION_MODE_LOG);
 		spLoggerPrintInfo(READ_FEATURES_FROM_FILE_LOG);
+		printf("step 7\n"); // todo remove
 
 		if ((features_per_image = extractFromFiles(config, num_of_features_per_image, num_of_images)) == NULL) {
 			retval = -1;
 			goto err; // error is printed inside  extractFromFiles
 		}
+		printf("step 8\n"); // todo remove
 	}
 	
+	printf("step 9\n"); // todo remove
 	if ((kd_tree = initiateDataStructures(features_per_image, num_of_features_per_image, num_of_images, split_method)) == NULL) {
 		retval = -1;
 		goto err; // error is printed inside initiateDataStructures
 	}
+	printf("step 10\n"); // todo remove
 
 	while(1) {
 		// get a query image from the user
@@ -186,6 +204,7 @@ int main(int argc, char *argv[]) {
 			goto err; // free memory and quit 
 		}
 
+		printf("step 11\n"); // todo remove
 		// extract query image features
 		spLoggerPrintMsg(EXTRACT_QUERY_IMAGE_FEATURES_LOG);
 		if ((query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features)) == NULL) {
@@ -193,12 +212,14 @@ int main(int argc, char *argv[]) {
 			goto err; // error log is printed inside getImageFeatures	
 		}
 		
+		printf("step 12\n"); // todo remove
 		// print debug log
 		if ((n = sprintf(string_holder, NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG, query_num_of_features)) < 0) {
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			retval = -1;
 			goto err;
 		}
+		printf("step 13\n"); // todo remove
 		spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
 		
 		//  print log message
@@ -207,6 +228,7 @@ int main(int argc, char *argv[]) {
 			retval = -1;
 			goto err;
 		}
+		printf("step 14\n"); // todo remove
 		spLoggerPrintMsg(string_holder);
 
 		// find similar images to the query image
@@ -217,6 +239,7 @@ int main(int argc, char *argv[]) {
 			retval = -1;
 			goto err; // error is printed to inside getKClosestImages
 		}
+		printf("step 15\n"); // todo remove
 
 		// show (display) closest_images images
 
@@ -227,15 +250,18 @@ int main(int argc, char *argv[]) {
 				improc->showImage(all_images_paths[closest_images[i]]);
 			}
 		}
+		
 
 		// i.e. minGui==false,  just need to print images path
 		else{
+			printf("step 17\n"); // todo remove
 			// initialize best_candidate_msg
 			if ((n = sprintf(best_candidate_msg,BEST_CADIDATES,query_image)) < 0) {
 				spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 				retval = -1;
 				goto err;
 			}
+			printf("step 18\n"); // todo remove
 			//print best_candidate_msg
 			printf("%s", best_candidate_msg);
 			fflush(NULL);
@@ -245,27 +271,35 @@ int main(int argc, char *argv[]) {
 				printf("%s", all_images_paths[closest_images[i]]);
 				fflush(NULL);
 			}
+			printf("step 19\n"); // todo remove
 		}
 	}
 
+			
 	// done - destroy logger and free everything 
 	err:
+		printf("1\n"); // todo remove this
 		spLoggerDestroy();
+		printf("2\n"); // todo remove this
 
 		// free the kd tree
 		DestroyKDTreeNode(kd_tree);
-
+		printf("3\n"); // todo remove this
 		spConfigDestroy(config);
+		printf("4\n"); // todo remove this
 		free(closest_images);
+		printf("5\n"); // todo remove this
 
 		// free all images paths
 		if (all_images_paths != NULL) {
 			for (i = 0; i < num_of_images; i ++) {
 				free(all_images_paths[i]);
 			}
+			printf("5.5\n"); // todo remove this
 			free(all_images_paths);
 		}
 
+		printf("6\n"); // todo remove this
 		// free query_features
 		if (query_features != NULL) {
 			for (i=0; i<query_num_of_features; i++) {
@@ -273,6 +307,8 @@ int main(int argc, char *argv[]) {
 			}
 			free(query_features);
 		}
+
+		printf("7\n"); // todo remove this
 
 		if (features_per_image != NULL) {
 			// free features_per_image
@@ -283,8 +319,10 @@ int main(int argc, char *argv[]) {
 					}
 				}
 			}
+			printf("7.5\n"); // todo remove this
 			free(features_per_image);
 		}
+		printf("8\n"); // todo remove this
 		free(num_of_features_per_image); // must be freed after features_per_image
 
 	printf(DONE_MSG);

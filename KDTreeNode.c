@@ -244,30 +244,36 @@ SPPoint KDTreeNodegetData(KDTreeNode node){
 KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	SPKDArray KDArray;
 	KDTreeNode KDTree;
-
+	printf("init tree 1\n"); //todo remove this
 	// check validation of parameter values, prints error to logger if not valid and returns NULL
 	if (arr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
+	printf("init tree 2\n"); //todo remove this
 	if (size<1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
+	printf("init tree 3\n"); //todo remove this
 	KDArray = Init(arr, size);
+	printf("init tree 4\n"); //todo remove this
 	if (KDArray==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
+	printf("init tree 5\n"); //todo remove this
 	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
 	if (KDTree==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
+	printf("init tree 6 - done\n"); //todo remove this
+
 	return KDTree;
 }
 
