@@ -9,6 +9,7 @@
 #include "unit_test_util.h"
 #include <stdbool.h>
 #include <math.h>
+#include <stdlib.h>
 
 static bool InitNodeBasicTest(){
 	double data[3] = {123.0,70.0, 12.6};
@@ -43,7 +44,7 @@ static bool InitNodeDiminvalidTest(){
 	double data[3] = {123.0,70.0, 12.6};
 	KDTreeNode node;
 	int val = 3;
-	SPPoint p = spPointCreate(data, 3, 1);
+	SPPoint p = spPointCreate(data, val, 1);
 	//create and check node
 	node = InitNode(-2, 23.9, NULL, NULL, p);
 	ASSERT_TRUE(node==NULL);
