@@ -7,6 +7,7 @@
 
 #include "SPKDArray.h"
 #include "unit_test_util.h"
+#include <stdlib.h>
 #include <stdbool.h>
 
 SPPoint* getPointArray(){

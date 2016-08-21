@@ -103,7 +103,7 @@ SPPoint** extractFromFiles(const SPConfig config, int* num_of_features_per_image
  *         num_of_similar_images_to_find- the number of similar images (to the query) to find (from configuration file)
  *         all_images_paths- the paths to all the images
  *         closest_images- an array that holds the spNumOfSimilarImages indexes of the closest images to the query image
- *
+ *@return 0 if an error occurred or 1 otherwise
  *
  *
  */
