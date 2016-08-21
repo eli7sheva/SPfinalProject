@@ -14,7 +14,7 @@ extern "C"{
 #define DEFAULT_CONFIG_FILENAME 	  			"spcbir.config"  // default configuration file name
 #define CMD_LINE_CONFIG_FILENAME_FLAG 			"-c"   // the commang ine flag
 #define CONFIG_FILE_PATH_SIZE      	  			1024   // the maximum length  of path to any file
-#define FILE_PATH_SIZE_PLUS						1060
+
 #define EXIT_SIGN 								"<>"   // when user enters this input the program will exit
 
 // messaged to print to stdout
@@ -38,7 +38,6 @@ extern "C"{
 #define READ_FEATURES_FROM_FILE_LOG 			"Reading extracted images' features from features files.."
 
 #define EXTRACT_QUERY_IMAGE_FEATURES_LOG 		"Extracting query image features..."
-#define BEST_CADIDATES 							"Best candidates for - %s -are:\n"
 
 int main(int argc, char *argv[]) {
 	SPConfig config = NULL;						    // hold configuration parameters
@@ -61,7 +60,7 @@ int main(int argc, char *argv[]) {
 	
 	KDTreeNode kd_tree = NULL;						// array holds a KDTree for each image
 	int* closest_images = NULL;  				    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
-	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
+	int print_result;   							// holds the result of the call to PrintMinGuiFalse
 	
 	int retval = 0;									 // return value - default 0 on success
 	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
@@ -250,29 +249,16 @@ int main(int argc, char *argv[]) {
 				improc->showImage(all_images_paths[closest_images[i]]);
 			}
 		}
-		
 
 		// i.e. minGui==false,  just need to print images path
 		else{
-			printf("step 17\n"); // todo remove
-			// initialize best_candidate_msg
-			if ((n = sprintf(best_candidate_msg,BEST_CADIDATES,query_image)) < 0) {
+			print_result = PrintMinGuiFalse(query_image, num_of_similar_images_to_find, all_images_paths, closest_images);
+			if (print_result == 0) {
 				spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 				retval = -1;
 				goto err;
 			}
-			printf("step 18\n"); // todo remove
-			//print best_candidate_msg
-			printf("%s", best_candidate_msg);
-			fflush(NULL);
-			//print the candidates paths, first path is the closest image
-			for (i=0; i<num_of_similar_images_to_find; i++){
-				//get file path of the images by the indexes in closest_images
-				printf("%s", all_images_paths[closest_images[i]]);
-				fflush(NULL);
-			}
-			printf("step 19\n"); // todo remove
-		}
+
 	}
 
 			

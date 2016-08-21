@@ -15,6 +15,8 @@
 #define SPBP_QUEUE_CREATE_RETURNED_NULL "the call to spBPQueueCreate returned NULL"
 #define KNN_RETURNED_NULL               "the call to kNearestNeighbors returned NULL"
 #define ERR_DEQUEUE                     "a problem occurred during the call to spBPQueueDequeue"
+#define BEST_CADIDATES 					"Best candidates for - %s -are:\n"
+#define FILE_PATH_SIZE_PLUS				1060 //1024 for path plus room for more words in the string
 
 #define EXTRACT_CONFIG_PARAM_LOG                "Extrating parameters from configuration file..."
 #define INITIALIZING_LOGGER_INFO_MSG            "Initializing logger, reading logger parameters from configuration\n"
@@ -611,3 +613,30 @@ SPPoint** extractFromFiles(const SPConfig config, int* num_of_features_per_image
     }
     return features_per_image;
 }
+
+int PrintMinGuiFalse(char* query_image,int num_of_similar_images_to_find, char** all_images_paths,
+					int* closest_images){
+	int i;
+	int n;
+	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
+
+	printf("step 17\n"); // todo remove
+	// initialize best_candidate_msg
+	if ((n = sprintf(best_candidate_msg,BEST_CADIDATES,query_image)) < 0) {
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		return 0;
+	}
+	printf("step 18\n"); // todo remove
+	//print best_candidate_msg
+	printf("%s", best_candidate_msg);
+	fflush(NULL);
+	//print the candidates paths, first path is the closest image
+	for (i=0; i<num_of_similar_images_to_find; i++){
+		//get file path of the images by the indexes in closest_images
+		printf("%s", all_images_paths[closest_images[i]]);
+		fflush(NULL);
+		}
+	printf("step 19\n"); // todo remove
+	return 1;
+}
+

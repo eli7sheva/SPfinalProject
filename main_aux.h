@@ -95,3 +95,17 @@ int saveToDirectory(const SPConfig config, SPPoint** features_per_image, int* nu
  */
 SPPoint** extractFromFiles(const SPConfig config, int* num_of_features_per_image, int num_of_images);
 #endif
+
+/*
+ * part of the show images
+ * prints to std out the paths of the best images that match the query
+ * @param: query_image- the path of the query image
+ *         num_of_similar_images_to_find- the number of similar images (to the query) to find (from configuration file)
+ *         all_images_paths- the paths to all the images
+ *         closest_images- an array that holds the spNumOfSimilarImages indexes of the closest images to the query image
+ *
+ *
+ *
+ */
+int PrintMinGuiFalse(char* query_image,int num_of_similar_images_to_find, char** all_images_paths,
+					int* closest_images);
