@@ -7,6 +7,7 @@
 #include "SPKDArray.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h> ////TODO remove this with all the prints
 
 #define ALLOC_ERROR_MSG "Allocation error"
 #define INVALID_ARG_ERROR "Invalid arguments"
@@ -126,7 +127,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		return NULL;
 	}
 	printf("init kdArray 10\n"); //todo remove this
-	for (i=0; i<2; i++){
+	for (i=0; i<size; i++){
 		if( (index_val_arr[i]=(double*)malloc(2*sizeof(double))) == NULL){
 			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			for (j=0; j<=i; j++){
