@@ -41,28 +41,28 @@ extern "C"{
 #define BEST_CADIDATES 							"Best candidates for - %s -are:\n"
 
 int main(int argc, char *argv[]) {
-	SPConfig config;								// hold configuration parameters
+	SPConfig config = NULL;						    // hold configuration parameters
 	char config_filename[CONFIG_FILE_PATH_SIZE];    // the configuration file name
 	int knn;										// the number of similar features in each image to find (spKNN from configuration file)
 	int num_of_similar_images_to_find;              // the number of similar images (to the query) to find (from configuration file)
-	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
+	int split_method;                               // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
 	bool minGui = false;                            // value of the system variable MinimalGui
 	bool extraction_mode;							// indicates if extraction mode on or off
-	int num_of_images = 0;   						    // number of images in the directory given by the user in the configuration file
-	char** all_images_paths;						// array with the paths to all the images
+	int num_of_images = 0;   					    // number of images in the directory given by the user in the configuration file
+	char** all_images_paths = NULL;					// array with the paths to all the images
 	
 	SPPoint** features_per_image = NULL;   			// helper - holds the features for each images
-	int* num_of_features_per_image; 							// holds number of features extracted for each image
+	int* num_of_features_per_image = NULL;			// holds number of features extracted for each image
 	
 	char query_image[CONFIG_FILE_PATH_SIZE];        // the query image 
-	SPPoint* query_features; 					    // all query features
+	SPPoint* query_features = NULL;				    // all query features
 	int query_num_of_features;					    // number of features in query image
 	
-	KDTreeNode kd_tree;							    // array holds a KDTree for each image
-	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
+	KDTreeNode kd_tree = NULL;						// array holds a KDTree for each image
+	int* closest_images = NULL;  				    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
 	
-	int retval = 0;									// return value - default 0 on success
+	int retval = 0;									 // return value - default 0 on success
 	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
 	sp::ImageProc *improc;
 	SP_CONFIG_MSG msg;

@@ -423,21 +423,18 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
     }
     
     // check if line is empty or invalid
-    if ((strlen(right) == 0) ^ (strlen(left) == 0)) { // only one of the sides of the assingment is empty - error
-        printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
-        *msg = SP_CONFIG_INVALID_STRING;
-        return -1;
-    } 
-    else { // two sides of the assignment are empty
+	// if at least one of the sides of the assingment is empty - error
+	// in this case or the hole line is empty or it contains "="
+    if ((strlen(right) == 0) || (strlen(left) == 0)) { 
+    	
         trimWhitespace(helper, 1024, line ); 
-        if (strlen(helper) != 0)  {
-            printf(ERROR_INVALID_LINE_MSG, config_filename, line_number); // line contains only '=' - error
-        	*msg = SP_CONFIG_INVALID_STRING;
-            return -1;
-        }
-        else { // line is empty - ignore
+        if (strlen(helper) == 0){ // line is empty - ignore
             return -2;
-        }
+        } else { // line contains only "=" - error
+	        printf(ERROR_INVALID_LINE_MSG, config_filename, line_number);
+	        *msg = SP_CONFIG_INVALID_STRING;
+	        return -1;
+	    }
     }
 
 
