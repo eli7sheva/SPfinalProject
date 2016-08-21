@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+//creates an array of points to use for tests
 SPPoint* getPointArray(){
 	SPPoint* point_array = (SPPoint*)malloc(5*sizeof(SPPoint));
 	double data1[2] = {1.0,2.0};
@@ -24,6 +25,7 @@ SPPoint* getPointArray(){
 	point_array[4] = spPointCreate((double *)data5, 2, 1);
 	return point_array;
 }
+
 /*
  * basic test for Init, when all parameters are valid
  * in this test after Init this is what the values of kdArray should be:
@@ -161,6 +163,26 @@ static bool SplitInvalidParameterKdArr(){
 	return true;
 }
 
+//check basic case of getCopyOfPointfromArrayOfPoints
+static bool getCopyOfPointfromArrayOfPointsTest(){
+	int i;
+	SPPoint p;
+	SPPoint* point_array = getPointArray();
+	SPKDArray kdArray = Init(point_array,5);
+	p = getCopyOfPointfromArrayOfPoints(kdArray, 2);
+	ASSERT_TRUE(spPointGetAxisCoor(p, 0) == 2.0);
+	ASSERT_TRUE(spPointGetAxisCoor(p, 1) == 7.0);
+	ASSERT_TRUE(spPointGetIndex(p) == 1);
+	ASSERT_TRUE(spPointGetDimension(p) == 2);
+	spPointDestroy(p);
+	for (i=0;i<5;i++){
+		spPointDestroy(point_array[i]);
+	}
+	free(point_array);
+	destroyKDArray(kdArray);
+	return true;
+}
+
 int main() {
 	RUN_TEST(InitBasicTest);
 	RUN_TEST(InitInvalidParameterSize);
@@ -168,5 +190,6 @@ int main() {
 	RUN_TEST(SplitBasicTest);
 	RUN_TEST(SplitInvalidParameterCoor);
 	RUN_TEST(SplitInvalidParameterKdArr);
+	RUN_TEST(getCopyOfPointfromArrayOfPointsTest);
 	return 0;
 }
