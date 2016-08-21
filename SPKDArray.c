@@ -46,27 +46,32 @@ int getD(SPKDArray kdArray){
 }
 
 SPKDArray Init(SPPoint* arr, int size){
+	printf("init kdArray 1\n"); //todo remove this
 	SPKDArray KDArray = (SPKDArray)malloc(sizeof(SPKDArray));
 	int d = spPointGetDimension(arr[0]); // d = the dimension of the points (assuming dimension is the same for all points)
 	double** index_val_arr; //double array containing n rows. each row contains the index and the value of a specific coordinate in the point of that index
 	int i,j;
 
+	printf("init kdArray 2\n"); //todo remove this
 	//check validation of the parameters
 	if (size<1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
+	printf("init kdArray 3\n"); //todo remove this
 	if (arr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
+	printf("init kdArray 4\n"); //todo remove this
 	// initialize n and d
 	KDArray->n = size;
 	KDArray->d = d;
 
+	printf("init kdArray 5\n"); //todo remove this
 	// allocate memory for KDArray->array_of_points
 	if ( (KDArray->array_of_points = (SPPoint*)malloc(size*sizeof(SPPoint))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -75,6 +80,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		return NULL;
 	}
 
+	printf("init kdArray 6\n"); //todo remove this
 	//copy each point from arr to KDArray->array_of_points
 	for (i=0; i<size; i++){
 		KDArray->array_of_points[i] = spPointCopy(arr[i]); //spPointCopy returns NULL if an allocation error occurred
@@ -90,6 +96,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		}
 	}
 
+	printf("init kdArray 7\n"); //todo remove this
 	//allocate memory for KDArray->matrix_of_sorted_indexes, this will be a d*n matrix, the i'th row is the indexes of the points in arr sorted according to their i'th dimension
 	if ( (KDArray->matrix_of_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -98,6 +105,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		free(KDArray);
 		return NULL;
 	}
+	printf("init kdArray 8\n"); //todo remove this
 	for (i=0; i<d; i++){
 		if( (KDArray->matrix_of_sorted_indexes[i]=(int*)malloc(size*sizeof(int))) == NULL){
 			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -110,12 +118,14 @@ SPKDArray Init(SPPoint* arr, int size){
 		}
 	}
 
+	printf("init kdArray 9\n"); //todo remove this
 	//allocate memory for index_val_arr: n rows, 2 columns
 	if ( (index_val_arr = (double**)malloc(size*sizeof(double*))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(index_val_arr);
 		return NULL;
 	}
+	printf("init kdArray 10\n"); //todo remove this
 	for (i=0; i<2; i++){
 		if( (index_val_arr[i]=(double*)malloc(2*sizeof(double))) == NULL){
 			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -127,6 +137,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		}
 	}
 
+	printf("init kdArray 11\n"); //todo remove this
 	// for each coordinate
 	for (i=0; i<d; i++){ // i=coordinate
 
@@ -136,12 +147,14 @@ SPKDArray Init(SPPoint* arr, int size){
 			index_val_arr[j][1] = spPointGetAxisCoor(arr[j],i);
 		}
 
+		printf("init kdArray 12\n"); //todo remove this
 		/* sort the rows in index_val_arr by the value in the second column,
 		 * meaning by the value of the coordinate of each point.
 		 * the first column will be the indexes of the points sorted by the values of the coordinate
 		 */
 		qsort(index_val_arr, size, sizeof(double*), copmareByValue);
 
+		printf("init kdArray 13\n"); //todo remove this
 		// fill the sorted indexes in to KDArray->Array
 		for (j=0; j<size; j++){ //j=index of point
 			KDArray->matrix_of_sorted_indexes[i][j] = index_val_arr[j][0];
