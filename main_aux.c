@@ -180,15 +180,12 @@ KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_feat
     // create one SPPoint array for all features images
     for (i = 0; i < num_of_images; i ++)
     {
-        printf("init 3.1\n");//todo remove this
         for (j = 0; j < num_of_features_per_image[i]; j++)
         {
-            printf("init 3.2\n");//todo remove this
             if ((all_features[counter] = spPointCopy(features_per_image[i][j])) == NULL) {
                 spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
                 goto err;
             }
-            printf("init 3.3\n");//todo remove this
             //set the index of each point (feature) to be the number of the image it belongs to
             spPointSetIndex(all_features[counter], i);
             counter++;
