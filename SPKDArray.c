@@ -359,12 +359,14 @@ void destroyKDArray(SPKDArray KDArray){
 	if (KDArray==NULL){
 		return;
 	}
+	printf("destroyKDArray 1\n"); //todo remove this
 	if (KDArray->array_of_points!=NULL){
 		for (i=0; i<n; i++){
 			spPointDestroy(KDArray->array_of_points[i]);
 		}
 		free(KDArray->array_of_points);
 	}
+	printf("destroyKDArray 2\n"); //todo remove this
 	if (KDArray->matrix_of_sorted_indexes!=NULL){
 		for(i=0; i<d;i++){
 			if (KDArray->matrix_of_sorted_indexes[i]!=NULL){
