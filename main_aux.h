@@ -67,7 +67,7 @@ KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_feat
  *   
  * @return -1 on failure (and prints the errors) and 0 on success
  */
-int initFromConfig(const SPConfig config, int* num_of_images, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui, char *** all_images_paths);
+ int initFromConfig(const SPConfig config, int* num_of_images, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui, char *** all_images_paths);
 
 /**
  * saves images features into file (iuse in extraction mode)

@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
 	int num_of_images = 0;   					    // number of images in the directory given by the user in the configuration file
 	char** all_images_paths = NULL;					// array with the paths to all the images
 	
+	int last_extracted_feature = 0;  				// helper - holds the last feature extracted in order to free all extracted features on error
 	SPPoint** features_per_image = NULL;   			// helper - holds the features for each images
 	int* num_of_features_per_image = NULL;			// holds number of features extracted for each image
 	
@@ -145,6 +146,7 @@ int main(int argc, char *argv[]) {
 
 			// extract image features
 			if ((features_per_image[i] = improc->getImageFeatures(all_images_paths[i], i, &(num_of_features_per_image[i]))) == NULL) {
+				last_extracted_feature = i;
 				retval = -1;
 				goto err; // error is printed inside  getImageFeatures
 			}
@@ -274,7 +276,7 @@ int main(int argc, char *argv[]) {
 
 		if (features_per_image != NULL) {
 			// free features_per_image
-			for (i = 0; i < num_of_images; i ++) {
+			for (i = 0; i < last_extracted_feature; i ++) {
 				if (features_per_image[i] != NULL) {
 					for (j = 0; j < num_of_features_per_image[i]; j++) {
 						spPointDestroy(features_per_image[i][j]);

@@ -515,8 +515,8 @@ char** getAllImagesPaths(const SPConfig config, int* num_of_images) {
             return NULL;
         }
     }
-
-    for(i=0; error & (i< (*num_of_images)); i++) {
+    
+    for(i=0; (!error) & (i< (*num_of_images)); i++) {
         msg = spConfigGetImagePath(images_paths[i], config, i);
         error = (msg != SP_CONFIG_SUCCESS);
     }
