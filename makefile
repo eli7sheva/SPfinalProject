@@ -18,7 +18,7 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
-main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPExtractFeatures.h SPImageProc.h main_aux.h KDTreeNode.h #put dependencies here!
+main.o: main.cpp SPPoint.h SPLogger.h SPConfig.h SPImageProc.h main_aux.h KDTreeNode.h 
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
@@ -40,23 +40,13 @@ SPList.o: SPList.c SPList.h SPListElement.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPListElement.o: SPListElement.c SPListElement.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
-main_aux.o: main_aux.h main_aux.c SPLogger.h KDTreeNode.h #put dependencies here!
+main_aux.o: main_aux.h main_aux.c SPLogger.h KDTreeNode.h SPExtractFeatures.h SPConfig.h SPPoint.h
 	$(CC) $(C_COMP_FLAG) -I$(INCLUDEPATH) -c $*.c
 	
 
 
 #a rule for building a simple c souorce file
 #use gcc -MM SPPoint.c to see the dependencies
-
-#add here you .o files
-
-## todo should add if use queue should also add in more places..
-# SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h SPList.h SPListElement.h
-# 	$(CC) $(COMP_FLAG) -c $*.c
-# SPList.o: SPList.c SPList.h SPListElement.h
-# 	$(CC) $(COMP_FLAG) -c $*.c
-# SPListElement.o: SPListElement.c SPListElement.h
-# 	$(CC) $(COMP_FLAG) -c $*.c
 
 clean:
 	rm -f $(OBJS) $(EXEC)

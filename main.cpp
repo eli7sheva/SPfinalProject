@@ -5,7 +5,6 @@ extern "C"{
 #include "SPConfig.h"
 #include "SPPoint.h"
 #include "SPLogger.h"
-#include "SPExtractFeatures.h"
 #include "main_aux.h"
 #include "KDTreeNode.h"
 }
@@ -23,14 +22,11 @@ extern "C"{
 #define INVALID_CMD_LINE_MSG 					"Invalid command line : use -c <config_filename>\n"
 #define ERROR_OPENING_CONFIG_FILE_MSG 			"The configuration file %s couldn't be open\n"
 #define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn't be open\n"
-#define ERROR_MEMORY_ALLOC_MSG 					"Error allocating memory\n"
 #define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
-#define INITIALIZING_LOGGER_INFO_MSG 			"Initializing logger, reading logger parameters from configuration\n"
 #define DONE_MSG 								"Done.\n"
 
 
 // logger messages (no new line at the end since it is added automatically by the logger)
-#define EXTRACT_CONFIG_PARAM_LOG				"Extrating parameters from configuration file..."
 #define ALLOCATION_FAILURE_MSG 					"An error occurred - allocation failure"
 #define GENERAL_ERROR_MSG 						"An error occured - internal error"
 #define NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG 	"Extracted %d features from query image"
@@ -40,39 +36,39 @@ extern "C"{
 #define USE_NOT_EXTRACTION_MODE_LOG 			"Extraction mode is not set"
 #define EXTRACT_IMAGES_FEATURES_INFO_LOG 		"Extracting the features of each image and storing them into files..."
 #define READ_FEATURES_FROM_FILE_LOG 			"Reading extracted images' features from features files.."
-#define STORE_FEATURES_INTO_KD_TREE_LOG 		"Storing all extracted features (%d) into kd tree..."
+
 #define EXTRACT_QUERY_IMAGE_FEATURES_LOG 		"Extracting query image features..."
 #define BEST_CADIDATES 							"Best candidates for - %s -are:\n"
 
 int main(int argc, char *argv[]) {
+	SPConfig config;								// hold configuration parameters
+	char config_filename[CONFIG_FILE_PATH_SIZE];    // the configuration file name
+	int knn;										// the number of similar features in each image to find (spKNN from configuration file)
+	int num_of_similar_images_to_find;              // the number of similar images (to the query) to find (from configuration file)
+	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
+	bool minGui = false;                            // value of the system variable MinimalGui
+	bool extraction_mode;							// indicates if extraction mode on or off
+	int num_of_images = 0;   						    // number of images in the directory given by the user in the configuration file
+	char** all_images_paths;						// array with the paths to all the images
+	
+	SPPoint** features_per_image = NULL;   			// helper - holds the features for each images
+	int* num_of_features_per_image; 							// holds number of features extracted for each image
+	
+	char query_image[CONFIG_FILE_PATH_SIZE];        // the query image 
+	SPPoint* query_features; 					    // all query features
+	int query_num_of_features;					    // number of features in query image
+	
+	KDTreeNode kd_tree;							    // array holds a KDTree for each image
+	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
+	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
+	
+	int retval = 0;									// return value - default 0 on success
+	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
+	sp::ImageProc *improc;
+	SP_CONFIG_MSG msg;
 	int i;
 	int j;
 	int n;
-	int counter;									// helper
-	char config_filename[CONFIG_FILE_PATH_SIZE];    // the configuration file name
-	char query_image[CONFIG_FILE_PATH_SIZE];        // the query image 
-	int knn;										// the number of similar features in each image to find (spKNN from configuration file)
-	int num_of_similar_images_to_find;              // the number of similar images (to the query) to find (from configuration file)
-	int query_num_of_features;					    // number of features in query image
-	SPPoint* query_features; 					    // all query features
-	SPConfig config;								// hold configuration parameters
-	bool extraction_mode;							// indicates if extraction mode on or off
-	char current_image_path[CONFIG_FILE_PATH_SIZE]; // the path to the current image
-	char** all_images_paths;						// array with the paths to all the images
-	int num_of_images = 0;   						    // number of images in the directory given by the user in the configuration file
-	SPPoint** features_per_image = NULL;   			// helper - holds the features for each images
-	SPPoint* all_features = NULL;   				// holds all features of all images
-	int* num_of_features; 							// holds number of features extracted for each image
-	int total_num_of_features = 0;					// the total number of extractred features from all images
-	KDTreeNode kd_tree;							    // array holds a KDTree for each image
-	int* closest_images; 						    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
-	int retval = 0;									// return value - default 0 on success
-	bool minGui = false;                            // value of the system variable MinimalGui
-	char best_candidate_msg[FILE_PATH_SIZE_PLUS];   // holds the string "Best candidates for - <query image path> - are:\n"
-	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
-	int split_method;                                // holds an int representing the split method: 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
-	sp::ImageProc *improc;
-	SP_CONFIG_MSG msg;
 
 	// validate command line arguments:
 	// cmd line arguments are ok if there was no arguments specified (argc == 1) or two arguments specified ( -c and filname)
@@ -115,37 +111,18 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
-	// initiate logger
-	printf(INITIALIZING_LOGGER_INFO_MSG);
-	if (initiateLoggerByConfig(config) == -1) {
-		retval = -1;
-		goto err; // error is printed inside  initiateLoggerByConfig
+	// initiate from config
+	if (initFromConfig(config, &num_of_images, &num_of_similar_images_to_find, &knn, &split_method, &extraction_mode, &minGui, &all_images_paths) == -1 ) {
+		retval = -1; 
+		goto err; // error is printed inside initFromConfig 
 	}
 
-	// extract parameters from configuration file 
-	spLoggerPrintInfo(EXTRACT_CONFIG_PARAM_LOG);
-	if (getConfigParameters(config, &num_of_similar_images_to_find, &knn, &split_method, &extraction_mode, &minGui) == -1) {
-		retval = -1;
-		goto err; // error is printed inside getConfigParameters
-	}
-
-	// get all images paths
-	if ((all_images_paths =  getAllImagesPaths(config, &num_of_images)) == NULL) {
-		retval = -1;
-		goto err; // error is printed inside getAllImagesPaths
-	}
 
 	// initiate image proc
 	improc = new sp::ImageProc(config);
 
 	// extract images features
-	if ((num_of_features = (int*)malloc(sizeof(*num_of_features) * num_of_images)) == NULL) {
-		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-
-	if ((features_per_image = (SPPoint**)malloc(sizeof(*features_per_image) * num_of_images)) == NULL) {
+	if ((num_of_features_per_image = (int*)malloc(sizeof(*num_of_features_per_image) * num_of_images)) == NULL) {
 		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		retval = -1;
 		goto err;
@@ -156,82 +133,43 @@ int main(int argc, char *argv[]) {
 	if (extraction_mode) {	// exztraction mode is chosen
 		spLoggerPrintMsg(USE_EXTRACTION_MODE_LOG);
 		spLoggerPrintInfo(EXTRACT_IMAGES_FEATURES_INFO_LOG);
+
+		if ((features_per_image = (SPPoint**)malloc(sizeof(*features_per_image) * num_of_images)) == NULL) {
+			spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
+			retval = -1;
+			goto err;
+		}
+
 		// extract each image features and write them to file
 		for (i=0; i < num_of_images; i++) {	
 
 			// extract image features
-			features_per_image[i] = improc->getImageFeatures(all_images_paths[i], i, &(num_of_features[i]));
-
-			if (features_per_image[i] == NULL) {
+			if ((features_per_image[i] = improc->getImageFeatures(all_images_paths[i], i, &(num_of_features_per_image[i]))) == NULL) {
 				retval = -1;
 				goto err; // error is printed inside  getImageFeatures
 			}
-
-			// write image features into file
-			if (writeImageFeaturesIntoFile(config, i, features_per_image[i], num_of_features[i]) == -1) {
-				retval = -1;
-				goto err; // error is printed inside writeImageFeaturesIntoFile
-			}
-
-			total_num_of_features = total_num_of_features + num_of_features[i];
 		}
-		
+
+		if (saveToDirectory(config, features_per_image, num_of_features_per_image, num_of_images) == -1) {
+			retval = -1;
+			goto err; // error is printed inside  saveToDirectory
+		}
 	}
 
 	else { // not extraction mode
 		spLoggerPrintMsg(USE_NOT_EXTRACTION_MODE_LOG);
 		spLoggerPrintInfo(READ_FEATURES_FROM_FILE_LOG);
-		for (i = 0; i < num_of_images; i++)
-		{
-			if ((features_per_image[i] = readImageFreaturesFromFile(config, i, &(num_of_features[i]))) == NULL) {
-				retval = -1;
-				goto err; // error is printed inside readImageFreaturesFromFile
-			}
 
-			total_num_of_features = total_num_of_features + num_of_features[i];
+		if ((features_per_image = extractFromFiles(config, num_of_features_per_image, num_of_images)) == NULL) {
+			retval = -1;
+			goto err; // error is printed inside  extractFromFiles
 		}
 	}
 	
-
-	//  print debug log
-	if ((n = sprintf(string_holder, STORE_FEATURES_INTO_KD_TREE_LOG, total_num_of_features)) < 0) {
-		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+	if ((kd_tree = initiateDataStructures(features_per_image, num_of_features_per_image, num_of_images, split_method)) == NULL) {
 		retval = -1;
-		goto err;
+		goto err; // error is printed inside initiateDataStructures
 	}
-	spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
-
-	// hold all features
-	if ((all_features = (SPPoint*)malloc(sizeof(*all_features) * total_num_of_features)) == NULL) {
-		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
-		retval = -1;
-		goto err;
-	}
-
-
-	// create one SPPoint array for all features images
-	counter = 0;
-	for (i = 0; i < num_of_images; i ++)
-	{
-		for (j = 0; j < num_of_features[i]; j++)
-		{
-			if ((all_features[counter] = spPointCopy(features_per_image[i][j])) == NULL) {
-				spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
-				retval = -1;
-				goto err; // error log is printed inside InitTree
-			}
-			//set the index of each point (feature) to be the number of the image it belongs to
-			spPointSetIndex(all_features[counter], i);
-			counter++;
-		}
-	}
-
-	// initiate kd tree with all features of all images
-	if ((kd_tree = InitTree(all_features, total_num_of_features,split_method)) == NULL){
-		retval = -1;
-		goto err; // error log is printed inside InitTree
-	}
-
 
 	while(1) {
 		// get a query image from the user
@@ -269,15 +207,13 @@ int main(int argc, char *argv[]) {
 		}
 		spLoggerPrintMsg(string_holder);
 
-		// find closest images to the query image
+		// find similar images to the query image
 		closest_images = getKClosestImages(num_of_similar_images_to_find, knn, query_features,
-										   kd_tree, query_num_of_features, num_of_images, num_of_features);
-
+										   kd_tree, query_num_of_features, num_of_images, num_of_features_per_image);
 
 		if (closest_images == NULL) { 
-			// error is printed to inside getKClosestImages
 			retval = -1;
-			goto err;
+			goto err; // error is printed to inside getKClosestImages
 		}
 
 		// show (display) closest_images images
@@ -304,7 +240,7 @@ int main(int argc, char *argv[]) {
 			//print the candidates paths, first path is the closest image
 			for (i=0; i<num_of_similar_images_to_find; i++){
 				//get file path of the images by the indexes in closest_images
-				printf("%s", current_image_path[closest_images[i]]);
+				printf("%s", all_images_paths[closest_images[i]]);
 				fflush(NULL);
 			}
 		}
@@ -336,26 +272,18 @@ int main(int argc, char *argv[]) {
 			free(query_features);
 		}
 
-		// free all_features
-		if (all_features != NULL) {
-			for (i=0; i<total_num_of_features; i++) {
-				spPointDestroy(all_features[i]);
-			}
-			free(all_features);
-		}
-
 		if (features_per_image != NULL) {
 			// free features_per_image
 			for (i = 0; i < num_of_images; i ++) {
 				if (features_per_image[i] != NULL) {
-					for (j = 0; j < num_of_features[i]; j++) {
+					for (j = 0; j < num_of_features_per_image[i]; j++) {
 						spPointDestroy(features_per_image[i][j]);
 					}
 				}
 			}
 			free(features_per_image);
 		}
-		free(num_of_features); // must be freed after features_per_image
+		free(num_of_features_per_image); // must be freed after features_per_image
 
 	printf(DONE_MSG);
 	return retval;

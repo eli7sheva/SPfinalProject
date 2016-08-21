@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "main_aux.h"
 #include "SPLogger.h"
+#include "SPExtractFeatures.h"
+#include "KDTreeNode.h"
 
 //#define ALLOC_ERROR_MSG "Allocation error" - already defined in files that are included
 #define GENERAL_ERROR_MSG               "An error occurred"
@@ -14,7 +16,8 @@
 #define KNN_RETURNED_NULL               "the call to kNearestNeighbors returned NULL"
 #define ERR_DEQUEUE                     "a problem occurred during the call to spBPQueueDequeue"
 
-
+#define EXTRACT_CONFIG_PARAM_LOG                "Extrating parameters from configuration file..."
+#define INITIALIZING_LOGGER_INFO_MSG            "Initializing logger, reading logger parameters from configuration\n"
 #define CONFIG_FILE_PATH_SIZE                   1024   // the maximum length  of path to any file
 #define ERROR_READING_CONFIG_INVALID_ARG_MSG    "While reading configuration parameter - invalid argument\n"
 #define LOGGER_ALREADY_DEFINED                  "logger file %s is already defined.\n"
@@ -143,6 +146,68 @@ int* nearestImages(double* arr, int size, int nearestNImages){
 
     free(arr_with_indixes);
     return first_minimums;
+}
+
+KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_features_per_image, int num_of_images, int split_method) {
+    int total_num_of_features = 0; // the total number of extractred features from all images
+    SPPoint* all_features = NULL;  // holds all features of all images    
+    KDTreeNode kd_tree = NULL;            // the tree to return
+    int counter = 0;               // helper         
+    int i;      
+    int j;
+
+    for (i=0; i < num_of_images; i++) { 
+        total_num_of_features = total_num_of_features + num_of_features_per_image[i];
+    }
+
+// // todo -  print debug log?
+// #define STORE_FEATURES_INTO_KD_TREE_LOG      "Storing all extracted features (%d) into kd tree..."
+//     if ((n = sprintf(string_holder, STORE_FEATURES_INTO_KD_TREE_LOG, total_num_of_features)) < 0) {
+//         spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+//         retval = -1;
+//         goto err;
+//     }
+//     spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
+
+
+    if ((all_features = (SPPoint*)malloc(sizeof(*all_features) * total_num_of_features)) == NULL) {
+        spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
+        return NULL;
+    }
+
+
+    // create one SPPoint array for all features images
+    for (i = 0; i < num_of_images; i ++)
+    {
+        for (j = 0; j < num_of_features_per_image[i]; j++)
+        {
+            if ((all_features[counter] = spPointCopy(features_per_image[i][j])) == NULL) {
+                spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
+                goto err;
+            }
+            //set the index of each point (feature) to be the number of the image it belongs to
+            spPointSetIndex(all_features[counter], i);
+            counter++;
+        }
+    }
+
+    // initiate kd tree with all features of all images
+    if ((kd_tree = InitTree(all_features, total_num_of_features, split_method)) == NULL){
+        kd_tree = NULL;
+        goto err; // error log is printed inside InitTree
+    }
+
+
+    err:
+        // free all_features
+        if (all_features != NULL) {
+            for (i=0; i<counter; i++) {
+                spPointDestroy(all_features[i]);
+            }
+            free(all_features);
+        }
+
+    return kd_tree; // on error kd_tree is NULL
 }
 
 /**
@@ -302,60 +367,13 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
     return closestImages;
 }
 
-
-
-// looger is set
-int getConfigParameters(const SPConfig config, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui)
-    SP_CONFIG_MSG msg;
-
-    extraction_mode = spConfigIsExtractionMode(config, &msg);
-    if (msg != SP_CONFIG_SUCCESS) {
-        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-        return -1;
-    }
-
-    *num_of_similar_images = spConfigGetNumOfSimilarImages(config, &msg);
-    if (msg != SP_CONFIG_SUCCESS) { 
-        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-        return -1;
-    }
-
-    *knn = spConfigGetKNN(config, &msg);
-    if (msg != SP_CONFIG_SUCCESS) {
-        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-        return -1;
-    }
-
-    // todo add debug log?
-    // #define NUM_OF_SIMILAR_IMAGES_DEBUG_LOG         "Number of similar images to find is %d, knn is %d"
-    //     // print debug log
-    // if ((n = sprintf(string_holder, NUM_OF_SIMILAR_IMAGES_DEBUG_LOG, num_of_similar_images_to_find, knn)) < 0) {
-    //     spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
-    //     retval = -1;
-    //     goto err;
-    // }
-    // spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__); 
-
-
-    
-
-    *split_method = spConfigGetKDTreeSplitMethod(config, &msg);
-    if (msg != SP_CONFIG_SUCCESS) {
-        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-        return -1;
-    }
-
-    *min_gui = spConfigMinimalGui(config, &msg);
-    if (msg != SP_CONFIG_SUCCESS) {
-        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-        return -1;
-    }
-
-    return 0;
-}
-
-
-
+/**
+ * initiates the logger by the parameters specified in the cvonfiguration file
+ *
+ * @param config - the configuration structure
+ *
+ * @return -1 on failure (and prints the errors) and 0 on success
+ */
 int initiateLoggerByConfig(const SPConfig config) {
     SP_CONFIG_MSG msg;
     SP_LOGGER_LEVEL logger_level;                   // the logger level in configuration file
@@ -367,7 +385,7 @@ int initiateLoggerByConfig(const SPConfig config) {
         return -1;
     }
 
-    if (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS)) {
+    if (spConfigGetLoggerFileName(logger_filename, config) != SP_CONFIG_SUCCESS) {
         printf(ERROR_READING_CONFIG_INVALID_ARG_MSG);
         return -1;
     }
@@ -391,6 +409,60 @@ int initiateLoggerByConfig(const SPConfig config) {
 
     return 0;
 }
+
+
+/**
+ * extract information from configuration file and stores it into the given params as described below:
+ * 
+ * @param config - the configuration structure
+ * @param num_of_similar_images - an address to store the number of images in
+ * @param knn - an address to store the number of knn in
+ * @param split_method - an address to store the split method in
+ * @param extraction_mode - an address to store whether extraction mode is asked 
+ * @param min_gui - an address to store whether minimal gui mode is asked 
+ * 
+ * Note -assumes that logger is initiated
+ *  
+ * @return -1 on failure (and prints the errors) and 0 on success
+ */
+int getConfigParameters(const SPConfig config, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui) {
+    SP_CONFIG_MSG msg;
+
+    *extraction_mode = spConfigIsExtractionMode(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    *num_of_similar_images = spConfigGetNumOfSimilarImages(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) { 
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    *knn = spConfigGetKNN(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+
+    *split_method = spConfigGetKDTreeSplitMethod(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    *min_gui = spConfigMinimalGui(config, &msg);
+    if (msg != SP_CONFIG_SUCCESS) {
+        spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
+        return -1;
+    }
+
+    return 0;
+}
+
+
 
 /*
  * returns list of the full path of all images paths specified in configuration file
@@ -428,12 +500,12 @@ char** getAllImagesPaths(const SPConfig config, int* num_of_images) {
         return NULL;
     }
 
-    if ((images_paths = (char**)malloc(sizeof(*images_paths) * num_of_images)) == NULL) {
+    if ((images_paths = (char**)malloc(sizeof(*images_paths) * (*num_of_images))) == NULL) {
         spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
         return NULL;
     }
 
-    for(i=0; i< num_of_images; i++) {
+    for(i=0; i< (*num_of_images); i++) {
         if ((images_paths[i] = (char*)malloc(sizeof(*(images_paths[i])) * CONFIG_FILE_PATH_SIZE)) == NULL) {
             spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
             for (j=0; j<i; j++) {
@@ -444,19 +516,75 @@ char** getAllImagesPaths(const SPConfig config, int* num_of_images) {
         }
     }
 
-    for(i=0; error & (i< num_of_images); i++) {
+    for(i=0; error & (i< (*num_of_images)); i++) {
         msg = spConfigGetImagePath(images_paths[i], config, i);
         error = (msg != SP_CONFIG_SUCCESS);
     }
 
     if (error) {
         spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG_LOG, __FILE__, __func__, __LINE__);
-        for (j=0; j<num_of_images; j++) {
+        for (j=0; j<(*num_of_images); j++) {
             free(images_paths[j]);
         }
         free(images_paths);
         return NULL;
     }
 
-    return images_paths
+    return images_paths;
+}
+
+int initFromConfig(const SPConfig config, int* num_of_images, int* num_of_similar_images, int* knn, int* split_method, bool* extraction_mode, bool* min_gui, char *** all_images_paths) {
+    // initiate logger
+    printf(INITIALIZING_LOGGER_INFO_MSG);
+    if (initiateLoggerByConfig(config) == -1) {
+        return -1; // error is printed inside  initiateLoggerByConfig
+    }
+
+    // extract parameters from configuration file 
+    spLoggerPrintInfo(EXTRACT_CONFIG_PARAM_LOG);
+    if (getConfigParameters(config, num_of_similar_images, knn, split_method, extraction_mode, min_gui) == -1) {
+        return -1;// error is printed inside getConfigParameters
+    }
+
+    // get all images paths
+    if ((*all_images_paths =  getAllImagesPaths(config, num_of_images)) == NULL) {
+        return -1; // error is printed inside getAllImagesPaths
+    }
+
+    return 0;
+}
+
+
+int saveToDirectory(const SPConfig config, SPPoint** features_per_image, int* num_of_features_per_image, int num_of_images) {
+    int i;
+    // write image features into file
+    for (i=0; i < num_of_images; i++) { 
+        if (writeImageFeaturesIntoFile(config, i, features_per_image[i], num_of_features_per_image[i]) == -1) {
+            return -1; // errors are printed inside  writeImageFeaturesIntoFile
+        }
+    }
+    return 0;
+}
+
+
+SPPoint** extractFromFiles(const SPConfig config, int* num_of_features_per_image, int num_of_images){
+    SPPoint** features_per_image;
+    int i;
+    int j;
+
+    if ((features_per_image = (SPPoint**)malloc(sizeof(*features_per_image) * num_of_images)) == NULL) {
+        spLoggerPrintError(ALLOCATION_FAILURE_LOG, __FILE__, __func__, __LINE__);
+        return NULL;
+    }
+
+    for (i = 0; i < num_of_images; i++) {
+        if ((features_per_image[i] = readImageFreaturesFromFile(config, i, &(num_of_features_per_image[i]))) == NULL) {
+            for (j=0; j<i; j++) {  
+                free(features_per_image[j]);
+            }
+            free(features_per_image);
+            return NULL; // error is printed inside readImageFreaturesFromFile
+        }
+    }
+    return features_per_image;
 }
