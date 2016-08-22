@@ -4,6 +4,11 @@ CPP = g++
 OBJS =  SPPoint.o SPLogger.o SPKDArray.o sp_kdArray_unit_test.o
 #The executabel filename
 EXEC = kdArray_unit_test
+INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
+LIBPATH=/usr/local/lib/opencv-3.1.0/lib/
+LIBS=-lopencv_xfeatures2d -lopencv_features2d \
+-lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core
+
 
 
 CPP_COMP_FLAG = -std=c++11 -Wall -Wextra \

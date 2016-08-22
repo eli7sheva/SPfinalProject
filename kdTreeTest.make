@@ -4,6 +4,11 @@ CPP = g++
 OBJS = SPListElement.o SPList.o SPBPriorityQueue.o SPLogger.o SPPoint.o SPKDArray.o KDTreeNode.o sp_kdTreeNode_unit_test.o
 #The executabel filename
 EXEC = kdTreeTest
+INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
+LIBPATH=/usr/local/lib/opencv-3.1.0/lib/
+LIBS=-lopencv_xfeatures2d -lopencv_features2d \
+-lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core
+
 
 CPP_COMP_FLAG = -std=c++11 -Wall -Wextra \
 -Werror -pedantic-errors -DNDEBUG
@@ -12,7 +17,7 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 -Werror -pedantic-errors -DNDEBUG
 
 $(EXEC): $(OBJS)
-	$(CPP) $(OBJS) $@
+	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
 sp_kdTreeNode_unit_test.o: unit_test_util.h KDTreeNode.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 KDTreeNode.o: KDTreeNode.h KDTreeNode.c SPKDArray.h 
