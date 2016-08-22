@@ -198,7 +198,7 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	int* is_index_in_left;             // array of 0's and 1's. value is 1 if the point in this index is in left half
 	SPPoint* left_points;              // array of the left half points
 	SPPoint* right_points;             // array of the right half points
-	int ** left_sorted_indexes;        // matrix of sorted indexes for left half
+	int** left_sorted_indexes;        // matrix of sorted indexes for left half
 	int** right_sorted_indexes;	       // matrix of sorted indexes for left half
 	int* map_indexes;                  // mapping from the indexes of the points in kdArr to the indexes in left or right half
 	int i, j, k;
@@ -339,18 +339,27 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 		return NULL;
 	}
 
+
 	printf("Split 20\n"); //todo remove this
-	//fill map_indexes for the left part
-	for (i=0; i<num_of_left_points; i++){
-		map_indexes[kdArr->matrix_of_sorted_indexes[coor][i]] = i;
+	//fill map_indexes
+	j=0; //counter for left
+	k=0; //counter for right
+	for (i=0; i<n; i++){
+		if (is_index_in_left[i]==1){ //i is an index that belongs to left
+			map_indexes[i] = j;
+			j++;
+		}
+		else{ //i is an index that belongs to right
+			map_indexes[i] = k;
+			k++;
+		}
 	}
+
 	printf("Split 21\n"); //todo remove this
-	//fill map_indexes for the right part
-	j=0;
-	for (i=num_of_left_points; i<n; i++){
-		map_indexes[kdArr->matrix_of_sorted_indexes[coor][i]] = j;
-		j++;
-	}
+	// assertions on j and k after previous for loop
+	assert(j==num_of_left_points);
+	assert(k==num_of_right_points);
+
 	printf("Split 22\n"); //todo remove this
 	// j should go from 0 to num_of_right_points-1
 	assert(j==(num_of_right_points-1));
@@ -393,6 +402,9 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	array_of_KDArrays[1] = right_array;
 
 	printf("Split 27\n"); //todo remove this
+	//free memory and return
+	free(map_indexes);
+	free(is_index_in_left);
 	return array_of_KDArrays;
 }
 

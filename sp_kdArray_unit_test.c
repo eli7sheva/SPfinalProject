@@ -58,9 +58,9 @@ static bool InitBasicTest(){
 	}
 	free(point_array);
 	destroyKDArray(kdArray);
-	free(p0);
-	free(p2);
-	free(p4);
+	spPointDestroy(p0);
+	spPointDestroy(p2);
+	spPointDestroy(p4);
 	return true;
 }
 
@@ -105,7 +105,6 @@ static bool InitInvalidParameterArr(){
  * kdArray->d = 2
  */
 static bool SplitBasicTest(){
-	printf("start SplitBasicTest"); //todo remove
 	int i;
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
@@ -121,8 +120,11 @@ static bool SplitBasicTest(){
 	ASSERT_TRUE(spPointGetAxisCoor(p02, 0)==3.0);
 	ASSERT_TRUE(spPointGetAxisCoor(p11, 1)==11.0);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,1) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,2) == 2);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,0) == 0);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,1) == 2);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,2) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],0,0) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],1,1) == 0);
 	for (i=0;i<5;i++){
@@ -133,15 +135,14 @@ static bool SplitBasicTest(){
 	destroyKDArray(array_of_kdArrays[0]);
 	destroyKDArray(array_of_kdArrays[1]);
 	free(array_of_kdArrays);
-	free(p00);
-	free(p02);
-	free(p11);
+	spPointDestroy(p00);
+	spPointDestroy(p02);
+	spPointDestroy(p11);
 	return true;
 }
 
 //check split when the parameter coor<0
 static bool SplitInvalidParameterCoor(){
-	printf("start SplitInvalidParameterCoor"); //todo remove
 	int i;
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
@@ -152,15 +153,12 @@ static bool SplitInvalidParameterCoor(){
 	}
 	free(point_array);
 	destroyKDArray(kdArray);
-	destroyKDArray(array_of_kdArrays[0]);
-	destroyKDArray(array_of_kdArrays[1]);
 	free(array_of_kdArrays);
 	return true;
 }
 
 //check split when the parameter kdArr==NULL
 static bool SplitInvalidParameterKdArr(){
-	printf("start SplitInvalidParameterKdArr"); //todo remove
 	SPKDArray kdArray=NULL;
 	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
 	ASSERT_TRUE(array_of_kdArrays==NULL);
@@ -169,7 +167,6 @@ static bool SplitInvalidParameterKdArr(){
 
 //check basic case of getCopyOfPointfromArrayOfPoints
 static bool getCopyOfPointfromArrayOfPointsTest(){
-	printf("start getCopyOfPointfromArrayOfPointsTest"); //todo remove
 	int i;
 	SPPoint p;
 	SPPoint* point_array = getPointArray();
