@@ -210,6 +210,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 
 KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
 	KDTreeNode Node;
+
 	printf("InitNode 1\n"); //todo remove this
 	// if the value of the dim parameter is invalid
 	if (dim<-1){
@@ -227,12 +228,35 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	}
 
 	printf("InitNode 3\n"); //todo remove this
+
 	//initialize fields according to the values given in the parameters
 	Node->Dim = dim;
 	Node->Val= val;
+
+	//allocate and initialize Node->Left //todo: problem here
+	if ( (Node->Left =(KDTreeNode)malloc(sizeof(*(Node->Left))))==NULL ){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+		DestroyKDTreeNode(Node);
+		return NULL;
+	}
 	Node->Left = left;
+
+	//allocate and initialize Node->Right //todo: problem here
+	if ( (Node->Right =(KDTreeNode)malloc(sizeof(*(Node->Right))))==NULL ){
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+			DestroyKDTreeNode(Node);
+			return NULL;
+		}
 	Node->Right = right;
+
+	//allocate and initialize Node->Data //todo: problem here
+	if ( (Node->Data =(SPPoint)malloc(sizeof(SPPoint)))==NULL ){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+		DestroyKDTreeNode(Node);
+		return NULL;
+	}
 	Node->Data = data;
+
 	return Node;
 }
 

@@ -19,14 +19,17 @@ static bool InitNodeBasicTest(){
 	KDTreeNode node2;
 	//create and check first node
 	node1 = InitNode(2, 4.0, NULL, NULL, p1);
+	node1->Data = p1;
 	ASSERT_TRUE(KDTreeNodegetDim(node1)==2);
 	ASSERT_TRUE(KDTreeNodegetVal(node1)==4.0);
 	ASSERT_TRUE(KDTreeNodegetLeft(node1)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(node1)==NULL);
 	p2 = KDTreeNodegetData(node1);
-	ASSERT_TRUE(spPointGetAxisCoor(p2,1)==2.0);
+	ASSERT_TRUE(spPointGetAxisCoor(p2,1)==70.0);
 	//create and check second node
 	node2 = InitNode(1, 2.0, node1, node1, NULL);
+	node2->Left = node1; //todo remove?
+	node2->Right = node1; //todo remove?
 	ASSERT_TRUE(KDTreeNodegetDim(node2)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(node2)==2.0);
 	ASSERT_TRUE(KDTreeNodegetDim(KDTreeNodegetLeft(node2))==2);  //Dim of node1
