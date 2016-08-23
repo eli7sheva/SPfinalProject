@@ -195,12 +195,12 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	int d;                  	       // number of dimensions of each point in kdArr
 	int num_of_left_points;            // number of points that will be in the left half
 	int num_of_right_points;           // number of points that will be in the right half
-	int* is_index_in_left;             // array of 0's and 1's. value is 1 if the point in this index is in left half
+	int* is_index_in_left = NULL;             // array of 0's and 1's. value is 1 if the point in this index is in left half
 	SPPoint* left_points;              // array of the left half points
 	SPPoint* right_points;             // array of the right half points
-	int** left_sorted_indexes;        // matrix of sorted indexes for left half
-	int** right_sorted_indexes;	       // matrix of sorted indexes for left half
-	int* map_indexes;                  // mapping from the indexes of the points in kdArr to the indexes in left or right half
+	int** left_sorted_indexes = NULL;        // matrix of sorted indexes for left half
+	int** right_sorted_indexes = NULL;	       // matrix of sorted indexes for left half
+	int* map_indexes = NULL;                  // mapping from the indexes of the points in kdArr to the indexes in left or right half
 	int i, j, k;
 
 	printf("Split 2\n"); //todo remove this
@@ -278,8 +278,8 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 
 	printf("Split 13\n"); //todo remove this
 	// fill left_points and right_points
-	for (int i=0; i<n; i++){ // i= index counter for is_index_in_left
-		if (is_index_in_left[i]==1){
+	for (i=0; i<n; i++){ // i= index counter for is_index_in_left
+		if (is_index_in_left!=NULL && is_index_in_left[i]==1){
 			left_points[j]= spPointCopy(kdArr->array_of_points[i]);
 			j++;
 		}
@@ -301,7 +301,7 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 		free(left_sorted_indexes);
 		return NULL;
 	}
-	printf("Split 6\n"); //todo remove this
+	printf("Split 16\n"); //todo remove this
 	for (i=0; i<d; i++){
 		if( (left_sorted_indexes[i]=(int*)malloc(num_of_left_points*sizeof(int))) == NULL){
 			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -345,7 +345,7 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	j=0; //counter for left
 	k=0; //counter for right
 	for (i=0; i<n; i++){
-		if (is_index_in_left[i]==1){ //i is an index that belongs to left
+		if (is_index_in_left!=NULL && is_index_in_left[i]==1){ //i is an index that belongs to left
 			map_indexes[i] = j;
 			j++;
 		}

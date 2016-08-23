@@ -85,13 +85,6 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method);
  * @param node: a node which is the root of the tree to be destroyed
  * 				if node is NULL nothing will happen
  */
-void DestroyKDTree(KDTreeNode node);
-
-/*
- * free all memory of a KDTreeNode object
- * @param node: a node to be destroyed
- * 				if node is NULL nothing will happen
- */
 void DestroyKDTreeNode(KDTreeNode node);
 
 /*

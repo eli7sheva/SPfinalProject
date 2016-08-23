@@ -221,7 +221,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 
 	printf("InitNode 2\n"); //todo remove this
 	//allocate memory for Node
-	if ( (Node = (KDTreeNode)malloc(sizeof(KDTreeNode))) == NULL ){
+	if ( (Node = (KDTreeNode)malloc(sizeof(*Node))) == NULL ){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(Node);
 		return NULL;
@@ -256,7 +256,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 		return NULL;
 	}
 	Node->Data = data;
-
+	printf("InitNode 4\n"); //todo remove this
 	return Node;
 }
 
@@ -320,26 +320,16 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 }
 
 void DestroyKDTreeNode(KDTreeNode node){
-	if (node == NULL){
+	if (node==NULL){
 		return;
 	}
-	free(node->Left);
-	free(node->Right);
+	DestroyKDTreeNode(node->Left);
+	DestroyKDTreeNode(node->Right);
 	if (node->Data!=NULL){
 		spPointDestroy(node->Data);
 	}
-	return;
+	free(node);
 }
-
-void DestroyKDTree(KDTreeNode node){
-	if (node == NULL){
-		return;
-	}
-	DestroyKDTree(node->Left);
-	DestroyKDTree(node->Right);
-	DestroyKDTreeNode(node);
-}
-
 
 int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 	SPListElement newElement;

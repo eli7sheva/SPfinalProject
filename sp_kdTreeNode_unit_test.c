@@ -16,10 +16,11 @@ static bool InitNodeBasicTest(){
 	SPPoint p1 = spPointCreate(data, 3, 1);
 	SPPoint p2;
 	KDTreeNode node1;
+	KDTreeNode node11;
 	KDTreeNode node2;
 	//create and check first node
 	node1 = InitNode(2, 4.0, NULL, NULL, p1);
-	node1->Data = p1;
+	printf("InitNodeBasicTest 1\n"); //todo remove this
 	ASSERT_TRUE(KDTreeNodegetDim(node1)==2);
 	ASSERT_TRUE(KDTreeNodegetVal(node1)==4.0);
 	ASSERT_TRUE(KDTreeNodegetLeft(node1)==NULL);
@@ -27,19 +28,19 @@ static bool InitNodeBasicTest(){
 	p2 = KDTreeNodegetData(node1);
 	ASSERT_TRUE(spPointGetAxisCoor(p2,1)==70.0);
 	//create and check second node
-	node2 = InitNode(1, 2.0, node1, node1, NULL);
-	node2->Left = node1; //todo remove?
-	node2->Right = node1; //todo remove?
+	node11 = InitNode(2, 4.0, NULL, NULL, p1);
+	node2 = InitNode(1, 2.0, node1, node11, NULL);
+	printf("InitNodeBasicTest 2\n"); //todo remove this
 	ASSERT_TRUE(KDTreeNodegetDim(node2)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(node2)==2.0);
 	ASSERT_TRUE(KDTreeNodegetDim(KDTreeNodegetLeft(node2))==2);  //Dim of node1
 	ASSERT_TRUE(KDTreeNodegetVal(KDTreeNodegetRight(node2))==4.0); //Val of node1
 	ASSERT_TRUE(KDTreeNodegetData(node2)==NULL);
 	//free memory
+	DestroyKDTreeNode(node2); //destroys all tree so node1 and node11 will also be freed
 	spPointDestroy(p1);
 	spPointDestroy(p2);
-	DestroyKDTreeNode(node1);
-	DestroyKDTreeNode(node1);
+	printf("InitNodeBasicTest 3\n"); //todo remove this
 	return true;
 }
 
@@ -59,24 +60,34 @@ static bool InitNodeDiminvalidTest(){
 
 //creates an array of points to use for tests- todo-this is duplicate from kdArray test
 SPPoint* getPointArray(){
+	printf("getPointArray 1\n"); //todo remove this
 	SPPoint* point_array = (SPPoint*)malloc(5*sizeof(SPPoint));
-	double data0[2] = {1.0,2.0};
-	double data1[2] = {123.0,70.0};
-	double data2[2] = {2.0,7.0};
-	double data3[2] = {9.0,11.0};
-	double data4[2] = {3.0,4.0};
-	point_array[0] = spPointCreate((double *)data0, 2, 1);
-	point_array[1] = spPointCreate((double *)data1, 2, 1);
-	point_array[2] = spPointCreate((double *)data2, 2, 1);
-	point_array[3] = spPointCreate((double *)data3, 2, 1);
-	point_array[4] = spPointCreate((double *)data4, 2, 1);
+	printf("getPointArray 2\n"); //todo remove this
+	double data1[2] = {1.0,2.0};
+	double data2[2] = {123.0,70.0};
+	double data3[2] = {2.0,7.0};
+	double data4[2] = {9.0,11.0};
+	double data5[2] = {3.0,4.0};
+	printf("getPointArray 3.1\n"); //todo remove this
+	point_array[0] = spPointCreate((double *)data1, 2, 1);
+	printf("getPointArray 3.2\n"); //todo remove this
+	point_array[1] = spPointCreate((double *)data2, 2, 1);
+	printf("getPointArray 3.3\n"); //todo remove this
+	point_array[2] = spPointCreate((double *)data3, 2, 1);
+	printf("getPointArray 3.4\n"); //todo remove this
+	point_array[3] = spPointCreate((double *)data4, 2, 1);
+	printf("getPointArray 3.5\n"); //todo remove this
+	point_array[4] = spPointCreate((double *)data5, 2, 1);
+	printf("getPointArray 4\n"); //todo remove this
 	return point_array;
 }
 
 
 //checks initTree with incremental
 static bool InitTreeBasicTest(){
+	printf("InitTreeBasicTest 1\n"); //todo remove this
 	SPPoint* point_array = getPointArray();
+	printf("InitTreeBasicTest 2\n"); //todo remove this
 	int split_method = 2; //incremental
 	int size = 5;
 	int i;
@@ -93,6 +104,8 @@ static bool InitTreeBasicTest(){
 	KDTreeNode LLR_of_root;
 	//root
 	KDTreeNode root = InitTree(point_array, size, split_method);
+
+	printf("InitTreeBasicTest 3\n"); //todo remove this
 
 	//check root values
 	ASSERT_TRUE(KDTreeNodegetDim(root)==0);
@@ -162,7 +175,7 @@ static bool InitTreeBasicTest(){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
-	DestroyKDTree(root);
+	DestroyKDTreeNode(root);
 	return true;
 }
 
