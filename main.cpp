@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
 		spLoggerPrintMsg(EXTRACT_QUERY_IMAGE_FEATURES_LOG);
 		if ((query_features = improc->getImageFeatures(query_image, num_of_images, &query_num_of_features)) == NULL) {
 			retval = -1;
-			goto err; // error log is printed inside getImageFeatures	
+			goto err_inside_loop; // error log is printed inside getImageFeatures	
 		}
 		
 		printf("step 12\n"); // todo remove
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
 		if ((n = sprintf(string_holder, NUM_OF_EXTRACTED_FEATURES_DEBUG_LOG, query_num_of_features)) < 0) {
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			retval = -1;
-			goto err;
+			goto err_inside_loop;
 		}
 		printf("step 13\n"); // todo remove
 		spLoggerPrintDebug(string_holder, __FILE__, __func__, __LINE__);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 		if ((n = sprintf(string_holder, SEARCING_SIMILAR_IMAGES_MSG, num_of_similar_images_to_find)) < 0) {
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			retval = -1;
-			goto err;
+			goto err_inside_loop;
 		}
 		printf("step 14\n"); // todo remove
 		spLoggerPrintMsg(string_holder);
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
 
 		if (closest_images == NULL) { 
 			retval = -1;
-			goto err; // error is printed to inside getKClosestImages
+			goto err_inside_loop; // error is printed to inside getKClosestImages
 		}
 		printf("step 15\n"); // todo remove
 
@@ -255,14 +255,34 @@ int main(int argc, char *argv[]) {
 			print_result = PrintMinGuiFalse(query_image, num_of_similar_images_to_find, all_images_paths, closest_images);
 			if (print_result == 0) {
 				retval = -1;
-				goto err; // error is printed inside PrintMinGuiFalse
+				goto err_inside_loop; // error is printed inside 
 			}
 
 		}
-		// todo need to free stuff before starting while loop again?
+		// free memory before entring to the loop again
+		
+		free(closest_images);
+		if (query_features != NULL) {
+			for (i=0; i<query_num_of_features; i++) {
+				spPointDestroy(query_features[i]);
+			}
+			free(query_features);
+		}
 	}
 
-			
+	err_inside_loop;	
+		printf("4\n"); // todo remove this
+		free(closest_images);
+
+		printf("6\n"); // todo remove this
+		free query_features
+		if (query_features != NULL) {
+			for (i=0; i<query_num_of_features; i++) {
+				spPointDestroy(query_features[i]);
+			}
+			free(query_features);
+		}
+
 	// done - destroy logger and free everything 
 	err:
 		printf("1\n"); // todo remove this
@@ -273,8 +293,6 @@ int main(int argc, char *argv[]) {
 		DestroyKDTreeNode(kd_tree);
 		printf("3\n"); // todo remove this
 		spConfigDestroy(config);
-		printf("4\n"); // todo remove this
-		free(closest_images);
 		printf("5\n"); // todo remove this
 
 		// free all images paths
@@ -284,15 +302,6 @@ int main(int argc, char *argv[]) {
 			}
 			printf("5.5\n"); // todo remove this
 			free(all_images_paths);
-		}
-
-		printf("6\n"); // todo remove this
-		// free query_features
-		if (query_features != NULL) {
-			for (i=0; i<query_num_of_features; i++) {
-				spPointDestroy(query_features[i]);
-			}
-			free(query_features);
 		}
 
 		printf("7\n"); // todo remove this
