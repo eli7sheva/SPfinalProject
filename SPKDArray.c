@@ -195,12 +195,12 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	int d;                  	       // number of dimensions of each point in kdArr
 	int num_of_left_points;            // number of points that will be in the left half
 	int num_of_right_points;           // number of points that will be in the right half
-	int* is_index_in_left = NULL;             // array of 0's and 1's. value is 1 if the point in this index is in left half
+	int* is_index_in_left;              // array of 0's and 1's. value is 1 if the point in this index is in left half
 	SPPoint* left_points;              // array of the left half points
 	SPPoint* right_points;             // array of the right half points
-	int** left_sorted_indexes = NULL;        // matrix of sorted indexes for left half
-	int** right_sorted_indexes = NULL;	       // matrix of sorted indexes for left half
-	int* map_indexes = NULL;                  // mapping from the indexes of the points in kdArr to the indexes in left or right half
+	int** left_sorted_indexes;        // matrix of sorted indexes for left half
+	int** right_sorted_indexes;	       // matrix of sorted indexes for left half
+	int* map_indexes;                  // mapping from the indexes of the points in kdArr to the indexes in left or right half
 	int i, j, k;
 
 	printf("Split 2\n"); //todo remove this
@@ -210,6 +210,9 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 		spLoggerPrintDebug(PARAMETER_COOR_INVALID, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
+
+	printf("in Split, coor = %d\n", coor); //todo remove this
+
 	printf("Split 3\n"); //todo remove this
 	if (kdArr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
@@ -220,6 +223,9 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	//initialize n and d
 	n = kdArr->n;
 	d = kdArr->d;
+
+	printf("n = %d\n", n); //todo remove this
+	printf("d = %d\n", d); //todo remove this
 
 	printf("Split 5\n"); //todo remove this
 	//allocate memory for array_of_KDArrays
@@ -238,24 +244,44 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	}
 
 	printf("Split 7\n"); //todo remove this
-	//initialize num_of_leftt_points and num_of_right_points
+	//initialize num_of_left_points and num_of_right_points
 	if (n%2==0){
 		num_of_left_points = n/2;
 	}
 	else{
-		num_of_left_points = (n/2) +1;
+		num_of_left_points = (n+1)/2;
 	}
 	num_of_right_points = n - num_of_left_points;
+
+	printf("num_of_left_points = %d\n", num_of_left_points); //todo remove this
+	printf("num_of_right_points = %d\n", num_of_right_points); //todo remove this
 
 	printf("Split 8\n"); //todo remove this
 	// fill is_index_in_left
 	for (i=0; i<num_of_left_points; i++){
+		//todo delete:
+		//if(num_of_left_points==1){
+			printf("matrix_of_sorted_indexes[%d][%d] = %d\n", coor, i,kdArr->matrix_of_sorted_indexes[coor][i]);
+		//}
+		//Until here delete
 		is_index_in_left[kdArr->matrix_of_sorted_indexes[coor][i]] = 1;
 	}
 	printf("Split 9\n"); //todo remove this
 	for (i=num_of_left_points; i<n; i++){
+		//todo delete:
+		//if(num_of_left_points==1){
+			printf("matrix_of_sorted_indexes[%d][%d] = %d\n", coor, i,kdArr->matrix_of_sorted_indexes[coor][i]);
+		//}
+		//Until here delete
 		is_index_in_left[kdArr->matrix_of_sorted_indexes[coor][i]] = 0;
 	}
+
+	//delete this:
+	for (i=0; i<n; i++){
+		printf("is_index_in_left[%d] = %d   ", i, is_index_in_left[i]);
+	}
+	printf("\n");
+	//until here delete
 
 	printf("Split 10\n"); //todo remove this
 	//allocate memory for left_points
@@ -279,12 +305,14 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	printf("Split 13\n"); //todo remove this
 	// fill left_points and right_points
 	for (i=0; i<n; i++){ // i= index counter for is_index_in_left
-		if (is_index_in_left!=NULL && is_index_in_left[i]==1){
+		if (is_index_in_left[i]==1){
 			left_points[j]= spPointCopy(kdArr->array_of_points[i]);
+			printf("left_points[%d] x coordinade is: %d\n", j, (int)spPointGetAxisCoor(left_points[j],0)); //todo remove this
 			j++;
 		}
-		else{
+		else{ //is_index_in_left[i]==0
 			right_points[k]= spPointCopy(kdArr->array_of_points[i]);
+			printf("right_points[%d] x coordinade is: %d\n", k, (int)spPointGetAxisCoor(right_points[k],0)); //todo remove this
 			k++;
 		}
 	}
@@ -345,7 +373,7 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	j=0; //counter for left
 	k=0; //counter for right
 	for (i=0; i<n; i++){
-		if (is_index_in_left!=NULL && is_index_in_left[i]==1){ //i is an index that belongs to left
+		if (is_index_in_left[i]==1){ //i is an index that belongs to left
 			map_indexes[i] = j;
 			j++;
 		}
@@ -367,8 +395,9 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	printf("Split 23\n"); //todo remove this
 	//fill left_sorted_indexes
 	for (i=0; i<d; i++){
-		for (j=0; j<num_of_left_points; j++){
+		for (j=0; j<n; j++){
 			left_sorted_indexes[i][j] = map_indexes[kdArr->matrix_of_sorted_indexes[i][j]];
+			printf("left_sorted_indexes[%d][%d] = %d\n",i,j,left_sorted_indexes[i][j]); //todo remove this
 		}
 	}
 
@@ -377,6 +406,7 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	for (i=0; i<d; i++){
 		for(j=0; j<num_of_right_points; j++){
 			right_sorted_indexes[i][j] = map_indexes[kdArr->matrix_of_sorted_indexes[i][num_of_left_points+j]];
+			printf("right_sorted_indexes[%d][%d] = %d\n",i,j,right_sorted_indexes[i][j]); //todo remove this
 		}
 	}
 

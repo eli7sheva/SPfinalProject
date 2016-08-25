@@ -323,6 +323,7 @@ void DestroyKDTreeNode(KDTreeNode node){
 	if (node==NULL){
 		return;
 	}
+	printf("**destroy node with val: %f **\n", node->Val); //todo remove this
 	DestroyKDTreeNode(node->Left);
 	DestroyKDTreeNode(node->Right);
 	if (node->Data!=NULL){

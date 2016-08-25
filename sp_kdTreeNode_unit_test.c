@@ -36,8 +36,10 @@ static bool InitNodeBasicTest(){
 	ASSERT_TRUE(KDTreeNodegetDim(KDTreeNodegetLeft(node2))==2);  //Dim of node1
 	ASSERT_TRUE(KDTreeNodegetVal(KDTreeNodegetRight(node2))==4.0); //Val of node1
 	ASSERT_TRUE(KDTreeNodegetData(node2)==NULL);
+	printf("InitNodeBasicTest 3\n"); //todo remove this
 	//free memory
 	DestroyKDTreeNode(node2); //destroys all tree so node1 and node11 will also be freed
+	printf("InitNodeBasicTest 4\n"); //todo remove this
 	spPointDestroy(p1);
 	spPointDestroy(p2);
 	printf("InitNodeBasicTest 3\n"); //todo remove this
@@ -103,9 +105,10 @@ static bool InitTreeBasicTest(){
 	KDTreeNode LLL_of_root;
 	KDTreeNode LLR_of_root;
 	//root
+	printf("InitTreeBasicTest 3\n"); //todo remove this
 	KDTreeNode root = InitTree(point_array, size, split_method);
 
-	printf("InitTreeBasicTest 3\n"); //todo remove this
+	printf("InitTreeBasicTest 4\n"); //todo remove this
 
 	//check root values
 	ASSERT_TRUE(KDTreeNodegetDim(root)==0);

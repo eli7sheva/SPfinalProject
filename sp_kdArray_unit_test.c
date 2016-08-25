@@ -109,6 +109,8 @@ static bool SplitBasicTest(){
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
 	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
+	SPKDArray* res_split1;
+	SPKDArray* res_split2;
 	SPPoint p00 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[0],0);
 	SPPoint p02 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[0],2);
 	SPPoint p11 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[1],1);
@@ -126,7 +128,19 @@ static bool SplitBasicTest(){
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,1) == 2);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,2) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],0,0) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],0,1) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],1,0) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],1,1) == 0);
+	//split left half again
+	res_split1 = Split(array_of_kdArrays[0], 1);
+	/*res_split1[0]->matrix_of_sorted_indexes = [[0,1],
+	 * 									         [1,0]]
+	 */
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],0,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],0,1) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,0) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,1) == 0);
+	res_split2 = Split(res_split1[0], 0);
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
 	}
@@ -134,7 +148,13 @@ static bool SplitBasicTest(){
 	destroyKDArray(kdArray);
 	destroyKDArray(array_of_kdArrays[0]);
 	destroyKDArray(array_of_kdArrays[1]);
+	destroyKDArray(res_split1[0]);
+	destroyKDArray(res_split1[1]);
+	destroyKDArray(res_split2[0]);
+	destroyKDArray(res_split2[1]);
 	free(array_of_kdArrays);
+	free(res_split1);
+	free(res_split2);
 	spPointDestroy(p00);
 	spPointDestroy(p02);
 	spPointDestroy(p11);
