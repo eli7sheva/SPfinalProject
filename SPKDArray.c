@@ -416,20 +416,30 @@ SPKDArray* Split(SPKDArray kdArr, int coor){
 	//fill right_sorted_indexes and left_sorted_indexes
 	for (i=0; i<d; i++){
 		for(j=0; j<n; j++){
+			printf("i = %d, j= %d\n", i, j); //todo remove this
 			index = kdArr->matrix_of_sorted_indexes[i][j];
+			printf("index = %d\n", index); //todo remove this
 			if (is_index_in_left[index]==1){ //the index to map belongs to left
+				printf("index belongs to left\n"); //todo remove this
+				printf("left matrix [%d][%d] = %d\n", i, l, map_indexes[index]); //todo remove this
 				left_array->matrix_of_sorted_indexes[i][l] = map_indexes[index];
 				l++;
 			}
 			else{ //the index to map belongs to right
+				printf("index belongs to right\n"); //todo remove this
 				right_array->matrix_of_sorted_indexes[i][k] = map_indexes[index];
+				printf("right matrix [%d][%d] = %d\n", i, k, map_indexes[index]); //todo remove this
 				k++;
 			}
 		}
+		// assertions on j and l after previous for loop
+		assert(l==num_of_left_points);
+		assert(k==num_of_right_points);
+		//reset counters
+		k=0;
+		l=0;
 	}
-	// assertions on j and l after previous for loop
-	assert(l==num_of_left_points);
-	assert(k==num_of_right_points);
+
 
 
 

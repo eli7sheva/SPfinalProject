@@ -134,12 +134,12 @@ static bool SplitBasicTest(){
 	//split left half again
 	res_split1 = Split(array_of_kdArrays[0], 1);
 	/*res_split1[0]->matrix_of_sorted_indexes = [[0,1],
-	 * 									         [1,0]]
+	 * 									         [0,1]]
 	 */
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],0,0) == 0);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],0,1) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,0) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,1) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,1) == 1);
 	res_split2 = Split(res_split1[0], 0);
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
