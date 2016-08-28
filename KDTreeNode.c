@@ -111,6 +111,7 @@ int getDimentionRandom(SPKDArray KDArray){
  * @return
  * 		a KDTreeNode which is the root of the tree
  * 		NULL if an error occurred while calling other functions
+ * 		NULL if KDArray=NULL or split_method is not 0,1 or 2
  */
 KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method){
 	printf("CreateKDTree 1\n"); //todo remove this
@@ -122,8 +123,22 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	double split_median;
 	int median_index;
 	SPPoint p;
-	int n = getN(KDArray); //number of point in KDArray
-	int d = getD(KDArray); //number of dimensions in KDArray
+	SPPoint temp_point;
+	int n; //number of point in KDArray
+	int d; //number of dimensions in KDArray
+
+	//check validation of parameters
+	if (KDArray==NULL){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	if ( 0>split_method || split_method>2){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+
+	n = getN(KDArray);
+	d = getD(KDArray);
 
 	printf("CreateKDTree 2\n"); //todo remove this
 	//if KDArray has only one point
@@ -174,7 +189,11 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 		return NULL;
 	}
 	median_index = getN(splited_arrays[0])-1; //the last index in the left part of the split
-	split_median = getValFromMatrixOfSortedIndexes(splited_arrays[0], split_dimension, median_index); //get the value of the median
+	printf("median_index = %d\n", median_index); //todo remove this
+	temp_point = getCopyOfPointfromArrayOfPoints(splited_arrays[0], median_index); //the last point from the left half
+	split_median = spPointGetAxisCoor(temp_point,split_dimension); //get the value of the median, by which the split occurred
+	spPointDestroy(temp_point);
+	printf("split_median = %f\n", split_median); //todo remove this
 
 	printf("CreateKDTree 5\n"); //todo remove this
 	// recursive calls to left and right
