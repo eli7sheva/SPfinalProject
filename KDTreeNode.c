@@ -261,18 +261,30 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 }
 
 int KDTreeNodegetDim(KDTreeNode node){
+	if (node==NULL){
+		return -2; //invalid value that is not used in the tree
+	}
 	return node->Dim;
 }
 
 double KDTreeNodegetVal(KDTreeNode node){
+	if (node==NULL){
+			return -INFINITY; //invalid value that is not used in the tree
+		}
 	return node->Val;
 }
 
 KDTreeNode KDTreeNodegetLeft(KDTreeNode node){
+	if (node==NULL){
+		return NULL;
+	}
 	return node->Left;
 }
 
 KDTreeNode KDTreeNodegetRight(KDTreeNode node){
+	if (node==NULL){
+		return NULL;
+	}
 	return node->Right;
 }
 

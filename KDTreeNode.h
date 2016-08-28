@@ -33,6 +33,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
  * getter for Dim
  * @param node: KDTreeNode to get the Dim of
  * @return node->Dim
+ * 			if node==NULL returns -2
  */
 int KDTreeNodegetDim(KDTreeNode node);
 
@@ -40,6 +41,8 @@ int KDTreeNodegetDim(KDTreeNode node);
  * getter for Val
  * @param node: KDTreeNode to get the Val of
  * @return node->Val
+ * 			if node==NULL returns -INFINITY
+ *
  */
 double KDTreeNodegetVal(KDTreeNode node);
 
@@ -47,6 +50,7 @@ double KDTreeNodegetVal(KDTreeNode node);
  * getter for Left
  * @param node: KDTreeNode to get the Left of
  * @return pointer to node->Left
+ * 			if node==NULL returns NULL
  */
 KDTreeNode KDTreeNodegetLeft(KDTreeNode node);
 
@@ -54,6 +58,7 @@ KDTreeNode KDTreeNodegetLeft(KDTreeNode node);
  * getter for Right
  * @param node: KDTreeNode to get the Right of
  * @return pointer to node->Right
+ * 			if node==NULL returns NULL
  */
 KDTreeNode KDTreeNodegetRight(KDTreeNode node);
 
