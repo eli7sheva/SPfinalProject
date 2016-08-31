@@ -111,20 +111,17 @@ static bool InitTreeBasicTest(){
 	printf("InitTreeBasicTest 4\n"); //todo remove this
 
 	//check root values
-	printf("the val of root is: %f\n", KDTreeNodegetVal(root)); //todo remove this
 	ASSERT_TRUE(KDTreeNodegetDim(root)==0);
 	ASSERT_TRUE(KDTreeNodegetVal(root)==3.0);
 	ASSERT_TRUE(KDTreeNodegetData(root)==NULL);
 
 	//Assign L_of_root and check its values
-	printf("the val of L is: %f\n", KDTreeNodegetVal(L_of_root)); //todo remove this
 	L_of_root = KDTreeNodegetLeft(root);
 	ASSERT_TRUE(KDTreeNodegetDim(L_of_root)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(L_of_root)==4.0);
 	ASSERT_TRUE(KDTreeNodegetData(L_of_root)==NULL);
 
 	//Assign R_of_root and check its values
-	printf("the val of R is: %f\n", KDTreeNodegetVal(R_of_root)); //todo remove this
 	R_of_root = KDTreeNodegetRight(root);
 	ASSERT_TRUE(KDTreeNodegetDim(R_of_root)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(R_of_root)==11.0);
@@ -133,7 +130,7 @@ static bool InitTreeBasicTest(){
 	//Assign LL_of_root and check its values
 	LL_of_root = KDTreeNodegetLeft(L_of_root);
 	ASSERT_TRUE(KDTreeNodegetDim(LL_of_root)==0);
-	ASSERT_TRUE(KDTreeNodegetVal(LL_of_root)==2.0);
+	ASSERT_TRUE(KDTreeNodegetVal(LL_of_root)==1.0);
 	ASSERT_TRUE(KDTreeNodegetData(LL_of_root)==NULL);
 
 	//Assign LR_of_root and check its values
@@ -185,7 +182,16 @@ static bool InitTreeBasicTest(){
 	return true;
 }
 
-
+/* todo test for the knn search
+static bool KNNBasicTest(){
+	SPBPQueue bpq = spBPQueueCreate(1);
+	SPPoint* point_array = getPointArray();
+	int split_method = 2; //incremental
+	int size = 5;
+	int i;
+	KDTreeNode root = InitTree(point_array, size, split_method);
+}
+*/
 
 int main() {
 	RUN_TEST(InitNodeBasicTest);
