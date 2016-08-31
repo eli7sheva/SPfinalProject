@@ -375,12 +375,16 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 	char subtree_searched;
 	double hypersphere;
 
+	printf("kNearestNeighbors 1\n"); //todo remove this
 	//reached end of tree
 	if (curr==NULL){
 		return 1;
 	}
+	printf("kNearestNeighbors 2\n"); //todo remove this
+
 	//reached a leaf
-	if (curr->Data==NULL){
+	if (curr->Data!=NULL){
+		printf("kNearestNeighbors 3\n"); //todo remove this
 		//create new ListElement:
 		//index=index of the point that is the Data of curr. value=distance between the point of curr to P
 		newElement = spListElementCreate(spPointGetIndex(curr->Data), spPointL2SquaredDistance(P,curr->Data));
@@ -401,6 +405,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 	}
 	//recursive call to left or right
 	if (spPointGetAxisCoor(P,curr->Dim)<=curr->Val){
+		printf("kNearestNeighbors 4\n"); //todo remove this
 		//continue search on left subtree
 		subtree_searched = 'L';
 		return_val = kNearestNeighbors(curr->Left, bpq, P);
@@ -410,6 +415,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		}
 	}
 	else{
+		printf("kNearestNeighbors 5\n"); //todo remove this
 		//continue search on right subtree
 		subtree_searched = 'R';
 		return_val = kNearestNeighbors(curr->Right, bpq, P);
@@ -418,10 +424,13 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 			return 0;
 		}
 	}
+	printf("kNearestNeighbors 6\n"); //todo remove this
+
 	//if bpq is not full or the candidate's hypersphere crosses the splitting plane
 	hypersphere = curr->Val - spPointGetAxisCoor(P,curr->Dim);
 	if ( (!spBPQueueIsFull(bpq)) || ((hypersphere*hypersphere) < spBPQueueMaxValue(bpq)) ){
 		//search the subtree that wasn't searched yet
+		printf("kNearestNeighbors 7\n"); //todo remove this
 		if (subtree_searched=='L'){
 			return_val = kNearestNeighbors(curr->Right, bpq, P);
 			//if error occurred in the recursive call
@@ -430,6 +439,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 			}
 		}
 		else{
+			printf("kNearestNeighbors 8\n"); //todo remove this
 			return_val = kNearestNeighbors(curr->Left, bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
