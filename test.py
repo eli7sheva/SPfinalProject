@@ -31,7 +31,8 @@ def get_config_param(config, param, default = ""):
 
 def open_exe(argv):
     exe_list = argv[1:]
-    return Popen(exe_list, stdout=PIPE, stderr=STDOUT, stdin=PIPE, shell=True)
+    print("running " + " ".join(exe_list) + "...")
+    return Popen(exe_list, stdout=PIPE, stderr=STDOUT, stdin=PIPE)
 
 
 def send_input(proc, config):
@@ -63,7 +64,7 @@ def send_input(proc, config):
 
 def output_to_dict(out):
     if ver >= 3:
-        out =out.decode('UTF-8')
+        out=out.decode('UTF-8')
     
     lines = out.replace("\r\n", "\n").split("\n")
     query = ""
@@ -187,10 +188,10 @@ if __name__ == "__main__":
         args = sys.argv
     else:
         if ver < 3:
-            command = raw_input("Enter Command line: ").split(" ")
+            command = raw_input("Enter Command line: ").strip().split(" ")
         else:
             command = input("Enter Command line: ").strip().split(" ")
         args = sys.argv + command
-    print("starting...")
+    print("sarting...")
     main(args)
     print("done!")
