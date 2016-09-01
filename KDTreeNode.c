@@ -55,7 +55,6 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 	//allocate memory for dimension_spreads
 	if ( (dimension_spreads = (double*)malloc(d*sizeof(double))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		free(dimension_spreads);
 		return -1;
 	}
 
@@ -247,7 +246,6 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	//allocate memory for Node
 	if ( (Node = (KDTreeNode)malloc(sizeof(*Node))) == NULL ){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		free(Node);
 		return NULL;
 	}
 
@@ -258,28 +256,29 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	Node->Val= val;
 
 	//allocate and initialize Node->Left //todo: problem here
-	if ( (Node->Left =(KDTreeNode)malloc(sizeof(*(Node->Left))))==NULL ){
-		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		DestroyKDTreeNode(Node);
-		return NULL;
-	}
-	Node->Left = left;
-
-	//allocate and initialize Node->Right //todo: problem here
-	if ( (Node->Right =(KDTreeNode)malloc(sizeof(*(Node->Right))))==NULL ){
+	if (left != NULL) {
+		if ( (Node->Left =(KDTreeNode)malloc(sizeof(*(Node->Left))))==NULL ){
 			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 			DestroyKDTreeNode(Node);
 			return NULL;
 		}
-	Node->Right = right;
+		Node->Left = left;
+	}
+
+	//allocate and initialize Node->Right //todo: problem here
+	if (right != NULL) {
+		if ( (Node->Right =(KDTreeNode)malloc(sizeof(*(Node->Right))))==NULL ){
+				spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+				DestroyKDTreeNode(Node);
+				return NULL;
+			}
+		Node->Right = right;
+	}
 
 	//allocate and initialize Node->Data //todo: problem here
-	if ( (Node->Data =(SPPoint)malloc(sizeof(SPPoint)))==NULL ){
-		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		DestroyKDTreeNode(Node);
-		return NULL;
+	if (data != NULL) {
+		Node->Data = spPointCopy(data);
 	}
-	Node->Data = data;
 	printf("InitNode 4\n"); //todo remove this
 	return Node;
 }
