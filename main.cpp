@@ -270,12 +270,12 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	err_inside_loop;	
+	err_inside_loop:	
 		printf("4\n"); // todo remove this
 		free(closest_images);
 
 		printf("6\n"); // todo remove this
-		free query_features
+		// free query_features
 		if (query_features != NULL) {
 			for (i=0; i<query_num_of_features; i++) {
 				spPointDestroy(query_features[i]);
