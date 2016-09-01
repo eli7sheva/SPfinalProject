@@ -20,9 +20,9 @@ typedef struct sp_KDArray_t* SPKDArray;
  * 		kdArray- the source SPKDArray
  * 		index- the index of the point to be returned
  * @assert kdArray != NULL
- * @return a copy of the point from array_of_points that is in index index
+ * puts a copy of the point from kdArray->array_of_points that is in index index in the address p
  */
-SPPoint getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index);
+void getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index, SPPoint* p);
 
 /*
  * getter to an index from matrix_of_sorted_indexes
@@ -69,15 +69,15 @@ SPKDArray Init(SPPoint* arr, int size);
  * @param
  * 		kdArr: a SPKDArray object
  * 		coor: the coordinate used to split kdArr by
+ * 		left_array: pointer to store left kdArray - the first n/2 points with respect to the coordinate coor are left_array
+ * 		right_array: pointer to store right kdArray-  the rest of the points are in left_array
  * @return
- * 		two kd-arrays (kdLeft,kdRight) such that the first n/2 points with
- * 		respect to the coordinate coor are in kdLeft , and the rest of the points are in kdRight.
- * 		returns dynamic array of size two, the first element is a pointer to kdLeft and the second is a pointer to kdRight
- * 		NULL if kdArr==NULL or coor<0
- * 		NULL if allocation error occurred
+ * 		1 if completed successfully
+ * 		-1 if kdArr==NULL or coor<0
+ * 		-1 if allocation error occurred
  *
  */
-SPKDArray* Split(SPKDArray kdArr, int coor);
+int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_array);
 
 
 /**

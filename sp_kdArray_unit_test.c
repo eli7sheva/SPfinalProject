@@ -38,11 +38,14 @@ SPPoint* getPointArray(){
 static bool InitBasicTest(){
 	int i;
 	//int n;
+	SPPoint p0;
+	SPPoint p2;
+	SPPoint p4;
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
-	SPPoint p0 = getCopyOfPointfromArrayOfPoints(kdArray,0);
-	SPPoint p2 = getCopyOfPointfromArrayOfPoints(kdArray,2);
-	SPPoint p4 = getCopyOfPointfromArrayOfPoints(kdArray,4);
+	getCopyOfPointfromArrayOfPoints(kdArray,0, &p0);
+	getCopyOfPointfromArrayOfPoints(kdArray,2,&p2);
+	getCopyOfPointfromArrayOfPoints(kdArray,4,&p4);
 	ASSERT_TRUE(spPointGetAxisCoor(p0, 0)==1.0);
 	ASSERT_TRUE(spPointGetAxisCoor(p2, 1)==7.0);
 	ASSERT_TRUE(spPointGetAxisCoor(p4, 0)==3.0);
@@ -105,59 +108,72 @@ static bool InitInvalidParameterArr(){
  * kdArray->d = 2
  */
 static bool SplitBasicTest(){
+	printf("*******SplitBasicTest 1*******\n"); //todo remove this
 	int i;
+	SPKDArray left;
+	SPKDArray right;
+	SPKDArray left1;
+	SPKDArray right1;
+	int split_result;
+	SPPoint p00;
+	SPPoint p02;
+	SPPoint p11;
 	SPPoint* point_array = getPointArray();
+	printf("*******SplitBasicTest 2*******\n"); //todo remove this
 	SPKDArray kdArray = Init(point_array,5);
-	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
-	SPKDArray* res_split1;
-	SPKDArray* res_split2;
-	SPPoint p00 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[0],0);
-	SPPoint p02 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[0],2);
-	SPPoint p11 = getCopyOfPointfromArrayOfPoints(array_of_kdArrays[1],1);
-	ASSERT_TRUE(getN(array_of_kdArrays[0]) == 3);
-	ASSERT_TRUE(getD(array_of_kdArrays[0]) == 2);
-	ASSERT_TRUE(getN(array_of_kdArrays[1]) == 2);
-	ASSERT_TRUE(getD(array_of_kdArrays[1]) == 2);
+	printf("*******SplitBasicTest 3*******\n"); //todo remove this
+	split_result = Split(kdArray, 0, &left, &right);
+	ASSERT_TRUE(split_result==1);
+	printf("*******SplitBasicTest 4*******\n"); //todo remove this
+
+	printf("*******SplitBasicTest 5*******\n"); //todo remove this
+	getCopyOfPointfromArrayOfPoints(left,0,&p00);
+	getCopyOfPointfromArrayOfPoints(left,2,&p02);
+	getCopyOfPointfromArrayOfPoints(right,1,&p11);
+	printf("*******SplitBasicTest 6*******\n"); //todo remove this
+	ASSERT_TRUE(getN(left) == 3);
+	ASSERT_TRUE(getD(left) == 2);
+	ASSERT_TRUE(getN(right) == 2);
+	ASSERT_TRUE(getD(right) == 2);
 	ASSERT_TRUE(spPointGetAxisCoor(p00, 1)==2.0);
 	ASSERT_TRUE(spPointGetAxisCoor(p02, 0)==3.0);
 	ASSERT_TRUE(spPointGetAxisCoor(p11, 1)==11.0);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,0) == 0);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,1) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],0,2) == 2);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,0) == 0);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,1) == 2);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[0],1,2) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],0,0) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],0,1) == 0);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],1,0) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(array_of_kdArrays[1],1,1) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left,0,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left,0,1) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left,0,2) == 2);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left,1,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left,1,1) == 2);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left,1,2) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,0,0) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,0,1) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,1,0) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,1,1) == 0);
+	printf("*******SplitBasicTest 7*******\n"); //todo remove this
 	//split left half again
-	res_split1 = Split(array_of_kdArrays[0], 1);
+	split_result = Split(left, 1, &left1, &right1);
+	printf("*******SplitBasicTest 8*******\n"); //todo remove this
 	/*res_split1[0]->matrix_of_sorted_indexes = [[0,1],
 	 * 									         [0,1]]
 	 */
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],0,0) == 0);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],0,1) == 1);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,0) == 0);
-	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(res_split1[0],1,1) == 1);
-	res_split2 = Split(res_split1[0], 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,0,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,0,1) == 1);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,1,0) == 0);
+	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,1,1) == 1);
+	printf("*******SplitBasicTest 9*******\n"); //todo remove this
+
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
 	destroyKDArray(kdArray);
-	destroyKDArray(array_of_kdArrays[0]);
-	destroyKDArray(array_of_kdArrays[1]);
-	destroyKDArray(res_split1[0]);
-	destroyKDArray(res_split1[1]);
-	destroyKDArray(res_split2[0]);
-	destroyKDArray(res_split2[1]);
-	free(array_of_kdArrays);
-	free(res_split1);
-	free(res_split2);
+	destroyKDArray(left);
+	destroyKDArray(right);
+	destroyKDArray(left1);
+	destroyKDArray(right1);
 	spPointDestroy(p00);
 	spPointDestroy(p02);
 	spPointDestroy(p11);
+	printf("*******SplitBasicTest--end*******\n"); //todo remove this
 	return true;
 }
 
@@ -166,22 +182,27 @@ static bool SplitInvalidParameterCoor(){
 	int i;
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
-	SPKDArray* array_of_kdArrays = Split(kdArray, -1); // -1 is an invalid coordinate
-	ASSERT_TRUE(array_of_kdArrays==NULL);
+	SPKDArray left;
+	SPKDArray right;
+	int split_result;
+	split_result = Split(kdArray, -1, &left, &right); // -1 is an invalid coordinate
+	ASSERT_TRUE(split_result==-1);
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
 	destroyKDArray(kdArray);
-	free(array_of_kdArrays);
 	return true;
 }
 
 //check split when the parameter kdArr==NULL
 static bool SplitInvalidParameterKdArr(){
 	SPKDArray kdArray=NULL;
-	SPKDArray* array_of_kdArrays = Split(kdArray, 0);
-	ASSERT_TRUE(array_of_kdArrays==NULL);
+	SPKDArray left;
+	SPKDArray right;
+	int split_result;
+	split_result = Split(kdArray, 0, &left, &right);
+	ASSERT_TRUE(split_result==-1);
 	return true;
 }
 
@@ -191,7 +212,7 @@ static bool getCopyOfPointfromArrayOfPointsTest(){
 	SPPoint p;
 	SPPoint* point_array = getPointArray();
 	SPKDArray kdArray = Init(point_array,5);
-	p = getCopyOfPointfromArrayOfPoints(kdArray, 2);
+	getCopyOfPointfromArrayOfPoints(kdArray, 2, &p);
 	ASSERT_TRUE(spPointGetAxisCoor(p, 0) == 2.0);
 	ASSERT_TRUE(spPointGetAxisCoor(p, 1) == 7.0);
 	ASSERT_TRUE(spPointGetIndex(p) == 1);
