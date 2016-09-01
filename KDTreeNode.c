@@ -26,8 +26,8 @@
 struct sp_KDTreeNode_t{
 	int Dim; // The splitting dimension
 	double Val;//  The median value of the splitting dimension
-	KDTreeNode Left; // Pointer to the left subtree
-	KDTreeNode Right; // Pointer to the right subtree
+	KDTreeNode* Left; // Pointer to the left subtree
+	KDTreeNode* Right; // Pointer to the right subtree
 	SPPoint Data; // Pointer to a point (only if the current node is a leaf) otherwise this field value is NULL
 };
 
@@ -62,10 +62,10 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 	for (i=0; i<d; i++){
 		index_of_lowest = getValFromMatrixOfSortedIndexes(KDArray, i, 0);
 		index_of_highest = getValFromMatrixOfSortedIndexes(KDArray, i, n-1);
-		tmp_point = getCopyOfPointfromArrayOfPoints(KDArray, index_of_lowest);
+		getCopyOfPointfromArrayOfPoints(KDArray, index_of_lowest, &tmp_point);
 		lowest_value = spPointGetAxisCoor(tmp_point, i);
 		spPointDestroy(tmp_point);
-		tmp_point =  getCopyOfPointfromArrayOfPoints(KDArray, index_of_highest);
+		getCopyOfPointfromArrayOfPoints(KDArray, index_of_highest, &tmp_point);
 		highest_value = spPointGetAxisCoor(tmp_point, i);
 		spPointDestroy(tmp_point);
 		dimension_spreads[i] = highest_value - lowest_value;
@@ -118,18 +118,15 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 
 	int split_dimension;
 	KDTreeNode newNode;
-	KDTreeNode leftNode;
-	KDTreeNode rightNode;
+	KDTreeNode leftNode = NULL;
+	KDTreeNode rightNode = NULL;
 	SPKDArray left_array;
 	SPKDArray right_array;
 	int split_result;
-	int num_of_left_points;
-	int num_of_right_points;
+	int initNode_result;
 	double split_median;
 	int median_index;
-	SPPoint p;
-	SPPoint temp_point;
-	int i, j;
+	SPPoint tmp_point;
 	int n; //number of point in KDArray
 	int d; //number of dimensions in KDArray
 
@@ -151,17 +148,17 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	//if KDArray has only one point
 	if (n==1){
 		printf("CreateKDTree 2.0\n"); //todo remove this
-		p = getCopyOfPointfromArrayOfPoints(KDArray, 0);
-		newNode = InitNode(-1,INFINITY,NULL,NULL,p);
-		if (newNode==NULL){
+		getCopyOfPointfromArrayOfPoints(KDArray, 0, &tmp_point);
+		initNode_result = InitNode(-1,INFINITY,&leftNode,&rightNode,tmp_point,&newNode);
+		if (initNode_result==-1){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
-			spPointDestroy(p);
+			spPointDestroy(tmp_point);
 			destroyKDArray(KDArray);
 			return NULL;
 		}
 	printf("CreateKDTree 2.1\n"); //todo remove this
-	spPointDestroy(p);
+	spPointDestroy(tmp_point);
 	destroyKDArray(KDArray);
 	printf("node created with point: x=%f, y=%f\n", spPointGetAxisCoor(newNode->Data,0), spPointGetAxisCoor(newNode->Data,1) ); //todo remove this
 	printf("CreateKDTree 2.2\n"); //todo remove this
@@ -201,9 +198,9 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 
 	median_index = getN(left_array)-1; //the last index in the left part of the split
 	printf("median_index = %d\n", median_index); //todo remove this
-	temp_point = getCopyOfPointfromArrayOfPoints(left_array, median_index); //the last point from the left half
-	split_median = spPointGetAxisCoor(temp_point,split_dimension); //get the value of the median, by which the split occurred
-	spPointDestroy(temp_point);
+	getCopyOfPointfromArrayOfPoints(left_array, median_index, &tmp_point); //the last point from the left half
+	split_median = spPointGetAxisCoor(tmp_point,split_dimension); //get the value of the median, by which the split occurred
+	spPointDestroy(tmp_point);
 	printf("split_median = %f\n", split_median); //todo remove this
 
 	printf("CreateKDTree 5\n"); //todo remove this
@@ -227,8 +224,8 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 
 	printf("CreateKDTree 6\n"); //todo remove this
 	//create new node
-	newNode = InitNode(split_dimension, split_median, leftNode, rightNode, NULL);
-	if (newNode==NULL){
+	initNode_result = InitNode(split_dimension, split_median, &leftNode, &rightNode, NULL, &newNode);
+	if (initNode_result==-1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		destroyKDArray(KDArray);
@@ -243,30 +240,57 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	return newNode;
 }
 
-KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data){
-	KDTreeNode Node;
+int InitNode(int dim, double val, KDTreeNode* left, KDTreeNode* right, SPPoint data, KDTreeNode* Node){
 
 	printf("InitNode 1\n"); //todo remove this
 	// if the value of the dim parameter is invalid
 	if (dim<-1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
 
 	printf("InitNode 2\n"); //todo remove this
 	//allocate memory for Node
-	if ( (Node = (KDTreeNode)malloc(sizeof(*Node))) == NULL ){
+	if ( ((*Node) = (KDTreeNode)malloc(sizeof(**Node))) == NULL ){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
 
 	printf("InitNode 3\n"); //todo remove this
 
 	//initialize fields according to the values given in the parameters
-	Node->Dim = dim;
-	Node->Val= val;
+	(*Node)->Dim = dim;
+	(*Node)->Val= val;
 
+	if (*left != NULL){
+		(*Node)->Left = left;
+	}
+	else{
+		(*Node)->Left = NULL;
+	}
+	if (*right!=NULL){
+		(*Node)->Right = right;
+	}
+	else{
+		(*Node)->Right = NULL;
+	}
+
+	//initialize Node->Data
+	if (data != NULL) {
+		(*Node)->Data = spPointCopy(data);
+		if((*Node)->Data==NULL){
+			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+			return -1;
+		}
+	}
+	else{
+		(*Node)->Data = NULL;
+	}
+	printf("InitNode--end\n"); //todo remove this
+	return 1;
+}
+	/*
 	//allocate and initialize Node->Left //todo: problem here
 	if (left != NULL) {
 		if ( (Node->Left =(KDTreeNode)malloc(sizeof(*(Node->Left))))==NULL ){
@@ -294,6 +318,7 @@ KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPo
 	printf("InitNode 4\n"); //todo remove this
 	return Node;
 }
+*/
 
 int KDTreeNodegetDim(KDTreeNode node){
 	if (node==NULL){
@@ -313,14 +338,20 @@ KDTreeNode KDTreeNodegetLeft(KDTreeNode node){
 	if (node==NULL){
 		return NULL;
 	}
-	return node->Left;
+	if (node->Left==NULL){
+		return NULL;
+	}
+	return *(node->Left);
 }
 
 KDTreeNode KDTreeNodegetRight(KDTreeNode node){
 	if (node==NULL){
 		return NULL;
 	}
-	return node->Right;
+	if (node->Right==NULL){
+		return NULL;
+	}
+	return *(node->Right);
 }
 
 SPPoint KDTreeNodegetData(KDTreeNode node){
@@ -366,17 +397,21 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	return KDTree;
 }
 
-void DestroyKDTreeNode(KDTreeNode node){
-	if (node==NULL){
+void DestroyKDTreeNode(KDTreeNode* node){
+	if (node==NULL || (*node)==NULL){
 		return;
 	}
-	printf("**destroy node with val: %f **\n", node->Val); //todo remove this
-	DestroyKDTreeNode(node->Left);
-	DestroyKDTreeNode(node->Right);
-	if (node->Data!=NULL){
-		spPointDestroy(node->Data);
+	if ((*node)->Left!=NULL){
+		DestroyKDTreeNode((*node)->Left);
 	}
-	free(node);
+	if ((*node)->Right!=NULL){
+		DestroyKDTreeNode((*node)->Right);
+	}
+	if ((*node)->Data!=NULL){
+		spPointDestroy((*node)->Data);
+	}
+	free(*node);
+	return;
 }
 
 int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
@@ -419,7 +454,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		printf("kNearestNeighbors 4\n"); //todo remove this
 		//continue search on left subtree
 		subtree_searched = 'L';
-		return_val = kNearestNeighbors(curr->Left, bpq, P);
+		return_val = kNearestNeighbors((*curr->Left), bpq, P);
 		//if error occurred in the recursive call
 		if (return_val==0){
 			return 0;
@@ -429,7 +464,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		printf("kNearestNeighbors 5\n"); //todo remove this
 		//continue search on right subtree
 		subtree_searched = 'R';
-		return_val = kNearestNeighbors(curr->Right, bpq, P);
+		return_val = kNearestNeighbors((*curr->Right), bpq, P);
 		//if error occurred in the recursive call
 		if (return_val==0){
 			return 0;
@@ -443,7 +478,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		//search the subtree that wasn't searched yet
 		printf("kNearestNeighbors 7\n"); //todo remove this
 		if (subtree_searched=='L'){
-			return_val = kNearestNeighbors(curr->Right, bpq, P);
+			return_val = kNearestNeighbors((*curr->Right), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
 				return 0;
@@ -451,7 +486,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
 		}
 		else{
 			printf("kNearestNeighbors 8\n"); //todo remove this
-			return_val = kNearestNeighbors(curr->Left, bpq, P);
+			return_val = kNearestNeighbors((*curr->Left), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
 				return 0;

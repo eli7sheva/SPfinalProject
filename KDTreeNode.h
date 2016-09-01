@@ -15,19 +15,21 @@
 typedef struct sp_KDTreeNode_t* KDTreeNode;
 
 /*
- * initialize a new KDTreeNode
+ * creates a new KDTreeNode with it's field values set according to the parameters
+ *				and stores it in address of Node
  * @param
  * 		dim: the splitting dimension, -1 represents invalid value
  * 		val: the median value of the splitting dimension. infinity represents invalid value
  *		left: a pointer to the left subtree
  *		right: a pointer to the right subtree
  *		data: a pointer to a point (only if the current node is a leaf) otherwise this field value is NULL
+ *		Node: address to store the new created node
  * @return
- *		a new KDTreeNode with it's field values set according to the parameters
- *		Null if dim<0 or if allocation error accrued.
+ * 		 1 if completed successfully
+ *		-1 if dim<0 or if allocation error accrued.
  *			 the relevant error message will be sent to Logger
  */
-KDTreeNode InitNode(int dim, double val, KDTreeNode left, KDTreeNode right, SPPoint data);
+int InitNode(int dim, double val, KDTreeNode* left, KDTreeNode* right, SPPoint data, KDTreeNode* Node);
 
 /*
  * getter for Dim
@@ -49,16 +51,16 @@ double KDTreeNodegetVal(KDTreeNode node);
 /*
  * getter for Left
  * @param node: KDTreeNode to get the Left of
- * @return pointer to node->Left
- * 			if node==NULL returns NULL
+ * @return the KDTreeNode pointed by node->Left
+ * 			if node==NULL or node->Left==NULL returns NULL
  */
 KDTreeNode KDTreeNodegetLeft(KDTreeNode node);
 
 /*
  * getter for Right
  * @param node: KDTreeNode to get the Right of
- * @return pointer to node->Right
- * 			if node==NULL returns NULL
+ * @return the KDTreeNode pointed by node->Right
+ * 			if node==NULL or node->Right==NULL returns NULL
  */
 KDTreeNode KDTreeNodegetRight(KDTreeNode node);
 
@@ -87,10 +89,10 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method);
 
 /*
  * free all memory of a KDTree including all its nodes
- * @param node: a node which is the root of the tree to be destroyed
+ * @param node: a pointer to a KDTreeNode which is the root of the tree to be destroyed
  * 				if node is NULL nothing will happen
  */
-void DestroyKDTreeNode(KDTreeNode node);
+void DestroyKDTreeNode(KDTreeNode* node);
 
 /*
  * searches a KDtree for the K closest points to a given point
