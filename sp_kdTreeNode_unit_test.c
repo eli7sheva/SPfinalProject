@@ -375,7 +375,7 @@ static bool KNNBasicTest(){
 
 	printf("KNNBasicTest 2\n"); //todo remove this
 	//search for a point that appears in the tree
-	serach_result = kNearestNeighbors(root, bpq, p1);
+	serach_result = kNearestNeighbors(root, bpq, &p1);
 	printf("KNNBasicTest 2.0\n"); //todo remove this
 	ASSERT_TRUE(serach_result==1); //search completed successfully
 	printf("KNNBasicTest 2.1\n"); //todo remove this
@@ -392,7 +392,7 @@ static bool KNNBasicTest(){
 
 	printf("KNNBasicTest 4\n"); //todo remove this
 	//search for a point that appears in the tree
-	serach_result = kNearestNeighbors(root, bpq, p2);
+	serach_result = kNearestNeighbors(root, bpq, &p2);
 	ASSERT_TRUE(serach_result==1); //search completed successfully
 	bpq_element = spBPQueuePeek(bpq);
 	index = spListElementGetIndex(bpq_element);

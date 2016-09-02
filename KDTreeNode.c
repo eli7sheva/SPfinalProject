@@ -442,12 +442,12 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 		printf("kNearestNeighbors 3\n"); //todo remove this
 		//create new ListElement:
 		//index=index of the point that is the Data of curr. value=distance between the point of curr to P
-		newElement = spListElementCreate(spPointGetIndex(curr->Data), spPointL2SquaredDistance(P,curr->Data));
+		newElement = spListElementCreate(spPointGetIndex(curr->Data), spPointL2SquaredDistance(*P,curr->Data));
 		//if there was a problem creating newElement
 		if (newElement==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(SPLISTELEMENTCREATE_RETURNED_NULL, __FILE__, __func__, __LINE__);
-			return 0;
+			return -1;
 		}
 		// add newElement to bpq
 		msg = spBPQueueEnqueue(bpq, newElement);
@@ -455,18 +455,20 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 		if (msg!=SP_BPQUEUE_SUCCESS && msg!=SP_BPQUEUE_FULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(SPBPQUEUEENGUEUE_RETURNED_NULL, __FILE__, __func__, __LINE__);
-			return 0;
+			return -1;
 		}
+		spListElementDestroy(newElement);
+		return 1;
 	}
 	//recursive call to left or right
-	if (spPointGetAxisCoor(P,curr->Dim)<=curr->Val){
+	if (spPointGetAxisCoor(*P,curr->Dim)<=curr->Val){
 		printf("kNearestNeighbors 4\n"); //todo remove this
 		//continue search on left subtree
 		subtree_searched = 'L';
 		return_val = kNearestNeighbors((*curr->Left), bpq, P);
 		//if error occurred in the recursive call
 		if (return_val==0){
-			return 0;
+			return -1;
 		}
 	}
 	else{
@@ -476,13 +478,13 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 		return_val = kNearestNeighbors((*curr->Right), bpq, P);
 		//if error occurred in the recursive call
 		if (return_val==0){
-			return 0;
+			return -1;
 		}
 	}
 	printf("kNearestNeighbors 6\n"); //todo remove this
 
 	//if bpq is not full or the candidate's hypersphere crosses the splitting plane
-	hypersphere = curr->Val - spPointGetAxisCoor(P,curr->Dim);
+	hypersphere = curr->Val - spPointGetAxisCoor(*P,curr->Dim);
 	if ( (!spBPQueueIsFull(bpq)) || ((hypersphere*hypersphere) < spBPQueueMaxValue(bpq)) ){
 		//search the subtree that wasn't searched yet
 		printf("kNearestNeighbors 7\n"); //todo remove this
@@ -490,7 +492,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 			return_val = kNearestNeighbors((*curr->Right), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
-				return 0;
+				return -1;
 			}
 		}
 		else{
@@ -498,7 +500,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 			return_val = kNearestNeighbors((*curr->Left), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
-				return 0;
+				return -1;
 			}
 		}
 	}

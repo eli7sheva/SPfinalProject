@@ -102,11 +102,11 @@ void DestroyKDTreeNode(KDTreeNode* node);
  * @param
  * 		curr: a KDTreeNode that is the root of the KDTree
  * 		bpq: a SPBPQueue to store the closest points, K is the size of the bpq
- * 		P: the given point
+ * 		P: address of the given point
  * @return
- * 		1 if the search was successful
- * 		0 if an error occurred during the search (such as an error while calling another function)
+ * 		 1 if the search was successful
+ * 		-1 if an error occurred during the search (such as an error while calling another function)
  */
-int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P);
+int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P);
 
 #endif /* KDTREENODE_H_ */
