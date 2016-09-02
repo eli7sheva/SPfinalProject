@@ -102,17 +102,16 @@ int getDimentionRandom(SPKDArray KDArray){
 
 
 /*
- * the recursive function creating the KD tree
+ * the recursive function creating the KD tree, stores it in the adress root
  * @param
  * 		KDArray: a SPKDArray object
  * 		last_split_dim: the dimension that was used for split in the last recursive call
  * 		split_method: an int representing the method to split by
  * 					 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
  * 		root: an address to store the root of the created tree
- * @return todo:switch documentation if needed
- * 		the root of the KDTreeNode
- * 		NULL if an error occurred while calling other functions
- * 		NULL if KDArray=NULL or split_method is not 0,1 or 2
+ * @return
+ * 		 1 if an error occurred while calling other functions
+ * 		-1 if KDArray=NULL or split_method is not 0,1 or 2
  */
 int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTreeNode* root){
 	printf("CreateKDTree 1\n"); //todo remove this

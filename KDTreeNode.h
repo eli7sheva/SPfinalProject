@@ -22,6 +22,8 @@ typedef struct sp_KDTreeNode_t* KDTreeNode;
  * 		val: the median value of the splitting dimension. infinity represents invalid value
  *		left: a pointer to the left subtree
  *		right: a pointer to the right subtree
+ *			if left/right are NULL: the newNode Left/Right field will be allocated to be a pointer to a KDTreeNode
+ *			if left/right are A POINTER TO NULL: the newNode Left/Right field will be NULL
  *		data: a pointer to a point (only if the current node is a leaf) otherwise this field value is NULL
  *		Node: address to store the new created node
  * @return
@@ -73,7 +75,7 @@ KDTreeNode KDTreeNodegetRight(KDTreeNode node);
 SPPoint KDTreeNodegetData(KDTreeNode node);
 
 /*
- * creates the KD Tree by calling the recursive function CreateKDTree
+ * creates the KD Tree by calling the recursive function CreateKDTree sores it in the sdress of root
  * this is an envelope function for CreateKDTree
  * @param
  * 		arr: an array of points (each point represents a feature)
@@ -81,9 +83,9 @@ SPPoint KDTreeNodegetData(KDTreeNode node);
  * 		split_method: an int representing the method to split by
  * 					 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
  * 		root: an address to store the root of the created tree
- * @return todo:switch ocumentaion if needed
- * 		the root of the created tree
- *		NULL if arr==NULL, size<1 or call to other function returned NULL.
+ * @return
+ * 		 1 if completed successfully
+ *		-1 if arr==NULL, size<1 or call to other function returned NULL.
  *		 	 the relevant error message will be sent to Logger
  */
 int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root);
