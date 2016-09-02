@@ -407,12 +407,12 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 	for (i=0; i<n; i++){ // i= index counter for is_index_in_left
 		if (is_index_in_left[i]==1){
 			(*left_array)->array_of_points[j]= spPointCopy(kdArr->array_of_points[i]);
-			printf("left_points[%d] x coordinate is: %d\n", j, (int)spPointGetAxisCoor((*left_array)->array_of_points[j],0)); //todo remove this
+			//printf("left_points[%d] x coordinate is: %d\n", j, (int)spPointGetAxisCoor((*left_array)->array_of_points[j],0)); //todo remove this
 			j++;
 		}
 		else{ //is_index_in_left[i]==0
 			(*right_array)->array_of_points[k]= spPointCopy(kdArr->array_of_points[i]);
-			printf("right_points[%d] x coordinate is: %d\n", k, (int)spPointGetAxisCoor((*right_array)->array_of_points[k],0)); //todo remove this
+			//printf("right_points[%d] x coordinate is: %d\n", k, (int)spPointGetAxisCoor((*right_array)->array_of_points[k],0)); //todo remove this
 			k++;
 		}
 	}

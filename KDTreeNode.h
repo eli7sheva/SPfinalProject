@@ -80,8 +80,9 @@ SPPoint KDTreeNodegetData(KDTreeNode node);
  * 		size: the number of points in arr
  * 		split_method: an int representing the method to split by
  * 					 0=RANDOM, 1= MAX_SPREAD,  2=INCREMENTAL
- * @return
- * 		a KDTreeNode which is the root of the tree
+ * 		root: an address to store the root of the created tree
+ * @return todo:switch ocumentaion if needed
+ * 		the root of the created tree
  *		NULL if arr==NULL, size<1 or call to other function returned NULL.
  *		 	 the relevant error message will be sent to Logger
  */
