@@ -92,10 +92,10 @@ int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root);
 
 /*
  * free all memory of a KDTree including all its nodes
- * @param node: a pointer to a KDTreeNode which is the root of the tree to be destroyed
+ * @param node: a KDTreeNode which is the root of the tree to be destroyed
  * 				if node is NULL nothing will happen
  */
-void DestroyKDTreeNode(KDTreeNode* node);
+void DestroyKDTreeNode(KDTreeNode node);
 
 /*
  * searches a KDtree for the K closest points to a given point

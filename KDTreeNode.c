@@ -392,7 +392,7 @@ int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root){
 	if (createTree_result==-1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
-		DestroyKDTreeNode(root);
+		DestroyKDTreeNode(*root);
 		return -1;
 	}
 	printf("init tree 6 - done\n"); //todo remove this
@@ -400,7 +400,24 @@ int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root){
 	return 1;
 }
 
-
+void DestroyKDTreeNode(KDTreeNode node){
+	if (node==NULL){
+		return;
+	}
+	if (node->Left!=NULL){
+		DestroyKDTreeNode(*(node->Left));
+		free(node->Left);
+	}
+	if (node->Right!=NULL){
+		DestroyKDTreeNode(*(node->Right));
+		free(node->Right);
+	}
+	if (node->Data!=NULL){
+		spPointDestroy(node->Data);
+	}
+	free(node);
+}
+/*
 void DestroyKDTreeNode(KDTreeNode* node){
 	if (node==NULL){
 		return;
@@ -422,6 +439,7 @@ void DestroyKDTreeNode(KDTreeNode* node){
 	free(node);
 	return;
 }
+*/
 
 int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	SPListElement newElement;

@@ -11,7 +11,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-/*
+
 static bool InitNodeBasicTest(){
 	double data[3] = {123.0,70.0, 12.6};
 	SPPoint p1 = spPointCreate(data, 3, 1);
@@ -28,7 +28,7 @@ static bool InitNodeBasicTest(){
 	//create and check first node
 	intNode_result = InitNode(2, 4.0, &left1, &right1, p1, &node1);
 	if (intNode_result==-1){
-		DestroyKDTreeNode(&node1);
+		DestroyKDTreeNode(node1);
 	}
 	ASSERT_TRUE(KDTreeNodegetDim(node1)==2);
 	ASSERT_TRUE(KDTreeNodegetVal(node1)==4.0);
@@ -39,11 +39,11 @@ static bool InitNodeBasicTest(){
 	//create and check second node
 	intNode_result = InitNode(2, 4.5, &left2, &right2, p1, &node11);
 	if (intNode_result==-1){
-		DestroyKDTreeNode(&node1);
+		DestroyKDTreeNode(node1);
 	}
 	intNode_result = InitNode(1, 2.0, &node1, &node11, NULL, &node2);
 	if (intNode_result==-1){
-		DestroyKDTreeNode(&node1);
+		DestroyKDTreeNode(node1);
 	}
 	ASSERT_TRUE(KDTreeNodegetDim(node2)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(node2)==2.0);
@@ -53,7 +53,7 @@ static bool InitNodeBasicTest(){
 	ASSERT_TRUE(tmp_point==NULL);
 	spPointDestroy(tmp_point);
 	//free memory
-	DestroyKDTreeNode(&node2); //destroys all tree so node1 and node11 will also be freed
+	DestroyKDTreeNode(node2); //destroys all tree so node1 and node11 will also be freed
 	spPointDestroy(p1);
 	spPointDestroy(p2);
 	return true;
@@ -75,7 +75,7 @@ static bool InitNodeDiminvalidTest(){
 	return true;
 }
 
-*/
+
 
 //creates an array of points to use for tests- todo-this is duplicate from kdArray test
 SPPoint* getPointArray(){
@@ -101,7 +101,7 @@ SPPoint* getPointArray(){
 	return point_array;
 }
 
-/*
+
 //checks initTree with incremental
 static bool InitTreeIncrementalTest(){
 	printf("InitTreeIncrementalTest 1\n"); //todo remove this
@@ -128,7 +128,7 @@ static bool InitTreeIncrementalTest(){
 	printf("InitTreeIncrementalTest 3\n"); //todo remove this
 	InitTree_result = InitTree(point_array, size, split_method, &root);
 	if(InitTree_result==-1){
-		DestroyKDTreeNode(&root);
+		DestroyKDTreeNode(root);
 	}
 
 	printf("InitTreeIncrementalTest 4\n"); //todo remove this
@@ -220,7 +220,7 @@ static bool InitTreeIncrementalTest(){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
-	DestroyKDTreeNode(&root);
+	DestroyKDTreeNode(root);
 	return true;
 }
 
@@ -251,7 +251,7 @@ static bool InitTreeMaxSpreadTest(){
 	printf("InitTreeIncrementalTest 3\n"); //todo remove this
 	InitTree_result = InitTree(point_array, size, split_method, &root);
 	if(InitTree_result==-1){
-		DestroyKDTreeNode(&root);
+		DestroyKDTreeNode(root);
 	}
 
 	printf("InitTreeIncrementalTest 4\n"); //todo remove this
@@ -343,10 +343,10 @@ static bool InitTreeMaxSpreadTest(){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
-	DestroyKDTreeNode(&root);
+	DestroyKDTreeNode(root);
     return true;
 }
-*/
+
 
 // basic check of kNearestNeighbors
 static bool KNNBasicTest(){
@@ -406,7 +406,7 @@ static bool KNNBasicTest(){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
-	DestroyKDTreeNode(&root);
+	DestroyKDTreeNode(root);
 	spPointDestroy(p1);
 	spPointDestroy(p2);
 
@@ -415,10 +415,10 @@ static bool KNNBasicTest(){
 
 
 int main() {
-//	RUN_TEST(InitNodeBasicTest);
-//	RUN_TEST(InitNodeDiminvalidTest);
-//	RUN_TEST(InitTreeIncrementalTest);
-//	RUN_TEST(InitTreeMaxSpreadTest);
+	RUN_TEST(InitNodeBasicTest);
+	RUN_TEST(InitNodeDiminvalidTest);
+	RUN_TEST(InitTreeIncrementalTest);
+	RUN_TEST(InitTreeMaxSpreadTest);
 	RUN_TEST(KNNBasicTest);
 	return 0;
 }
