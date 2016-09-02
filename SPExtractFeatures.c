@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,15 +45,21 @@
  *
  */
 
-void replaceSuffix(const char* input, char* new_suffix, char* output) {
-    unsigned int i = 0;
-    while ((*(input + i)) && (*(input + i) != PATH_SUFFIX_MARK)) {
-		i++;
+void replaceSuffix(const char* input, const char* new_suffix, char* output) {
+int i = strlen(input) -1;
+    assert(i>0);
+    while ((i>=0)&&(*(input + i)) && (*(input + i) != PATH_SUFFIX_MARK)) {
+		i--;
     }
-
-    strncpy(output, input, i);
-    output[i] = STRING_NULL_TERMINATOR;
-	strcat(output, new_suffix);
+    printf("%d\n", i);
+    if (i<0){
+    	strcpy(output, input);
+    }
+    else {
+	    strncpy(output, input, i);
+	    output[i] = STRING_NULL_TERMINATOR;
+		strcat(output, new_suffix);
+	}
 }
 
 /**
