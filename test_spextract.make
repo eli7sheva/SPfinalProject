@@ -1,9 +1,10 @@
 CC = gcc
 CPP = g++
 #put your object files here
-OBJS =  SPLogger.o SPConfig.o  test_spconfig.o
+OBJS =  SPLogger.o SPPoint.o SPConfig.o  test_spextract.o
+# OBJS =  SPLogger.o SPPoint.o SPConfig.o SPImageProc.o test_spextract.o
 #The executabel filename
-EXEC = test_spconfig
+EXEC = test_spextract
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
 LIBPATH=/usr/local/lib/opencv-3.1.0/lib/
 LIBS=-lopencv_xfeatures2d -lopencv_features2d \
@@ -19,13 +20,19 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
-test_spconfig.o: sp_kdArray_unit_test.c unit_test_util.h SPKDArray.h 
+
+# test_spextract.o: test_spextract.cpp unit_test_util.h  SPLogger.h SPPoint.h SPConfig.h SPImageProc.h
+# 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+test_spextract.o: test_spextract.c unit_test_util.h  SPLogger.h SPPoint.h SPConfig.h
+		$(CC) $(C_COMP_FLAG) -c $*.c
+SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPConfig.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
-	
+# SPImageProc.o: SPImageProc.cpp SPImageProc.h SPConfig.h SPPoint.h SPLogger.h
+# 	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 #a rule for building a simple c souorce file
 #use gcc -MM SPPoint.c to see the dependencies
 
