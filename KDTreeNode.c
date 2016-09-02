@@ -423,7 +423,7 @@ void DestroyKDTreeNode(KDTreeNode* node){
 	return;
 }
 
-int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint P){
+int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	SPListElement newElement;
 	SP_BPQUEUE_MSG msg;
 	int return_val;

@@ -11,7 +11,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-
+/*
 static bool InitNodeBasicTest(){
 	double data[3] = {123.0,70.0, 12.6};
 	SPPoint p1 = spPointCreate(data, 3, 1);
@@ -75,7 +75,7 @@ static bool InitNodeDiminvalidTest(){
 	return true;
 }
 
-
+*/
 
 //creates an array of points to use for tests- todo-this is duplicate from kdArray test
 SPPoint* getPointArray(){
@@ -101,7 +101,7 @@ SPPoint* getPointArray(){
 	return point_array;
 }
 
-
+/*
 //checks initTree with incremental
 static bool InitTreeIncrementalTest(){
 	printf("InitTreeIncrementalTest 1\n"); //todo remove this
@@ -130,17 +130,6 @@ static bool InitTreeIncrementalTest(){
 	if(InitTree_result==-1){
 		DestroyKDTreeNode(&root);
 	}
-	/*todo remove this block
-	L_of_root = KDTreeNodegetLeft(root);
-	R_of_root = KDTreeNodegetRight(root);
-	LL_of_root = KDTreeNodegetLeft(L_of_root);
-	LR_of_root = KDTreeNodegetRight(L_of_root);
-	printf("root: dim=%d, val=%f\n",KDTreeNodegetDim(root),KDTreeNodegetVal(root));
-	printf("L_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(L_of_root),KDTreeNodegetVal(L_of_root));
-	printf("R_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(R_of_root),KDTreeNodegetVal(R_of_root));
-	printf("LL_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(LL_of_root),KDTreeNodegetVal(LL_of_root));
-	printf("LR_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(LR_of_root),KDTreeNodegetVal(LR_of_root));
-*/
 
 	printf("InitTreeIncrementalTest 4\n"); //todo remove this
 	//check root values
@@ -357,8 +346,8 @@ static bool InitTreeMaxSpreadTest(){
 	DestroyKDTreeNode(&root);
     return true;
 }
+*/
 
-/*
 // basic check of kNearestNeighbors
 static bool KNNBasicTest(){
 	SPBPQueue bpq;
@@ -423,13 +412,13 @@ static bool KNNBasicTest(){
 
 	return true;
 }
-*/
+
 
 int main() {
-	RUN_TEST(InitNodeBasicTest);
-	RUN_TEST(InitNodeDiminvalidTest);
-	RUN_TEST(InitTreeIncrementalTest);
-	RUN_TEST(InitTreeMaxSpreadTest);
-//	RUN_TEST(KNNBasicTest);
+//	RUN_TEST(InitNodeBasicTest);
+//	RUN_TEST(InitNodeDiminvalidTest);
+//	RUN_TEST(InitTreeIncrementalTest);
+//	RUN_TEST(InitTreeMaxSpreadTest);
+	RUN_TEST(KNNBasicTest);
 	return 0;
 }
