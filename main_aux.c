@@ -160,7 +160,8 @@ KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_feat
     int total_num_of_features = 0; // the total number of extractred features from all images
     SPPoint* all_features = NULL;  // holds all features of all images    
     KDTreeNode kd_tree = NULL;            // the tree to return
-    int counter = 0;               // helper         
+    int counter = 0;               // helper
+    int initTree_results;          // holds the result from call to InitTree
     int i;      
     int j;
 
@@ -196,7 +197,7 @@ KDTreeNode initiateDataStructures(SPPoint** features_per_image, int* num_of_feat
 
     printf("init 4\n");//todo remove this
     // initiate kd tree with all features of all images
-    if ((kd_tree = InitTree(all_features, total_num_of_features, split_method)) == NULL){
+    if ((initTree_results = InitTree(all_features, total_num_of_features, split_method, &kd_tree)) == -1){
         kd_tree = NULL;
         goto err; // error log is printed inside InitTree
     }
@@ -284,7 +285,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint featureA, KDTreeNode root){
 	}
 
 	//call kNearestNeighbors
-	knnResult = kNearestNeighbors(root, bpq, featureA);
+	knnResult = kNearestNeighbors(root, bpq, &featureA);
 	if (knnResult!=1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(KNN_RETURNED_NULL, __FILE__, __func__, __LINE__);
