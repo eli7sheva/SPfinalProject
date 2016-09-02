@@ -11,10 +11,12 @@
 #include <math.h>
 #include <stdlib.h>
 
+
 static bool InitNodeBasicTest(){
 	double data[3] = {123.0,70.0, 12.6};
 	SPPoint p1 = spPointCreate(data, 3, 1);
 	SPPoint p2;
+	SPPoint tmp_point;
 	KDTreeNode node1;
 	KDTreeNode node11;
 	KDTreeNode node2;
@@ -32,7 +34,7 @@ static bool InitNodeBasicTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(node1)==4.0);
 	ASSERT_TRUE(KDTreeNodegetLeft(node1)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(node1)==NULL);
-	p2 = KDTreeNodegetData(node1);
+	KDTreeNodegetData(node1, &p2);
 	ASSERT_TRUE(spPointGetAxisCoor(p2,1)==70.0);
 	//create and check second node
 	intNode_result = InitNode(2, 4.5, &left2, &right2, p1, &node11);
@@ -47,7 +49,9 @@ static bool InitNodeBasicTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(node2)==2.0);
 	ASSERT_TRUE(KDTreeNodegetDim(KDTreeNodegetLeft(node2))==2);  //Dim of node1
 	ASSERT_TRUE(KDTreeNodegetVal(KDTreeNodegetRight(node2))==4.5); //Val of node1
-	ASSERT_TRUE(KDTreeNodegetData(node2)==NULL);
+	KDTreeNodegetData(node2, &tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 	//free memory
 	DestroyKDTreeNode(&node2); //destroys all tree so node1 and node11 will also be freed
 	spPointDestroy(p1);
@@ -70,6 +74,7 @@ static bool InitNodeDiminvalidTest(){
 	spPointDestroy(p);
 	return true;
 }
+
 
 
 //creates an array of points to use for tests- todo-this is duplicate from kdArray test
@@ -96,11 +101,12 @@ SPPoint* getPointArray(){
 	return point_array;
 }
 
-/*
+
 //checks initTree with incremental
 static bool InitTreeIncrementalTest(){
 	printf("InitTreeIncrementalTest 1\n"); //todo remove this
 	SPPoint* point_array = getPointArray();
+	SPPoint tmp_point;
 	printf("InitTreeIncrementalTest 2\n"); //todo remove this
 	int split_method = 2; //incremental
 	int size = 5;
@@ -124,49 +130,61 @@ static bool InitTreeIncrementalTest(){
 	if(InitTree_result==-1){
 		DestroyKDTreeNode(&root);
 	}
+	/*todo remove this block
 	L_of_root = KDTreeNodegetLeft(root);
 	R_of_root = KDTreeNodegetRight(root);
 	LL_of_root = KDTreeNodegetLeft(L_of_root);
 	LR_of_root = KDTreeNodegetRight(L_of_root);
+	printf("root: dim=%d, val=%f\n",KDTreeNodegetDim(root),KDTreeNodegetVal(root));
 	printf("L_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(L_of_root),KDTreeNodegetVal(L_of_root));
 	printf("R_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(R_of_root),KDTreeNodegetVal(R_of_root));
 	printf("LL_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(LL_of_root),KDTreeNodegetVal(LL_of_root));
 	printf("LR_of_root: dim=%d, val=%f\n",KDTreeNodegetDim(LR_of_root),KDTreeNodegetVal(LR_of_root));
+*/
 
 	printf("InitTreeIncrementalTest 4\n"); //todo remove this
 	//check root values
 	ASSERT_TRUE(KDTreeNodegetDim(root)==0);
 	ASSERT_TRUE(KDTreeNodegetVal(root)==3.0);
-	ASSERT_TRUE(KDTreeNodegetData(root)==NULL);
+	KDTreeNodegetData(root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
 	printf("InitTreeIncrementalTest 5\n"); //todo remove this
 	//Assign L_of_root and check its values
-	//L_of_root = KDTreeNodegetLeft(root);
-	printf("L_of_root val = %f\n",KDTreeNodegetVal(L_of_root));
+	L_of_root = KDTreeNodegetLeft(root);
 	ASSERT_TRUE(KDTreeNodegetDim(L_of_root)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(L_of_root)==4.0);
-	ASSERT_TRUE(KDTreeNodegetData(L_of_root)==NULL);
+	KDTreeNodegetData(L_of_root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
 	printf("InitTreeIncrementalTest 6\n"); //todo remove this
 	//Assign R_of_root and check its values
-	//R_of_root = KDTreeNodegetRight(root);
+	R_of_root = KDTreeNodegetRight(root);
 	ASSERT_TRUE(KDTreeNodegetDim(R_of_root)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(R_of_root)==11.0);
-	ASSERT_TRUE(KDTreeNodegetData(R_of_root)==NULL);
+	KDTreeNodegetData(R_of_root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
 	//Assign LL_of_root and check its values
-	//LL_of_root = KDTreeNodegetLeft(L_of_root);
+	LL_of_root = KDTreeNodegetLeft(L_of_root);
 	ASSERT_TRUE(KDTreeNodegetDim(LL_of_root)==0);
 	ASSERT_TRUE(KDTreeNodegetVal(LL_of_root)==1.0);
-	ASSERT_TRUE(KDTreeNodegetData(LL_of_root)==NULL);
+	KDTreeNodegetData(LL_of_root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
 	//Assign LR_of_root and check its values
-	//LR_of_root = KDTreeNodegetRight(L_of_root);
+	LR_of_root = KDTreeNodegetRight(L_of_root);
 	ASSERT_TRUE(KDTreeNodegetDim(LR_of_root)==-1);
 	ASSERT_TRUE(KDTreeNodegetVal(LR_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(LR_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(LR_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(LR_of_root), point_array[2])==0);
+	KDTreeNodegetData(LR_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[2])==0);
+	spPointDestroy(tmp_point);
 
 	//Assign RL_of_root and check its values
 	RL_of_root = KDTreeNodegetLeft(R_of_root);
@@ -174,7 +192,9 @@ static bool InitTreeIncrementalTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(RL_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(RL_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(RL_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(RL_of_root), point_array[3])==0);
+	KDTreeNodegetData(RL_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[3])==0);
+	spPointDestroy(tmp_point);
 
 	//Assign RR_of_root and check its values
 	RR_of_root = KDTreeNodegetRight(R_of_root);
@@ -182,7 +202,9 @@ static bool InitTreeIncrementalTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(RR_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(RR_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(RR_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(RR_of_root), point_array[1])==0);
+	KDTreeNodegetData(RR_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[1])==0);
+	spPointDestroy(tmp_point);
 
 	//Assign LLL_of_root and check its values
 	LLL_of_root = KDTreeNodegetLeft(LL_of_root);
@@ -190,15 +212,19 @@ static bool InitTreeIncrementalTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(LLL_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(LLL_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(LLL_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(LLL_of_root), point_array[0])==0);
+	KDTreeNodegetData(LLL_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[0])==0);
+	spPointDestroy(tmp_point);
 
-	//Assign LLL_of_root and check its values
+	//Assign LLR_of_root and check its values
 	LLR_of_root = KDTreeNodegetRight(LL_of_root);
 	ASSERT_TRUE(KDTreeNodegetDim(LLR_of_root)==-1);
 	ASSERT_TRUE(KDTreeNodegetVal(LLR_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(LLR_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(LLR_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(LLR_of_root), point_array[4])==0);
+	KDTreeNodegetData(LLR_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[4])==0);
+	spPointDestroy(tmp_point);
 
 	//free memory
 	for (i=0;i<5;i++){
@@ -212,12 +238,15 @@ static bool InitTreeIncrementalTest(){
 
 //checks initTree with max_spread
 static bool InitTreeMaxSpreadTest(){
-	printf("InitTreeMaxSpreadTest 1\n"); //todo remove this
+	printf("InitTreeIncrementalTest 1\n"); //todo remove this
 	SPPoint* point_array = getPointArray();
-	printf("InitTreeMaxSpreadTest 2\n"); //todo remove this
+	SPPoint tmp_point;
+	printf("InitTreeIncrementalTest 2\n"); //todo remove this
 	int split_method = 1; //max_spread
 	int size = 5;
 	int i;
+	KDTreeNode root;
+	int InitTree_result;
 	//sons
 	KDTreeNode L_of_root=NULL;
 	KDTreeNode R_of_root=NULL;
@@ -230,33 +259,45 @@ static bool InitTreeMaxSpreadTest(){
 	KDTreeNode LLL_of_root;
 	KDTreeNode LLR_of_root;
 	//root
-	printf("InitTreeMaxSpreadTest 3\n"); //todo remove this
-	KDTreeNode root = InitTree(point_array, size, split_method);
+	printf("InitTreeIncrementalTest 3\n"); //todo remove this
+	InitTree_result = InitTree(point_array, size, split_method, &root);
+	if(InitTree_result==-1){
+		DestroyKDTreeNode(&root);
+	}
 
-	printf("InitTreeMaxSpreadTest 4\n"); //todo remove this
-
+	printf("InitTreeIncrementalTest 4\n"); //todo remove this
 	//check root values
 	ASSERT_TRUE(KDTreeNodegetDim(root)==0);
 	ASSERT_TRUE(KDTreeNodegetVal(root)==3.0);
-	ASSERT_TRUE(KDTreeNodegetData(root)==NULL);
+	KDTreeNodegetData(root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
+	printf("InitTreeIncrementalTest 5\n"); //todo remove this
 	//Assign L_of_root and check its values
 	L_of_root = KDTreeNodegetLeft(root);
 	ASSERT_TRUE(KDTreeNodegetDim(L_of_root)==1);
 	ASSERT_TRUE(KDTreeNodegetVal(L_of_root)==4.0);
-	ASSERT_TRUE(KDTreeNodegetData(L_of_root)==NULL);
+	KDTreeNodegetData(L_of_root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
+	printf("InitTreeIncrementalTest 6\n"); //todo remove this
 	//Assign R_of_root and check its values
 	R_of_root = KDTreeNodegetRight(root);
 	ASSERT_TRUE(KDTreeNodegetDim(R_of_root)==0);
 	ASSERT_TRUE(KDTreeNodegetVal(R_of_root)==9.0);
-	ASSERT_TRUE(KDTreeNodegetData(R_of_root)==NULL);
+	KDTreeNodegetData(R_of_root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
 	//Assign LL_of_root and check its values
 	LL_of_root = KDTreeNodegetLeft(L_of_root);
 	ASSERT_TRUE(KDTreeNodegetDim(LL_of_root)==0);
 	ASSERT_TRUE(KDTreeNodegetVal(LL_of_root)==1.0);
-	ASSERT_TRUE(KDTreeNodegetData(LL_of_root)==NULL);
+	KDTreeNodegetData(LL_of_root,&tmp_point);
+	ASSERT_TRUE(tmp_point==NULL);
+	spPointDestroy(tmp_point);
 
 	//Assign LR_of_root and check its values
 	LR_of_root = KDTreeNodegetRight(L_of_root);
@@ -264,7 +305,9 @@ static bool InitTreeMaxSpreadTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(LR_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(LR_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(LR_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(LR_of_root), point_array[2])==0);
+	KDTreeNodegetData(LR_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[2])==0);
+	spPointDestroy(tmp_point);
 
 	//Assign RL_of_root and check its values
 	RL_of_root = KDTreeNodegetLeft(R_of_root);
@@ -272,7 +315,9 @@ static bool InitTreeMaxSpreadTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(RL_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(RL_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(RL_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(RL_of_root), point_array[3])==0);
+	KDTreeNodegetData(RL_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[3])==0);
+	spPointDestroy(tmp_point);
 
 	//Assign RR_of_root and check its values
 	RR_of_root = KDTreeNodegetRight(R_of_root);
@@ -280,7 +325,9 @@ static bool InitTreeMaxSpreadTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(RR_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(RR_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(RR_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(RR_of_root), point_array[1])==0);
+	KDTreeNodegetData(RR_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[1])==0);
+	spPointDestroy(tmp_point);
 
 	//Assign LLL_of_root and check its values
 	LLL_of_root = KDTreeNodegetLeft(LL_of_root);
@@ -288,24 +335,30 @@ static bool InitTreeMaxSpreadTest(){
 	ASSERT_TRUE(KDTreeNodegetVal(LLL_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(LLL_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(LLL_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(LLL_of_root), point_array[0])==0);
+	KDTreeNodegetData(LLL_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[0])==0);
+	spPointDestroy(tmp_point);
 
-	//Assign LLL_of_root and check its values
+	//Assign LLR_of_root and check its values
 	LLR_of_root = KDTreeNodegetRight(LL_of_root);
 	ASSERT_TRUE(KDTreeNodegetDim(LLR_of_root)==-1);
 	ASSERT_TRUE(KDTreeNodegetVal(LLR_of_root)==INFINITY);
 	ASSERT_TRUE(KDTreeNodegetLeft(LLR_of_root)==NULL);
 	ASSERT_TRUE(KDTreeNodegetRight(LLR_of_root)==NULL);
-	ASSERT_TRUE(spPointL2SquaredDistance(KDTreeNodegetData(LLR_of_root), point_array[4])==0);
+	KDTreeNodegetData(LLR_of_root,&tmp_point);
+	ASSERT_TRUE(spPointL2SquaredDistance(tmp_point, point_array[4])==0);
+	spPointDestroy(tmp_point);
 
 	//free memory
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
-	DestroyKDTreeNode(root);
-	return true;
+	DestroyKDTreeNode(&root);
+    return true;
 }
+
+/*
 // basic check of kNearestNeighbors
 static bool KNNBasicTest(){
 	SPBPQueue bpq;
@@ -319,13 +372,15 @@ static bool KNNBasicTest(){
 	int split_method = 2; //incremental
 	int size = 5;
 	int i;
+	int initTree_result;
 	int serach_result;
 	int index;
 
 	printf("KNNBasicTest 1\n"); //todo remove this
 	bpq = spBPQueueCreate(1);
 	point_array = getPointArray();
-	root = InitTree(point_array, size, split_method);
+	initTree_result = InitTree(point_array, size, split_method, &root);
+	ASSERT_TRUE(initTree_result==1); //InitTree completed successfully
 	p1 = spPointCreate(data1, 2, 1);
 	p2 = spPointCreate(data2, 2, 2);
 
@@ -362,19 +417,19 @@ static bool KNNBasicTest(){
 		spPointDestroy(point_array[i]);
 	}
 	free(point_array);
-	DestroyKDTreeNode(root);
+	DestroyKDTreeNode(&root);
 	spPointDestroy(p1);
 	spPointDestroy(p2);
 
 	return true;
 }
-
 */
+
 int main() {
 	RUN_TEST(InitNodeBasicTest);
 	RUN_TEST(InitNodeDiminvalidTest);
-//	RUN_TEST(InitTreeIncrementalTest);
-//	RUN_TEST(InitTreeMaxSpreadTest);
+	RUN_TEST(InitTreeIncrementalTest);
+	RUN_TEST(InitTreeMaxSpreadTest);
 //	RUN_TEST(KNNBasicTest);
 	return 0;
 }

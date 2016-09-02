@@ -20,6 +20,7 @@ typedef struct sp_KDArray_t* SPKDArray;
  * 		kdArray- the source SPKDArray
  * 		index- the index of the point to be returned
  * @assert kdArray != NULL
+ * if kdArray->array_of_points[index]==NULL -> *p=NULL
  * puts a copy of the point from kdArray->array_of_points that is in index index in the address p
  */
 void getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index, SPPoint* p);

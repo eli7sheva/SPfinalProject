@@ -259,15 +259,7 @@ int InitNode(int dim, double val, KDTreeNode* left, KDTreeNode* right, SPPoint d
 		spLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
 		return -1;
 	}
-/*
-	if (Node==NULL){
-		//allocate memory for Node
-		if ( (Node = (KDTreeNode*)malloc(sizeof(KDTreeNode))) == NULL ){
-			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-			return -1;
-		}
-	}
-*/
+
 	printf("InitNode 2\n"); //todo remove this
 	//allocate memory for *Node
 	if ( ((*Node) = (KDTreeNode)malloc(sizeof(**Node))) == NULL ){
@@ -362,11 +354,13 @@ KDTreeNode KDTreeNodegetRight(KDTreeNode node){
 	return *(node->Right);
 }
 
-SPPoint KDTreeNodegetData(KDTreeNode node){
+void KDTreeNodegetData(KDTreeNode node, SPPoint* point){
 	if (node->Data==NULL){
-		return NULL;
+		*point = NULL;
+		return;
 	}
-	return spPointCopy(node->Data);
+	*point = spPointCopy(node->Data);
+	return;
 }
 
 int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root){
@@ -424,6 +418,8 @@ void DestroyKDTreeNode(KDTreeNode* node){
 		spPointDestroy((*node)->Data);
 	}
 	free(*node);
+	*node=NULL;
+	free(node);
 	return;
 }
 

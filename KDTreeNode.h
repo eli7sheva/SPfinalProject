@@ -67,12 +67,12 @@ KDTreeNode KDTreeNodegetLeft(KDTreeNode node);
 KDTreeNode KDTreeNodegetRight(KDTreeNode node);
 
 /*
- * returns a SPPoint copy of node->Data
+ * puts a copy of node->Data in the sdress point
  * @param node: KDTreeNode to get the Data of
- * @return NULL if node->Data==NULL,
- *			copy of node->Data otherwise.
+ * *p=NULL if node->Data==NULL,
+ * *p=copy of node->Data, otherwise.
  */
-SPPoint KDTreeNodegetData(KDTreeNode node);
+void KDTreeNodegetData(KDTreeNode node, SPPoint* point);
 
 /*
  * creates the KD Tree by calling the recursive function CreateKDTree sores it in the sdress of root
