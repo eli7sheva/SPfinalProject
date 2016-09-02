@@ -23,7 +23,7 @@
 typedef struct sp_point_t* SPPoint;
 
 /**
- * Allocates a new point in the memory.
+ * Allocatdes a new point in the memory.
  * Given data array, dimension dim and an index.
  * The new point will be P = (p_0,p_2,...,p_{dim-1})
  * such that the following holds

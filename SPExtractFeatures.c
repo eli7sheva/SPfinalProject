@@ -103,10 +103,10 @@ SP_CONFIG_MSG getImageFeaturesFilePath(const SPConfig config, int index, char* f
  *
  */
 double* parseCoorLineFormat(char* line, int dim) {
-	int i;
+	int i = 0;
 	int cur_coor = 0;
 	char coor_str[MAX_LINE_SIZE];
-	
+
 	// allocate coordinates array
 	double* coordinates = (double*)malloc(dim*sizeof(double));
 	if (coordinates == NULL) {
@@ -115,7 +115,7 @@ double* parseCoorLineFormat(char* line, int dim) {
 	}
 
 	// get all coordinate except last one
-	while (*(line + i) != STRING_NULL_TERMINATOR) {
+	while ((cur_coor < dim) &&(*(line + i) != STRING_NULL_TERMINATOR)) {
 		// when reach to a space - parse the data before as a double (single coordinate)
 		if (isspace(*(line + i ))) {
 			strncpy(coor_str, line, i);
@@ -268,6 +268,7 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 	}
 
 	// on error - free allocated features and return
+	free(coordinates);
 	if (error) {
 		for (j=0; j<i; j++) {
 			spPointDestroy(features[j]);
