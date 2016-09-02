@@ -96,7 +96,7 @@ SPPoint* getPointArray(){
 	return point_array;
 }
 
-
+/*
 //checks initTree with incremental
 static bool InitTreeIncrementalTest(){
 	printf("InitTreeIncrementalTest 1\n"); //todo remove this
@@ -209,7 +209,7 @@ static bool InitTreeIncrementalTest(){
 	return true;
 }
 
-/*
+
 //checks initTree with max_spread
 static bool InitTreeMaxSpreadTest(){
 	printf("InitTreeMaxSpreadTest 1\n"); //todo remove this
@@ -373,7 +373,7 @@ static bool KNNBasicTest(){
 int main() {
 	RUN_TEST(InitNodeBasicTest);
 	RUN_TEST(InitNodeDiminvalidTest);
-	RUN_TEST(InitTreeIncrementalTest);
+//	RUN_TEST(InitTreeIncrementalTest);
 //	RUN_TEST(InitTreeMaxSpreadTest);
 //	RUN_TEST(KNNBasicTest);
 	return 0;

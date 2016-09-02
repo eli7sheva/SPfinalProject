@@ -118,10 +118,10 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	printf("CreateKDTree 1\n"); //todo remove this
 	printf("KDArray: n=%d, d=%d \n", getN(KDArray), getD(KDArray)); //todo remove this
 	int split_dimension;
-	KDTreeNode leftNode = NULL;
-	KDTreeNode rightNode = NULL;
 	SPKDArray left_array;
 	SPKDArray right_array;
+	KDTreeNode leftNode=NULL;
+	KDTreeNode rightNode=NULL;
 	int split_result;
 	int recursive_result;
 	int initNode_result;
@@ -150,7 +150,7 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	if (n==1){
 		printf("CreateKDTree 2.0\n"); //todo remove this
 		getCopyOfPointfromArrayOfPoints(KDArray, 0, &tmp_point);
-		initNode_result = InitNode(-1,INFINITY,&leftNode,&rightNode,tmp_point,root);
+		initNode_result = InitNode(-1,INFINITY,&leftNode,&rightNode,tmp_point,root);//to create node with left and right as null we send pointer to node
 		if (initNode_result==-1){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
@@ -158,11 +158,12 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 			destroyKDArray(KDArray);
 			return -1;
 		}
-	printf("CreateKDTree 2.1\n"); //todo remove this
-	spPointDestroy(tmp_point);
-	destroyKDArray(KDArray);
-	printf("CreateKDTree 2.2\n"); //todo remove this
-	return 1;
+		printf("node created with point: x=%f, y=%f\n", spPointGetAxisCoor((*root)->Data,0), spPointGetAxisCoor((*root)->Data,1) ); //todo remove this
+		printf("CreateKDTree 2.1\n"); //todo remove this
+		spPointDestroy(tmp_point);
+		destroyKDArray(KDArray);
+		printf("CreateKDTree 2.2\n"); //todo remove this
+		return 1;
 	}
 
 	printf("CreateKDTree 3\n"); //todo remove this
@@ -204,30 +205,8 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	printf("split_median = %f\n", split_median); //todo remove this
 
 	printf("CreateKDTree 5\n"); //todo remove this
-
-	// recursive calls to left and right
-	printf("splited_arrays[0]: n=%d, d=%d \n", getN(left_array), getD(left_array)); //todo remove this
-	recursive_result = CreateKDTree(left_array, split_dimension, split_method, &leftNode);
-	if (recursive_result==-1){
-		destroyKDArray(left_array);
-		destroyKDArray(right_array);
-		destroyKDArray(KDArray);
-		return -1;
-	}
-
-	printf("splited_arrays[1]: n=%d, d=%d \n", getN(right_array), getD(right_array)); //todo remove this
-	recursive_result = CreateKDTree(right_array, split_dimension, split_method, &rightNode);
-	if (recursive_result==-1){
-		destroyKDArray(left_array);
-		destroyKDArray(right_array);
-		destroyKDArray(KDArray);
-		//todo add destroyKDArray(splited_arrays[0])? and free(splited_arrays)?
-		return -1;
-	}
-
-	printf("CreateKDTree 6\n"); //todo remove this
 	//create new node
-	initNode_result = InitNode(split_dimension, split_median, &leftNode, &rightNode, NULL, root);
+	initNode_result = InitNode(split_dimension, split_median, NULL, NULL, NULL, root);
 	if (initNode_result==-1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
@@ -237,6 +216,32 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 		return -1;
 	}
 	printf("node created with dim=%d, val=%f\n", split_dimension, split_median); //todo remove this
+
+	printf("CreateKDTree 6\n"); //todo remove this
+
+	// recursive calls to left and right
+	printf("splited_arrays[0]: n=%d, d=%d \n", getN(left_array), getD(left_array)); //todo remove this
+	if ((*root)->Left==NULL){
+		printf("NULL*********\n");
+	}
+	recursive_result = CreateKDTree(left_array, split_dimension, split_method, (*root)->Left);
+	if (recursive_result==-1){
+		destroyKDArray(left_array);
+		destroyKDArray(right_array);
+		destroyKDArray(KDArray);
+		return -1;
+	}
+	printf("CreateKDTree 7\n"); //todo remove this
+	printf("splited_arrays[1]: n=%d, d=%d \n", getN(right_array), getD(right_array)); //todo remove this
+	recursive_result = CreateKDTree(right_array, split_dimension, split_method, (*root)->Right);
+	if (recursive_result==-1){
+		destroyKDArray(left_array);
+		destroyKDArray(right_array);
+		destroyKDArray(KDArray);
+		return -1;
+	}
+
+
 
 	printf("CreateKDTree 7\n"); //todo remove this
 	//free unused memory
@@ -255,9 +260,17 @@ int InitNode(int dim, double val, KDTreeNode* left, KDTreeNode* right, SPPoint d
 		spLoggerPrintDebug(PARAMETER_DIM_INVALID, __FILE__, __func__, __LINE__);
 		return -1;
 	}
-
+/*
+	if (Node==NULL){
+		//allocate memory for Node
+		if ( (Node = (KDTreeNode*)malloc(sizeof(KDTreeNode))) == NULL ){
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+			return -1;
+		}
+	}
+*/
 	printf("InitNode 2\n"); //todo remove this
-	//allocate memory for Node
+	//allocate memory for *Node
 	if ( ((*Node) = (KDTreeNode)malloc(sizeof(**Node))) == NULL ){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		return -1;
@@ -269,16 +282,35 @@ int InitNode(int dim, double val, KDTreeNode* left, KDTreeNode* right, SPPoint d
 	(*Node)->Dim = dim;
 	(*Node)->Val= val;
 
-	if (*left != NULL){
+	//initialize Node->Left
+	if (left!=NULL && (*left)!=NULL){
 		(*Node)->Left = left;
 	}
-	else{
+	// if *left=NULL* -> allocate the Left of Node to be a pointer to KDTreeNode
+	else if(left==NULL){
+		if ( ((*Node)->Left = (KDTreeNode*)malloc(sizeof(KDTreeNode))) == NULL ){
+				spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+				return -1;
+			}
+	}
+	//if left is a POINTER TO NULL ->the Left of the Node is NULL
+	else if ((*left)==NULL){
 		(*Node)->Left = NULL;
 	}
-	if (*right!=NULL){
+
+	//initialize Node->Right
+	if (right!=NULL && (*right)!=NULL){
 		(*Node)->Right = right;
 	}
-	else{
+	// if right=NULL -> allocate the Right of Node to be a pointer to KDTreeNode
+	else if(right==NULL){
+		if ( ((*Node)->Right = (KDTreeNode*)malloc(sizeof(KDTreeNode))) == NULL ){
+				spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+				return -1;
+			}
+	}
+	//if right is a *pointer to NULL* ->the Right of the Node is NULL
+	else if ((*right)==NULL){
 		(*Node)->Right = NULL;
 	}
 
