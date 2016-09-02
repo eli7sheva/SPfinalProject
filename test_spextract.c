@@ -49,15 +49,21 @@
  *
  */
 
-void replaceSuffix(const char* input, char* new_suffix, char* output) {
-    unsigned int i = 0;
-    while ((*(input + i)) && (*(input + i) != PATH_SUFFIX_MARK)) {
-		i++;
+void replaceSuffix(const char* input, const char* new_suffix, char* output) {
+    int i = strlen(input) -1;
+    assert(i>0);
+    while ((i>=0)&&(*(input + i)) && (*(input + i) != PATH_SUFFIX_MARK)) {
+		i--;
     }
-
-    strncpy(output, input, i);
-    output[i] = STRING_NULL_TERMINATOR;
-	strcat(output, new_suffix);
+    printf("%d\n", i);
+    if (i<0){
+    	strcpy(output, input);
+    }
+    else {
+	    strncpy(output, input, i);
+	    output[i] = STRING_NULL_TERMINATOR;
+		strcat(output, new_suffix);
+	}
 }
 
 /**
@@ -145,161 +151,35 @@ double* parseCoorLineFormat(char* line, int dim) {
 	return coordinates;
 }
 
-int writeImageFeaturesIntoFile(const SPConfig config, int image_index, const SPPoint* features, int num_of_features)
-{
-	int i;
-	FILE *ofp;
-	char features_filename[MAX_PATH_SIZE];
-	SP_CONFIG_MSG msg;
-	int dim;
-	int axis;
-
-	// find features file path
-	msg = getImageFeaturesFilePath(config, image_index, features_filename);
-	if (msg != SP_CONFIG_SUCCESS) { // should not happen
-		//error is printed inside function
-		return -1;
-	}
-
-	ofp = fopen(features_filename, "w");
-    if(ofp == NULL) {
-    	spLoggerPrintError(ERROR_OPENING_FEATURES_FILE, __FILE__, __func__, __LINE__);
-    	return -1;
-    }
-
-
-    // write header (image index and number of features) to file 
-	if (fprintf(ofp, FEATURES_FILE_HEADER_FORMAT, image_index, num_of_features) < 0) {
-		fclose(ofp);
-    	spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
-		return -1;
-	}
-
-	// write each feature information into the file in the right format
-	for (i = 0; i < num_of_features; i++) {
-		dim = spPointGetDimension(features[i]);
-		// write dim and index
-		if (fprintf(ofp, FEATURES_FILE_UNIT_FORMAT, spPointGetIndex(features[i]), dim) < 0) {
-    		spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
-			fclose(ofp);
-			return -1;
-		}
-		
-		// write coordinates
-		for (axis = 0 ; axis < dim -1; axis++) {
-			if (fprintf(ofp, FEATURES_FILE_COOR_FORMAT, spPointGetAxisCoor(features[i], axis))< 0) {
- 		   		spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
-				fclose(ofp);
-				return -1;
-			}
-		}
-		
-		// write last coordinate
-		if (fprintf(ofp, FEATURES_FILE_LAST_COOR_FORMAT, spPointGetAxisCoor(features[i], axis))< 0) {
- 		   	spLoggerPrintError(ERROR_WRITING_TO_FEATURES_FILE, __FILE__, __func__, __LINE__);
-			fclose(ofp);
-			return -1;
-		}
-	}
-
-	fclose(ofp);
-	return 0;
-}
-
-
-
-/*
- * Extracts features from file
- * 
- * @param features_filename - the path to th file contains the features to extract
- * @param num_of_features - will hold the number of feature extracted
- * Note: assumes features_filename is in the right features format described in function writeImageFeaturesIntoFile
- *
- * @return
- * An array of the actual features extracted. NULL is returned in case of an error.
- *
- */
-SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int* num_of_features) {
-	int i;
-	int j;
-	SPPoint* features;
-	// int image_index; todo need to return this?
-	char line[MAX_LINE_SIZE];
-	char features_filename[MAX_LINE_SIZE];
-	FILE *ifp;
-	int error = 0;
-	// features params
-	int index;
-	int dim;
-	double* coordinates;
-
-	// get image's features file name and open it 
-	if ((getImageFeaturesFilePath(config, image_index, features_filename)) != SP_CONFIG_SUCCESS) {
-		//error is printed inside function
-		return NULL;
-	}
-
-	ifp = fopen(features_filename, "r");
-
-    if(ifp == NULL) {
-		spLoggerPrintError(ERROR_OPENING_FEATURES_FILE, __FILE__, __func__, __LINE__);
-		return NULL;
-    }
-
-
-	// extract header
-	fgets(line, sizeof(line), ifp);
-	// image_index = atoi(line);
-	fgets(line, sizeof(line), ifp);
-	*num_of_features = atoi(line);
-
-	if ((features = (SPPoint*)malloc(sizeof(*features)*(*num_of_features))) == NULL) { // todo check this is ok
-		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
-		fclose(ifp);
-		return NULL;
-	}
-
-	// extract each features
-	for(i=0; (!error) & (i<(*num_of_features)); i++) {
-
-		index = atoi(fgets(line, sizeof(line), ifp));
-		dim = atoi(fgets(line, sizeof(line), ifp));
-		error = ((coordinates = parseCoorLineFormat(fgets(line, sizeof(line), ifp), dim)) == NULL);
-		if (!error) {
-			error = ((features[i] = spPointCreate(coordinates, dim, index)) == NULL);
-		}
-
-	}
-
-	// on error - free allocated features and return
-	free(coordinates);
-	if (error) {
-		for (j=0; j<i; j++) {
-			spPointDestroy(features[j]);
-		}
-		fclose(ifp);
-		free(features);
-		spLoggerPrintError(ERROR_WHILE_READING_FEATURES_FILE, __FILE__, __func__, __LINE__);	
-		return NULL;
-	}
-
-	fclose(ifp);
-	return features;
-}
-
-
-
 
 
 bool test_replaceSuffix(){
-
 	char * imagePath = "hello.world";
 	char output[1024];
-	replaceSuffix(imagePath, "reut", output);
-	assert(strcmp(output, "hello.reut") == 0);
+	
+	replaceSuffix(imagePath, ".reut", output);
+	printf("output is %s\n", output);
+	ASSERT_TRUE(strcmp(output, "hello.reut") == 0);
+	
 	imagePath = "hello";
-	replaceSuffix(imagePath, "reut", output);
-	assert(strcmp(output, "hello") == 0);
+	replaceSuffix(imagePath, ".reut", output);
+	ASSERT_TRUE(strcmp(output, "hello") == 0);
+	
+	imagePath = ".world";
+	replaceSuffix(imagePath, ".reut", output);
+	ASSERT_TRUE(strcmp(output, ".reut") == 0);
+	
+	imagePath = "hello.";
+	replaceSuffix(imagePath, ".reut", output);
+	ASSERT_TRUE(strcmp(output, "hello.reut") == 0);
+
+	imagePath = "test1images/hello.world";
+	replaceSuffix(imagePath, ".reut", output);
+	ASSERT_TRUE(strcmp(output, "test1images/hello.reut") == 0);
+
+	imagePath = "./test1images/hello.world";
+	replaceSuffix(imagePath, ".reut", output);
+	ASSERT_TRUE(strcmp(output, "./test1images/hello.reut") == 0);
 	return true;
 }
 
@@ -310,8 +190,9 @@ bool test_getImageFeaturesFilePath(){
 	SP_CONFIG_MSG msg ;
 	SPConfig config =  spConfigCreate(config_filename, &msg);
 	msg =getImageFeaturesFilePath( config, 3, imagePath);
-	assert(msg == SP_CONFIG_SUCCESS);
-	assert(strcmp(imagePath, "./test1images/img3.feats") == 0);	
+	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);
+	printf("imagePath after replacing suffix%s\n",imagePath );
+	ASSERT_TRUE(strcmp(imagePath, "./test1images/img3.feats") == 0);	
 	printf("%s\n", imagePath );
 	printf("%d\n", msg);
 	spConfigDestroy(config);
@@ -326,17 +207,21 @@ bool test_parseCoorLineFormat(){
 	int dim = 3;
 	double * coor = parseCoorLineFormat(line, dim);
 
-	assert(coor[0] == 1.1);
-	assert(coor[1] == 2.2);
-	assert(coor[2] == 3.3);
+	ASSERT_TRUE(coor[0] == 1.1);
+	ASSERT_TRUE(coor[1] == 2.2);
+	ASSERT_TRUE(coor[2] == 3.3);
 	printf("%f\n", coor[0]);
+	free(coor);
 	return true;
 }
 
 
 int main(){
+	printf("1\n");
 	RUN_TEST(test_replaceSuffix);
+	printf("2\n");
 	RUN_TEST(test_getImageFeaturesFilePath);
+	printf("3\n");
 	RUN_TEST(test_parseCoorLineFormat);
 
 	return 0;

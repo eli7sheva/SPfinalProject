@@ -52,16 +52,23 @@ extern "C"{
  *
  */
 
-void replaceSuffix(char* input, const char* new_suffix, char* output) {
-    unsigned int i = 0;
-    while ((*(input + i)) && (*(input + i) != PATH_SUFFIX_MARK)) {
-		i++;
+void replaceSuffix(const char* input, const char* new_suffix, char* output) {
+int i = strlen(input) -1;
+    assert(i>0);
+    while ((i>=0)&&(*(input + i)) && (*(input + i) != PATH_SUFFIX_MARK)) {
+		i--;
     }
-
-    strncpy(output, input, i);
-    output[i] = STRING_NULL_TERMINATOR;
-	strcat(output, new_suffix);
+    printf("%d\n", i);
+    if (i<0){
+    	strcpy(output, input);
+    }
+    else {
+	    strncpy(output, input, i);
+	    output[i] = STRING_NULL_TERMINATOR;
+		strcat(output, new_suffix);
+	}
 }
+
 
 /**
  * Given an index 'index' the function stores in featuresPath the full path of the
@@ -94,7 +101,9 @@ SP_CONFIG_MSG getImageFeaturesFilePath(const SPConfig config, int index, char* f
 		spLoggerPrintError(ERROR_READING_CONFIG_INVALID_ARG, __FILE__, __func__, __LINE__);
 		return msg;
 	}
+	printf("image path is%s\n", imagePath);
 	replaceSuffix(imagePath, FEATURES_FILE_SUFFIX, featuresPath);
+	printf("after replacing %s\n", featuresPath);
 
 	return SP_CONFIG_SUCCESS;
 }
@@ -299,6 +308,7 @@ bool test_writeReadImageFeaturesIntoFile(){
 	int image_index = 1;
 	sp::ImageProc *improc = new sp::ImageProc(config);
 	spConfigGetImagePath(image_path ,config, image_index);
+	printf("using pic at%s\n", image_path);
 	int i;
 	int j;
 	int dim;
@@ -323,13 +333,13 @@ bool test_writeReadImageFeaturesIntoFile(){
     }
 
     extracted = readImageFreaturesFromFile(config,  image_index, &num_of_features_per_image2);
-    assert(num_of_features_per_image2 == num_of_features_per_image);
+    ASSERT_TRUE(num_of_features_per_image2 == num_of_features_per_image);
     for (i=0; i< num_of_features_per_image;i++) {
 		dim = spPointGetDimension(features_per_image[i]);
-		assert(dim == spPointGetDimension(extracted[i]));
-		assert(spPointGetIndex(features_per_image[i]) == spPointGetIndex(extracted[i]));
+		ASSERT_TRUE(dim == spPointGetDimension(extracted[i]));
+		ASSERT_TRUE(spPointGetIndex(features_per_image[i]) == spPointGetIndex(extracted[i]));
 		for (j=0;j<dim; j++){
-			assert(spPointGetAxisCoor(features_per_image[i], j) == spPointGetAxisCoor(extracted[i], j));
+			ASSERT_TRUE(spPointGetAxisCoor(features_per_image[i], j) == spPointGetAxisCoor(extracted[i], j));
 		}
 	}
 
