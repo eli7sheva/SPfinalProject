@@ -661,7 +661,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
  * @param msg - pointer in which the msg returned by the function is stored
  *
  * @return -1 on any error (error explanation will be stored in msg and error will be printed)
- *          configuration parameter index of the parameter found in the given line
+ *          0 on success
  * 
  * The resulting value stored in msg is as follow:
  * - SP_CONFIG_MISSING_DIR - if spImagesDirectory is missing
@@ -675,6 +675,12 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
 	
  	assert(msg != NULL);
  	*msg = SP_CONFIG_SUCCESS; // default is success
+
+	if (!set_in_config[SP_IMAGES_DIRECTORY_INDEX]) {
+		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_DIRECTORY_STR);
+		*msg = SP_CONFIG_MISSING_DIR;
+		return -1;
+	}		
 
 	if (!set_in_config[SP_IMAGES_PREFIX_INDEX]) {
 		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_PREFIX_STR);
@@ -693,12 +699,6 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
 		*msg = SP_CONFIG_MISSING_NUM_IMAGES;
 		return -1;
  	}
-
-	if (!set_in_config[SP_IMAGES_DIRECTORY_INDEX]) {
-		printf(ERROR_PARMETER_NOT_SET_MSG, config_filename, num_of_lines, SP_IMAGES_DIRECTORY_STR);
-		*msg = SP_CONFIG_MISSING_DIR;
-		return -1;
-	}			
 
  	if (!set_in_config[SP_PCA_DIMENSION_INDEX]) {
 		config->spPCADimension = DEFUALT_PCA_DIM;
@@ -721,21 +721,21 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
 		config->spExtractionMode = DEFAULT_EXTRACTION_MODE;
  	}
  	
-	if (!set_in_config[SP_MINIMAL_GUI_INDEX]) {
-		config->spMinimalGUI = DEFAULT_MINIMAL_GUI;
-	}			
-
 	if (!set_in_config[SP_NUM_OF_SIMILAR_IMAGES_INDEX]) {
 		config->spNumOfSimilarImages = DEFAULT_NUM_OF_SIMILAR_IMAGES;
+	}
+
+	if (!set_in_config[SP_KD_TREE_SPLIT_METHOD_INDEX]) {
+		config->spKDTreeSplitMethod = DEFAULT_KD_TREE_SPLIT;
 	}
 
 	if (!set_in_config[SP_KNN_INDEX]) {
 		config->spKNN = DEFAULT_KNN;
 	}
 
-	if (!set_in_config[SP_KD_TREE_SPLIT_METHOD_INDEX]) {
-		config->spKDTreeSplitMethod = DEFAULT_KD_TREE_SPLIT;
-	}
+	if (!set_in_config[SP_MINIMAL_GUI_INDEX]) {
+		config->spMinimalGUI = DEFAULT_MINIMAL_GUI;
+	}			
 
 	if (!set_in_config[SP_LOGGER_LEVEL_INDEX]) {
 		config->spLoggerLevel = DEFAULT_LOGGER_LEVEL;
@@ -796,9 +796,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		// error if line is invalid (msg error code is set in the called function)
 		if (parameter_found_index == -1) {
     		fclose(fp);	
-    		printf("11\n");////todo remove this
     		spConfigDestroy(config); //free config
-    		printf("22\n"); //todo remove this
 			return NULL; // error is printed inside parseLine
 		}
 
@@ -923,18 +921,13 @@ SP_CONFIG_MSG spConfigGetPCAPath(char* pcaPath, const SPConfig config) {
 
 
 SP_LOGGER_LEVEL spConfigGetLoggerLevel(const SPConfig config, SP_CONFIG_MSG* msg){
-	printf("yay1\n");
 	assert(msg != NULL);
-	printf("yay2\n");
  	*msg = SP_CONFIG_SUCCESS; // default is success
-	printf("yay3\n");
 
 	if (config == NULL) {
-		printf("yay3.1\n");
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
-	printf("yay4 done\n");
 
  	return config->spLoggerLevel;
 }
@@ -954,8 +947,8 @@ int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg){
 
 int spConfigGetKDTreeSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg){
 	//check config is a valid argument
+	assert(msg != NULL);
 	if (config == NULL) {
-		assert(msg != NULL);
 		*msg = SP_CONFIG_INVALID_ARGUMENT;
 		return -1;
 	}
