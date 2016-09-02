@@ -86,7 +86,7 @@ SPPoint KDTreeNodegetData(KDTreeNode node);
  *		NULL if arr==NULL, size<1 or call to other function returned NULL.
  *		 	 the relevant error message will be sent to Logger
  */
-KDTreeNode InitTree(SPPoint* arr, int size, int split_method);
+int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root);
 
 /*
  * free all memory of a KDTree including all its nodes

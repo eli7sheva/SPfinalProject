@@ -106,7 +106,7 @@ static bool InitTreeIncrementalTest(){
 	int size = 5;
 	int i;
 	KDTreeNode root;
-	//int InitTree_result; todo:remove
+	int InitTree_result;
 	//sons
 	KDTreeNode L_of_root=NULL;
 	KDTreeNode R_of_root=NULL;
@@ -120,8 +120,8 @@ static bool InitTreeIncrementalTest(){
 	KDTreeNode LLR_of_root;
 	//root
 	printf("InitTreeIncrementalTest 3\n"); //todo remove this
-	root = InitTree(point_array, size, split_method);
-	if(root==NULL){
+	InitTree_result = InitTree(point_array, size, split_method, &root);
+	if(InitTree_result==-1){
 		DestroyKDTreeNode(&root);
 	}
 	L_of_root = KDTreeNodegetLeft(root);

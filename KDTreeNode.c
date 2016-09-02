@@ -114,20 +114,19 @@ int getDimentionRandom(SPKDArray KDArray){
  * 		NULL if an error occurred while calling other functions
  * 		NULL if KDArray=NULL or split_method is not 0,1 or 2
  */
-KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method){
+int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTreeNode* root){
 	printf("CreateKDTree 1\n"); //todo remove this
 	printf("KDArray: n=%d, d=%d \n", getN(KDArray), getD(KDArray)); //todo remove this
-
 	int split_dimension;
-	KDTreeNode newNode;
-	KDTreeNode leftNode=NULL;
-	KDTreeNode rightNode=NULL;
+	KDTreeNode leftNode = NULL;
+	KDTreeNode rightNode = NULL;
 	SPKDArray left_array;
 	SPKDArray right_array;
+	int split_result;
+	int recursive_result;
+	int initNode_result;
 	double split_median;
 	int median_index;
-	int initNode_result;
-	int split_result;
 	SPPoint tmp_point;
 	int n; //number of point in KDArray
 	int d; //number of dimensions in KDArray
@@ -135,38 +134,39 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	//check validation of parameters
 	if (KDArray==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
-	if (split_method!=0 && split_method!=1 && split_method!=2){
+	if ( split_method!=0 && split_method!=1 && split_method!=2){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
 
 	n = getN(KDArray);
 	d = getD(KDArray);
 
 	printf("CreateKDTree 2\n"); //todo remove this
+
 	//if KDArray has only one point
 	if (n==1){
 		printf("CreateKDTree 2.0\n"); //todo remove this
 		getCopyOfPointfromArrayOfPoints(KDArray, 0, &tmp_point);
-		initNode_result = InitNode(-1,INFINITY,&leftNode,&rightNode,tmp_point,&newNode);
+		initNode_result = InitNode(-1,INFINITY,&leftNode,&rightNode,tmp_point,root);
 		if (initNode_result==-1){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 			spPointDestroy(tmp_point);
 			destroyKDArray(KDArray);
-			return NULL;
+			return -1;
 		}
-		printf("CreateKDTree 2.1\n"); //todo remove this
-		spPointDestroy(tmp_point);
-		destroyKDArray(KDArray);
-		printf("node created with point: x=%f, y=%f\n", spPointGetAxisCoor(newNode->Data,0), spPointGetAxisCoor(newNode->Data,1) ); //todo remove this
-		printf("CreateKDTree 2.2\n"); //todo remove this
-		return newNode;
+	printf("CreateKDTree 2.1\n"); //todo remove this
+	spPointDestroy(tmp_point);
+	destroyKDArray(KDArray);
+	printf("CreateKDTree 2.2\n"); //todo remove this
+	return 1;
 	}
 
 	printf("CreateKDTree 3\n"); //todo remove this
+
 	//Assign split_dimension according to value of spKDTreeSplitMethod
 	if(split_method==0){   //0==RANDOM
 			split_dimension = getDimentionRandom(KDArray);
@@ -177,7 +177,7 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(GETDIMENSIONMAXSPREAD_RETURNED_MINUS1 , __FILE__, __func__, __LINE__);
 			destroyKDArray(KDArray);
-			return NULL;
+			return -1;
 		}
 	}
 	else if(split_method==2){   //2==INCREMENTAL){
@@ -190,10 +190,10 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 	if (split_result==-1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(SPLIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		destroyKDArray(KDArray);
 		destroyKDArray(left_array);
 		destroyKDArray(right_array);
-		destroyKDArray(KDArray);
-		return NULL;
+		return -1;
 	}
 
 	median_index = getN(left_array)-1; //the last index in the left part of the split
@@ -207,41 +207,43 @@ KDTreeNode CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method)
 
 	// recursive calls to left and right
 	printf("splited_arrays[0]: n=%d, d=%d \n", getN(left_array), getD(left_array)); //todo remove this
-	leftNode = CreateKDTree(left_array, split_dimension, split_method);
-	if (leftNode==NULL){
+	recursive_result = CreateKDTree(left_array, split_dimension, split_method, &leftNode);
+	if (recursive_result==-1){
 		destroyKDArray(left_array);
 		destroyKDArray(right_array);
 		destroyKDArray(KDArray);
-		//todo add destroyKDArray(splited_arrays[1])? and free(splited_arrays)?
-		return NULL;
+		return -1;
 	}
 
 	printf("splited_arrays[1]: n=%d, d=%d \n", getN(right_array), getD(right_array)); //todo remove this
-	rightNode = CreateKDTree(right_array, split_dimension, split_method);
-	if (rightNode==NULL){
+	recursive_result = CreateKDTree(right_array, split_dimension, split_method, &rightNode);
+	if (recursive_result==-1){
 		destroyKDArray(left_array);
 		destroyKDArray(right_array);
 		destroyKDArray(KDArray);
 		//todo add destroyKDArray(splited_arrays[0])? and free(splited_arrays)?
-		return NULL;
+		return -1;
 	}
 
 	printf("CreateKDTree 6\n"); //todo remove this
 	//create new node
-	initNode_result = InitNode(split_dimension, split_median, &leftNode, &rightNode, NULL, &newNode);
+	initNode_result = InitNode(split_dimension, split_median, &leftNode, &rightNode, NULL, root);
 	if (initNode_result==-1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(INITNODE_RETURNED_NULL, __FILE__, __func__, __LINE__);
 		destroyKDArray(left_array);
 		destroyKDArray(right_array);
 		destroyKDArray(KDArray);
-		return NULL;
+		return -1;
 	}
 	printf("node created with dim=%d, val=%f\n", split_dimension, split_median); //todo remove this
+
 	printf("CreateKDTree 7\n"); //todo remove this
 	//free unused memory
+	//destroyKDArray(left_array);
+	//destroyKDArray(right_array);
 	destroyKDArray(KDArray);
-	return newNode;
+	return 1;
 }
 
 int InitNode(int dim, double val, KDTreeNode* left, KDTreeNode* right, SPPoint data, KDTreeNode* Node){
@@ -336,21 +338,21 @@ SPPoint KDTreeNodegetData(KDTreeNode node){
 	return spPointCopy(node->Data);
 }
 
-KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
+int InitTree(SPPoint* arr, int size, int split_method, KDTreeNode* root){
 	SPKDArray KDArray;
-	KDTreeNode KDTree;
+	int createTree_result;
 	printf("init tree 1\n"); //todo remove this
 	// check validation of parameter values, prints error to logger if not valid and returns NULL
 	if (arr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_ARR_INVALID, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
 	printf("init tree 2\n"); //todo remove this
 	if (size<1){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_SIZE_INVALID, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
 	printf("init tree 3\n"); //todo remove this
 	KDArray = Init(arr, size);
@@ -358,19 +360,21 @@ KDTreeNode InitTree(SPPoint* arr, int size, int split_method){
 	if (KDArray==NULL){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(INIT_RETURNED_NULL, __FILE__, __func__, __LINE__);
-		return NULL;
+		return -1;
 	}
 	printf("init tree 5\n"); //todo remove this
-	KDTree = CreateKDTree(KDArray, -1, split_method); //parameter is -1 so that the first splitting dimension will be 0
-	if (KDTree==NULL){
+	createTree_result = CreateKDTree(KDArray, -1, split_method, root); //parameter is -1 so that the first splitting dimension will be 0
+	if (createTree_result==-1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(CREATEKDTREE_RETURNED_NULL, __FILE__, __func__, __LINE__);
-		return NULL;
+		DestroyKDTreeNode(root);
+		return -1;
 	}
 	printf("init tree 6 - done\n"); //todo remove this
 
-	return KDTree;
+	return 1;
 }
+
 
 void DestroyKDTreeNode(KDTreeNode* node){
 	if (node==NULL){
