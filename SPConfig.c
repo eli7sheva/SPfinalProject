@@ -69,7 +69,7 @@ const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
 #define ERROR_PARMETER_NOT_SET_MSG   "File: %s\nLine: %d\nMessage: Parameter %s is not set\n"
 #define ALLOCATION_FAILURE_MSG "An error occurred - allocation failure\n"
 #define INVALID_ARGUMENT_MSG "An error occurred - invalild argument\n"
-
+#define ERROR_DUPLICATE "duplicate definition of configuration paramater - undefined behavior\n"
 // split method enum
 typedef enum {RANDOM, MAX_SPREAD, INCREMENTAL, SPLIT_METHOD_COUNT} tree_split_method;
 
@@ -216,19 +216,21 @@ int isInRange(char * n, int low, int high) {
  * 		  						-1 if c is not a valid tree_split_method enum
  */
 int getTreeSplitMethod(char * c) {
-	int i;
-	char* method;
-	if ((method = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
-		return -1;
-	}
+    int i;
+    char* method;
+    if ((method = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
+        return -1;
+    }
 
-	for (i=0; i < SPLIT_METHOD_COUNT; i++) {
-		method = SPLIT_METHOD_STR(i);
-		if (strcmp(c, method) == 0)
-			return i;
-	}
-	free(method);
-	return -1;
+    for (i=0; i < SPLIT_METHOD_COUNT; i++) {
+        strcpy(method, SPLIT_METHOD_STR(i));
+        if (strcmp(c, method) == 0) {
+            free(method);
+            return i;
+        }
+    }
+    free(method);
+    return -1;
 }
 
 
@@ -427,7 +429,7 @@ int parseLine(const char* config_filename, char* line, int line_number, const SP
 	// in this case or the hole line is empty or it contains "="
     if ((strlen(right) == 0) || (strlen(left) == 0)) { 
     	
-        trimWhitespace(helper, 1024, line ); 
+        trimWhitespace(helper, CONFIG_MAX_LINE_SIZE, line); 
         if (strlen(helper) == 0){ // line is empty - ignore
             return -2;
         } else { // line contains only "=" - error
