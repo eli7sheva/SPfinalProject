@@ -304,8 +304,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint featureA, KDTreeNode root){
 	return best_spKNN_features;
 }
 
-int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage) { // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
-    //todo: reut- is the parameter nFeaturesPerImage needed? i don't need it for knn, but do we need for somthing else?
+int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages) {
 	int i;
     int j;
     int k;
@@ -314,7 +313,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
     int* closestImages; // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 
     // return NULL if one of the parameters is not initialized
-    if (!queryFeatures || !databaseFeatures || (queryNumOfFeatures <=1) || (numberOfImages <=1) || !nFeaturesPerImage) {
+    if (!queryFeatures || !databaseFeatures || (queryNumOfFeatures <=1) || (numberOfImages <=1)) {
         spLoggerPrintError(INVALID_ARGUMENT, __FILE__, __func__, __LINE__);
         return NULL;
     }
@@ -338,7 +337,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 
         // Counting hits
         for (k = 0; k < numberOfImages; k++) { // k is image index
-            for (j = 0; j < bestNFeatures; j++) { // todo find other way to get spKNN
+            for (j = 0; j < bestNFeatures; j++) {
                 if (featureClosestImages[j] == k) {
                     hintsPerImage[k]--;
                 }
@@ -347,7 +346,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
     }
 
     // find the nearest images
-    closestImages = nearestImages(hintsPerImage, numberOfImages, nearestKImages); // todo find another way to get spNumOfSimilarImages
+    closestImages = nearestImages(hintsPerImage, numberOfImages, nearestKImages);
     if (closestImages == NULL) {
         // free everything
         free(hintsPerImage);
@@ -382,20 +381,17 @@ int initiateLoggerByConfig(const SPConfig config) {
         return -1;
     }
 
-    printf("logger filename is%s\n",logger_filename );//todo remove this
     if (strcmp(logger_filename, DEFAULT_LOGGER_FILENAME) == 0) {
-        printf("logger filename is defualt\n");//todo remove this
         logmsg = spLoggerCreate(NULL, logger_level);
     }   
     else {
-        printf("logger filename is not defualt\n");//todo remove this
         logmsg = spLoggerCreate(logger_filename, logger_level);
     }
         
 
     switch(logmsg) {
        case SP_LOGGER_DEFINED:
-            printf(LOGGER_ALREADY_DEFINED, logger_filename); // todo reut should error or just continue(break)?
+            printf(LOGGER_ALREADY_DEFINED, logger_filename);
             break;
         
        case SP_LOGGER_OUT_OF_MEMORY:

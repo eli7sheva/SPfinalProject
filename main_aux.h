@@ -17,7 +17,6 @@
  * @param databaseFeatures  - An KD_TREE in which all the features of all the images are stored.
  / @param queryNumOfFeatures - number of features in param queryFeatures
  * @param numberOfImages    - The number of images in the database. (Number of entries in databaseFeatures)
- * @param nFeaturesPerImage - The number of features for each image. 
  *
  * Note: prints errors to logger
  * assumes Logger is initialized
@@ -35,7 +34,7 @@
  *             f2 is a SIFT descriptor of image i2 etc..)
  *           Then the array returned is {i1,i2,...,i_bestNFeatures}
  */
-int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages, int* nFeaturesPerImage); // todo elisheva change KD_TREE. Should SPPoint* be a KD_ARRAY?please add to #include everything needed here, and in the makefile (add it in the makefile as a dependency to main_aux.o)
+int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeatures, KDTreeNode databaseFeatures, int queryNumOfFeatures, int numberOfImages); 
 
 /** 
   *  Initiates kd tree from a given list holds all the features per each image.

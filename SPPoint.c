@@ -45,7 +45,6 @@ struct sp_point_t{
 		point->index = index;
 		point->dim = dim;
 
-		//printf("spPointCreate 10\n"); //todo remove this
 		return point;
 		}
 

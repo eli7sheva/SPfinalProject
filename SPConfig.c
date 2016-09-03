@@ -86,13 +86,13 @@ struct sp_config_t{
 	int spNumOfImages; 
 	int spPCADimension; 
 	char* spPCAFilename; 
-	int spNumOfFeatures; // TODO change every isPositiveInt to unsinged int
+	int spNumOfFeatures; 
 	bool spExtractionMode;
 	int spNumOfSimilarImages;
 	tree_split_method spKDTreeSplitMethod;
 	int spKNN; 
 	bool spMinimalGUI;
-	SP_LOGGER_LEVEL spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOT
+	SP_LOGGER_LEVEL spLoggerLevel;
 	char * spLoggerFilename; 
 };
 
@@ -743,7 +743,6 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
 	}			
 
 	if (!set_in_config[SP_LOGGER_FILNAME_INDEX]) {
-		// todo do we need this? stdout as a string name?
 		if ((config->spLoggerFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
 			*msg = SP_CONFIG_ALLOC_FAIL;
 			printf(ALLOCATION_FAILURE_MSG);
@@ -989,8 +988,6 @@ SP_CONFIG_MSG spConfigGetLoggerFileName(char* filename, const SPConfig config) {
 }
 
 
-
-// todo check this should 
 void spConfigDestroy(SPConfig config) {
 	if (config != NULL) {
 		free(config->spImagesDirectory);
