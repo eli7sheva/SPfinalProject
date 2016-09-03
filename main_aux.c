@@ -325,7 +325,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
 
     // for each feature of query calculate the spBestSIFTL2SquaredDistance
     for (i=0; i< queryNumOfFeatures; i++){
-        featureClosestImages = getSPKNNClosestFeatures(bestNFeatures, queryFeatures[i], //todo find another way to get spKNN
+        featureClosestImages = getSPKNNClosestFeatures(bestNFeatures, queryFeatures[i],
             databaseFeatures);
 
         if (featureClosestImages == NULL) {

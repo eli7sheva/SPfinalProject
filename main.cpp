@@ -296,6 +296,5 @@ int main(int argc, char *argv[]) {
 			delete improc;
 		}
 
-	printf(DONE_MSG);
 	return retval;
 }
