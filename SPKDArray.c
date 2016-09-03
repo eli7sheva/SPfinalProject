@@ -29,6 +29,10 @@ struct sp_KDArray_t{
 void getCopyOfPointfromArrayOfPoints(SPKDArray kdArray, int index, SPPoint* p){
 	printf("getCopyOfPointfromArrayOfPoints 1\n"); //todo remove this
 	assert (kdArray != NULL);
+	if (kdArray->array_of_points[index]==NULL){
+		*p = NULL;
+		return;
+	}
 	printf("getCopyOfPointfromArrayOfPoints 2\n"); //todo remove this
 	*p = spPointCopy(kdArray->array_of_points[index]);
 }

@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 	SPPoint* query_features = NULL;				    // all query features
 	int query_num_of_features;					    // number of features in query image
 	
-	KDTreeNode kd_tree = NULL;						// array holds a KDTree for each image
+	KDTreeNode kd_tree = NULL;						// array holds a KDTree for the images
 	int* closest_images = NULL;  				    // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 	int print_result;   							// holds the result of the call to PrintMinGuiFalse
 	
