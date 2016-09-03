@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 #include <time.h>
 
 
@@ -388,7 +389,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	SPListElement newElement;
 	SP_BPQUEUE_MSG msg;
 	int return_val;
-	char subtree_searched;
+	char* subtree_searched;
 	double hypersphere;
 
 	//reached end of tree
@@ -442,7 +443,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	hypersphere = curr->Val - spPointGetAxisCoor(*P,curr->Dim);
 	if ( (!spBPQueueIsFull(bpq)) || ((hypersphere*hypersphere) < spBPQueueMaxValue(bpq)) ){
 		//search the subtree that wasn't searched yet
-		if (subtree_searched==LEFT){
+		if (strcmp(subtree_searched, LEFT)==0){
 			return_val = kNearestNeighbors((*curr->Right), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
