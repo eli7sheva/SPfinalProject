@@ -604,7 +604,7 @@ int PrintMinGuiFalse(char* query_image,int num_of_similar_images_to_find, char**
 	//print the candidates paths, first path is the closest image
 	for (i=0; i<num_of_similar_images_to_find; i++){
 		//get file path of the images by the indexes in closest_images
-		printf("%s", all_images_paths[closest_images[i]]);
+		printf("%s\n", all_images_paths[closest_images[i]]);
 		fflush(NULL);
 	}
 	return 1;
