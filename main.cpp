@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -24,6 +25,7 @@ extern "C"{
 #define ERROR_OPENING_DEFAULT_CONFIG_FILE_MSG 	"The default configuration file %s couldn't be open\n"
 #define ENTER_AN_IMAGE_MSG 						"Please enter an image path:\n"
 #define DONE_MSG 								"Done.\n"
+#define FILE_DOESNT_EXIST 						"The file %s doesn't exist\n"
 
 
 // logger messages (no new line at the end since it is added automatically by the logger)
@@ -64,7 +66,7 @@ int main(int argc, char *argv[]) {
 	
 	int retval = 0;									 // return value - default 0 on success
 	char string_holder[CONFIG_FILE_PATH_SIZE];       // helper to hold strings
-	sp::ImageProc *improc;
+	sp::ImageProc *improc = NULL;
 	SP_CONFIG_MSG msg;
 	int i;
 	int j;
@@ -141,7 +143,7 @@ int main(int argc, char *argv[]) {
 
 
 	spLoggerPrintInfo(CHECK_EXTRACTION_MODE_INFO_LOG);
-	if (extraction_mode) {	// exztraction mode is chosen
+	if (extraction_mode) {	// extraction mode is chosen
 		spLoggerPrintMsg(USE_EXTRACTION_MODE_LOG);
 		spLoggerPrintInfo(EXTRACT_IMAGES_FEATURES_INFO_LOG);
 
@@ -190,6 +192,7 @@ int main(int argc, char *argv[]) {
 	}
 	printf("step 10\n"); // todo remove
 
+	query:
 	while(1) {
 		// get a query image from the user
 		printf(ENTER_AN_IMAGE_MSG);
@@ -201,6 +204,11 @@ int main(int argc, char *argv[]) {
 			printf(EXIT_MSG);
 			fflush(NULL);
 			goto err; // free memory and quit 
+		}
+
+		if( access( query_image, F_OK ) == -1 ) {
+		    printf(FILE_DOESNT_EXIST, query_image);
+			goto query;
 		}
 
 		printf("step 11\n"); // todo remove
@@ -320,6 +328,9 @@ int main(int argc, char *argv[]) {
 		}
 		printf("8\n"); // todo remove this
 		free(num_of_features_per_image); // must be freed after features_per_image
+		if (improc != NULL) {
+			delete improc;
+		}
 
 	printf(DONE_MSG);
 	return retval;

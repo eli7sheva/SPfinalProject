@@ -271,11 +271,11 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 		if (!error) {
 			error = ((features[i] = spPointCreate(coordinates, dim, index)) == NULL);
 		}
+		free(coordinates);
 
 	}
 
 	// on error - free allocated features and return
-	free(coordinates);
 	if (error) {
 		for (j=0; j<i; j++) {
 			spPointDestroy(features[j]);

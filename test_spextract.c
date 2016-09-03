@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include "unit_test_util.h"
 #include <ctype.h>

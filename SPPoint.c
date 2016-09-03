@@ -20,35 +20,27 @@ struct sp_point_t{
 	SPPoint spPointCreate(double* data, int dim, int index){
 		SPPoint point;
 		int i;
-		//printf("spPointCreate 1\n"); //todo remove this
 		// check validation of parameters
 		if (data == NULL || dim <= 0 || index < 0) {
 			return NULL;
 		}
-		//printf("spPointCreate 2\n"); //todo remove this
 		point = (SPPoint)malloc(sizeof(*point));
-		//printf("spPointCreate 3\n"); //todo remove this
 		if (point == NULL){
-			//printf("spPointCreate 4\n"); //todo remove this
 			spPointDestroy(point);
 			return NULL;
 		}
-		//printf("spPointCreate 5\n"); //todo remove this
 		// allocate memory for point->coordinates
 		point->coordinates = (double*)malloc(dim*sizeof(double));
-		//printf("spPointCreate 6\n"); //todo remove this
 		if (point->coordinates == NULL){ //Allocation failure - need to free(point)
-			//printf("spPointCreate 7\n"); //todo remove this
 			spPointDestroy(point);
 			return NULL;
 		}
-		//printf("spPointCreate 8\n"); //todo remove this
+
 		//get data
 		for (i=0; i<dim; i++){
 			point->coordinates[i] = data[i];
 		}
 
-		//printf("spPointCreate 9\n"); //todo remove this
 		// initializing the rest of point arguments
 		point->index = index;
 		point->dim = dim;
@@ -58,20 +50,14 @@ struct sp_point_t{
 		}
 
 	SPPoint spPointCopy(SPPoint source){
-		//printf("spPointCopy 1\n"); //todo remove this
 		SPPoint copiedPoint;
-		//printf("spPointCopy 2\n"); //todo remove this
 		// assertions
 		assert (source != NULL);
-		//printf("spPointCopy 3\n"); //todo remove this
 
 		copiedPoint = spPointCreate(source->coordinates, source->dim, source->index);
-		//printf("spPointCopy 4\n"); //todo remove this
 		if (copiedPoint==NULL){
-			//printf("spPointCopy 4-null\n"); //todo remove this
 			return NULL;
 		}
-		//printf("spPointCopy 5\n"); //todo remove this
 		return copiedPoint;
 	}
 

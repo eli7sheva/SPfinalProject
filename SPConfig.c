@@ -47,7 +47,6 @@
 #define DEFAULT_KNN 					1
 #define DEFAULT_MINIMAL_GUI 			false
 #define DEFAULT_LOGGER_LEVEL 			3
-#define DEFAULT_LOGGER_FILENAME 		"stdout" // todo do we need this? stdout as a string name? . remember to handle it differently
 
 // constants
 const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
@@ -763,8 +762,8 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
     char line[CONFIG_MAX_LINE_SIZE];
     int line_number = 0;
     int parameter_found_index;
-    char parameter_found[CONFIG_PARAMETERS_COUNT -1] = {0};
-	
+    char parameter_found[CONFIG_PARAMETERS_COUNT] = {0};
+
  	assert(msg != NULL);
  	*msg = SP_CONFIG_SUCCESS; // default is success
 
@@ -782,19 +781,18 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
        return NULL; // the only case where error is not printed
     }
 
+
     if ((config = (SPConfig)malloc(sizeof(*config))) == NULL) {
     	fclose(fp);
     	*msg = SP_CONFIG_ALLOC_FAIL;
     	printf(ALLOCATION_FAILURE_MSG);
         return NULL;
     }
-
     // read each line from the configuration file and parse it -
     // extract the parameter if possible, ignore empty lines and comments, error on invalid line
 	while (fgets (line, sizeof(line), fp)) {
 		line_number++;
 		parameter_found_index = parseLine(filename, line, line_number, config, msg);
-
 		// error if line is invalid (msg error code is set in the called function)
 		if (parameter_found_index == -1) {
     		fclose(fp);	
@@ -985,11 +983,7 @@ SP_CONFIG_MSG spConfigGetLoggerFileName(char* filename, const SPConfig config) {
 	if ((filename == NULL) || (config == NULL))
 		return SP_CONFIG_INVALID_ARGUMENT;
 	
-	if (strcmp(config->spLoggerFilename, DEFAULT_LOGGER_FILENAME) == 0)
-		filename = NULL;
-
-	else
-		strcpy(filename, config->spLoggerFilename);
+	strcpy(filename, config->spLoggerFilename);
 	
 	return SP_CONFIG_SUCCESS;
 }

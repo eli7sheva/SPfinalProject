@@ -280,11 +280,11 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 		if (!error) {
 			error = ((features[i] = spPointCreate(coordinates, dim, index)) == NULL);
 		}
+		free(coordinates);
 
 	}
 
 	// on error - free allocated features and return
-	free(coordinates);
 	if (error) {
 		for (j=0; j<i; j++) {
 			spPointDestroy(features[j]);
@@ -298,7 +298,35 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 	fclose(ifp);
 	return features;
 }
+bool fequal(double a, double b)
+{
+    return fabs(a-b) < 0.0004;
+}
 
+int adjust_num(double num) {
+    double low_bound = 1e7;
+    double high_bound = low_bound*10;
+    double adjusted = num;
+    int is_negative = (num < 0);
+    if(num == 0) {
+        return 0;
+    }
+    if(is_negative) {
+        adjusted *= -1;
+    }
+    while(adjusted < low_bound) {
+        adjusted *= 10;
+    }
+    while(adjusted >= high_bound) {
+        adjusted /= 10;
+    }
+    if(is_negative) {
+        adjusted *= -1;
+    }
+    //define int round(double) to be a function which rounds
+    //correctly for your domain application.
+    return round(adjusted);
+}
 
 bool test_writeReadImageFeaturesIntoFile(){
 	const char * config_filename = "test_spconfig.config";
@@ -311,6 +339,8 @@ bool test_writeReadImageFeaturesIntoFile(){
 	printf("using pic at%s\n", image_path);
 	int i;
 	int j;
+	double coor1;
+	double coor2;
 	int dim;
 	SPPoint* features_per_image;
 	SPPoint* extracted;
@@ -332,16 +362,27 @@ bool test_writeReadImageFeaturesIntoFile(){
     	return false;
     }
 
+    printf("read from file\n");
     extracted = readImageFreaturesFromFile(config,  image_index, &num_of_features_per_image2);
     ASSERT_TRUE(num_of_features_per_image2 == num_of_features_per_image);
+    printf("compare dim and index\n");
     for (i=0; i< num_of_features_per_image;i++) {
 		dim = spPointGetDimension(features_per_image[i]);
 		ASSERT_TRUE(dim == spPointGetDimension(extracted[i]));
 		ASSERT_TRUE(spPointGetIndex(features_per_image[i]) == spPointGetIndex(extracted[i]));
+	}
+	printf("compare coor\n");
+    for (i=0; i< num_of_features_per_image;i++) {
+		dim = spPointGetDimension(features_per_image[i]);
 		for (j=0;j<dim; j++){
-			ASSERT_TRUE(spPointGetAxisCoor(features_per_image[i], j) == spPointGetAxisCoor(extracted[i], j));
+			coor1 = spPointGetAxisCoor(features_per_image[i], j) ;
+			coor2 =  spPointGetAxisCoor(extracted[i], j);
+			// printf("coors %f %f\n",coor2, coor1 );
+			ASSERT_TRUE((fequal(coor2, coor1)) ||(adjust_num(coor2) == adjust_num(coor1)));
+			// ASSERT_TRUE(spPointGetAxisCoor(features_per_image[i], j) == spPointGetAxisCoor(extracted[i], j));
 		}
 	}
+
 
     for (i=0; i< num_of_features_per_image;i++) {
     	spPointDestroy(features_per_image[i]);

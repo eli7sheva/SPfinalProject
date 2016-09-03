@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "SPLogger.h"
 
+#define DEFAULT_LOGGER_FILENAME 		"stdout"
+
 /**
  * A data-structure which is used for configuring the system.
  */
