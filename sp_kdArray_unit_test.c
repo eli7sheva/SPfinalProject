@@ -108,7 +108,6 @@ static bool InitInvalidParameterArr(){
  * kdArray->d = 2
  */
 static bool SplitBasicTest(){
-	printf("*******SplitBasicTest 1*******\n"); //todo remove this
 	int i;
 	SPKDArray left;
 	SPKDArray right;
@@ -119,18 +118,16 @@ static bool SplitBasicTest(){
 	SPPoint p02;
 	SPPoint p11;
 	SPPoint* point_array = getPointArray();
-	printf("*******SplitBasicTest 2*******\n"); //todo remove this
+
 	SPKDArray kdArray = Init(point_array,5);
-	printf("*******SplitBasicTest 3*******\n"); //todo remove this
+
 	split_result = Split(kdArray, 0, &left, &right);
 	ASSERT_TRUE(split_result==1);
-	printf("*******SplitBasicTest 4*******\n"); //todo remove this
 
-	printf("*******SplitBasicTest 5*******\n"); //todo remove this
 	getCopyOfPointfromArrayOfPoints(left,0,&p00);
 	getCopyOfPointfromArrayOfPoints(left,2,&p02);
 	getCopyOfPointfromArrayOfPoints(right,1,&p11);
-	printf("*******SplitBasicTest 6*******\n"); //todo remove this
+
 	ASSERT_TRUE(getN(left) == 3);
 	ASSERT_TRUE(getD(left) == 2);
 	ASSERT_TRUE(getN(right) == 2);
@@ -148,10 +145,10 @@ static bool SplitBasicTest(){
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,0,1) == 0);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,1,0) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(right,1,1) == 0);
-	printf("*******SplitBasicTest 7*******\n"); //todo remove this
+
 	//split left half again
 	split_result = Split(left, 1, &left1, &right1);
-	printf("*******SplitBasicTest 8*******\n"); //todo remove this
+
 	/*res_split1[0]->matrix_of_sorted_indexes = [[0,1],
 	 * 									         [0,1]]
 	 */
@@ -159,7 +156,6 @@ static bool SplitBasicTest(){
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,0,1) == 1);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,1,0) == 0);
 	ASSERT_TRUE(getValFromMatrixOfSortedIndexes(left1,1,1) == 1);
-	printf("*******SplitBasicTest 9*******\n"); //todo remove this
 
 	for (i=0;i<5;i++){
 		spPointDestroy(point_array[i]);
@@ -173,7 +169,6 @@ static bool SplitBasicTest(){
 	spPointDestroy(p00);
 	spPointDestroy(p02);
 	spPointDestroy(p11);
-	printf("*******SplitBasicTest--end*******\n"); //todo remove this
 	return true;
 }
 

@@ -7,7 +7,6 @@
 #include "SPKDArray.h"
 #include <stdlib.h>
 #include <assert.h>
-#include <stdio.h> ////TODO remove this with all the prints
 
 #define ALLOC_ERROR_MSG "Allocation error"
 #define INVALID_ARG_ERROR "Invalid arguments"
@@ -215,7 +214,7 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 	int index;
 	int i, j, k, l;
 
-	//printf("Split 2\n"); //todo remove this
+
 	//check validation of arguments
 	if (coor<0){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
@@ -223,13 +222,12 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 		return -1;
 	}
 
-	//printf("Split 3\n"); //todo remove this
 	if (kdArr==NULL){
 		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(PARAMETER_KDARR_INVALID, __FILE__, __func__, __LINE__);
 		return -1;
 	}
-	//printf("Split 4\n"); //todo remove this
+
 	//initialize n and d
 	n = kdArr->n;
 	d = kdArr->d;
@@ -345,7 +343,6 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 	(*right_array)->d = d;
 	(*right_array)->n = num_of_right_points;
 
-	//printf("Split 5\n"); //todo remove this
 	//allocate memory for is_index_in_left
 	if ( (is_index_in_left = (int*)malloc(n*sizeof(int))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -365,51 +362,35 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 		return -1;
 	}
 
-	//printf("Split 6\n"); //todo remove this
+
 	// fill is_index_in_left
 	for (i=0; i<num_of_left_points; i++){
-		//todo delete:
-		//if(num_of_left_points==1){
-			//printf("matrix_of_sorted_indexes[%d][%d] = %d\n", coor, i,kdArr->matrix_of_sorted_indexes[coor][i]);
-		//}
-		//Until here delete
 		is_index_in_left[kdArr->matrix_of_sorted_indexes[coor][i]] = 1;
 	}
-	//printf("Split 7\n"); //todo remove this
+
 	for (i=num_of_left_points; i<n; i++){
-		//todo delete:
-		//if(num_of_left_points==1){
-			//printf("matrix_of_sorted_indexes[%d][%d] = %d\n", coor, i,kdArr->matrix_of_sorted_indexes[coor][i]);
-		//}
-		//Until here delete
 		is_index_in_left[kdArr->matrix_of_sorted_indexes[coor][i]] = 0;
 	}
 
-	//printf("Split 8\n"); //todo remove this
 	j=0; //index counter for left_points
 	k=0; //index counter for right_points
 
-	//printf("Split 9\n"); //todo remove this
 	// fill left->array_of_points and right->array_of_points
 	for (i=0; i<n; i++){ // i= index counter for is_index_in_left
 		if (is_index_in_left[i]==1){
 			(*left_array)->array_of_points[j]= spPointCopy(kdArr->array_of_points[i]);
-			//printf("left_points[%d] x coordinate is: %d\n", j, (int)spPointGetAxisCoor((*left_array)->array_of_points[j],0)); //todo remove this
 			j++;
 		}
 		else{ //is_index_in_left[i]==0
 			(*right_array)->array_of_points[k]= spPointCopy(kdArr->array_of_points[i]);
-			//printf("right_points[%d] x coordinate is: %d\n", k, (int)spPointGetAxisCoor((*right_array)->array_of_points[k],0)); //todo remove this
 			k++;
 		}
 	}
 
-	//printf("Split 10\n"); //todo remove this
 	// assertions on j and k after previous for loop
 	assert(j==num_of_left_points);
 	assert(k==num_of_right_points);
 
-	//printf("Split 11\n"); //todo remove this
 	//allocate memory for map_indexes
 	if ( (map_indexes= (int*)malloc(n*sizeof(int)))==NULL ){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -430,7 +411,6 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 		return -1;
 	}
 
-	//printf("Split 12\n"); //todo remove this
 	//fill map_indexes
 	j=0; //counter for left
 	k=0; //counter for right
@@ -445,31 +425,22 @@ int Split(SPKDArray kdArr, int coor, SPKDArray* left_array, SPKDArray* right_arr
 		}
 	}
 
-	//printf("Split 13\n"); //todo remove this
 	// assertions on j and k after previous for loop
 	assert(j==num_of_left_points);
 	assert(k==num_of_right_points);
-
-	//printf("Split 14\n"); //todo remove this
 
 	k=0; //counter for right
 	l=0; //counter for left
 	//fill right_sorted_indexes and left_sorted_indexes
 	for (i=0; i<d; i++){
 		for(j=0; j<n; j++){
-			//printf("i = %d, j= %d\n", i, j); //todo remove this
 			index = kdArr->matrix_of_sorted_indexes[i][j];
-			//printf("index = %d\n", index); //todo remove this
 			if (is_index_in_left[index]==1){ //the index to map belongs to left
-				//printf("index belongs to left\n"); //todo remove this
-				//printf("left matrix [%d][%d] = %d\n", i, l, map_indexes[index]); //todo remove this
 				(*left_array)->matrix_of_sorted_indexes[i][l] = map_indexes[index];
 				l++;
 			}
 			else{ //the index to map belongs to right
-				//printf("index belongs to right\n"); //todo remove this
 				(*right_array)->matrix_of_sorted_indexes[i][k] = map_indexes[index];
-				//printf("right matrix [%d][%d] = %d\n", i, k, map_indexes[index]); //todo remove this
 				k++;
 			}
 		}

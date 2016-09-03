@@ -7,8 +7,6 @@
 #include "SPPoint.h"
 #include <stdlib.h>
 #include <assert.h>
-#include <stdio.h> ////TODO remove this with all the prints
-
 
 
 struct sp_point_t{

@@ -6,7 +6,8 @@
 #include <time.h>
 
 
-
+#define LEFT "left"
+#define RIGHT "right"
 #define ALLOC_ERROR_MSG "Allocation error"
 #define INVALID_ARG_ERROR "Invalid arguments"
 #define GENERAL_ERROR_MSG "An error occurred"
@@ -21,8 +22,6 @@
 #define SPLISTELEMENTCREATE_RETURNED_NULL "the call to spListElementCreate of SPListElement returned NULL"
 #define SPBPQUEUEENGUEUE_RETURNED_NULL "the call to spBPQueueEnqueue of SPBPriorityqueue was not successful"
 
-
-//TODO: unit testing for all functions
 
 struct sp_KDTreeNode_t{
 	int Dim; // The splitting dimension
@@ -202,9 +201,6 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	}
 
 	// recursive calls to left and right
-	if ((*root)->Left==NULL){
-		printf("NULL*********\n"); // todo elisheva do we need to remove this too?
-	}
 	recursive_result = CreateKDTree(left_array, split_dimension, split_method, (*root)->Left);
 	if (recursive_result==-1){
 		destroyKDArray(left_array);
@@ -387,30 +383,6 @@ void DestroyKDTreeNode(KDTreeNode node){
 	}
 	free(node);
 }
-// todo elisheva remove this coomment?
-/*
-void DestroyKDTreeNode(KDTreeNode* node){
-	if (node==NULL){
-		return;
-	}
-	if((*node)==NULL){
-		return;
-	}
-	if ((*node)->Left!=NULL){
-		DestroyKDTreeNode((*node)->Left);
-	}
-	if ((*node)->Right!=NULL){
-		DestroyKDTreeNode((*node)->Right);
-	}
-	if ((*node)->Data!=NULL){
-		spPointDestroy((*node)->Data);
-	}
-	free(*node);
-	*node=NULL;
-	free(node);
-	return;
-}
-*/
 
 int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	SPListElement newElement;
@@ -449,7 +421,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	//recursive call to left or right
 	if (spPointGetAxisCoor(*P,curr->Dim)<=curr->Val){
 		//continue search on left subtree
-		subtree_searched = 'L';// todo elisheva ove 'L' to constant (#define
+		subtree_searched = LEFT;
 		return_val = kNearestNeighbors((*curr->Left), bpq, P);
 		//if error occurred in the recursive call
 		if (return_val==0){
@@ -458,7 +430,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	}
 	else{
 		//continue search on right subtree
-		subtree_searched = 'R'; // todo elisheva ove 'R' to constant (#define)
+		subtree_searched = RIGHT;
 		return_val = kNearestNeighbors((*curr->Right), bpq, P);
 		//if error occurred in the recursive call
 		if (return_val==0){
@@ -470,14 +442,14 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	hypersphere = curr->Val - spPointGetAxisCoor(*P,curr->Dim);
 	if ( (!spBPQueueIsFull(bpq)) || ((hypersphere*hypersphere) < spBPQueueMaxValue(bpq)) ){
 		//search the subtree that wasn't searched yet
-		if (subtree_searched=='L'){// todo elisheva ove 'L' to constant (#define
+		if (subtree_searched==LEFT){
 			return_val = kNearestNeighbors((*curr->Right), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
 				return -1;
 			}
 		}
-		else{
+		else{ //(subtree_searched==RIGHT)
 			return_val = kNearestNeighbors((*curr->Left), bpq, P);
 			//if error occurred in the recursive call
 			if (return_val==0){
