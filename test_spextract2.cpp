@@ -235,7 +235,6 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 	int i;
 	int j;
 	SPPoint* features;
-	// int image_index; todo need to return this?
 	char line[MAX_LINE_SIZE];
 	char features_filename[MAX_LINE_SIZE];
 	FILE *ifp;
@@ -265,7 +264,7 @@ SPPoint* readImageFreaturesFromFile(const SPConfig config, int image_index, int*
 	fgets(line, sizeof(line), ifp);
 	*num_of_features = atoi(line);
 
-	if ((features = (SPPoint*)malloc(sizeof(*features)*(*num_of_features))) == NULL) { // todo check this is ok
+	if ((features = (SPPoint*)malloc(sizeof(*features)*(*num_of_features))) == NULL) {
 		spLoggerPrintError(ALLOCATION_FAILURE_MSG, __FILE__, __func__, __LINE__);
 		fclose(ifp);
 		return NULL;

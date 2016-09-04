@@ -824,7 +824,7 @@ bool spConfigIsExtractionMode(const SPConfig config, SP_CONFIG_MSG* msg){
 
  	if (config == NULL) {
  		*msg = SP_CONFIG_INVALID_ARGUMENT;
- 		return false;// todo did they said if return true or false here?
+ 		return false;
  	}
 
 	if (config->spExtractionMode)
@@ -841,7 +841,7 @@ bool spConfigMinimalGui(const SPConfig config, SP_CONFIG_MSG* msg){
 
  	if (config == NULL) {
  		*msg = SP_CONFIG_INVALID_ARGUMENT;
- 		return false; // todo did they said if return true or false here?
+ 		return false; 
  	}
 
 	if (config->spMinimalGUI)

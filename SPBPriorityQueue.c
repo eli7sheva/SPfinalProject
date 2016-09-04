@@ -11,7 +11,6 @@ SP_BPQUEUE_MSG convertListMsgToQueueMsg(SP_LIST_MSG msg);
 
 /*
 * removes the last element in the queue
-TODO add doc
 */
 
 SP_BPQUEUE_MSG spQueueRemoveLast(SPBPQueue source);

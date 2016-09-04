@@ -70,7 +70,7 @@ typedef struct sp_config_t* SPConfig;
 #define DEFAULT_KNN                     1
 #define DEFAULT_MINIMAL_GUI             false
 #define DEFAULT_LOGGER_LEVEL            3
-#define DEFAULT_LOGGER_FILENAME         "stdout" // todo do we need this? stdout as a string name? . remember to handle it differently
+#define DEFAULT_LOGGER_FILENAME         "stdout"
 
 // constants
 const char* OPTIONAL_SUFFIX[] =  { ".jpg" , ".png" , ".bmp" , ".gif"};
@@ -109,20 +109,17 @@ struct sp_config_t{
     int spNumOfImages; 
     int spPCADimension; 
     char* spPCAFilename; 
-    int spNumOfFeatures; // TODO change every isPositiveInt to unsinged int
+    int spNumOfFeatures; 
     bool spExtractionMode;
     int spNumOfSimilarImages;
     tree_split_method spKDTreeSplitMethod;
     int spKNN; 
     bool spMinimalGUI;
-    SP_LOGGER_LEVEL spLoggerLevel; // todo ask if using SP_LOGGER_LEVEL is ok.. thats not the ORAOT
+    SP_LOGGER_LEVEL spLoggerLevel; 
     char * spLoggerFilename; 
 };
 
 
-
-
-// todo check this should 
 void spConfigDestroy(SPConfig config) {
     if (config != NULL) {
         free(config->spImagesDirectory);
@@ -780,7 +777,6 @@ int checkMissingAndSetDefaults(const char* config_filename, int num_of_lines, SP
     }           
 
     if (!set_in_config[SP_LOGGER_FILNAME_INDEX]) {
-        // todo do we need this? stdout as a string name?
         if ((config->spLoggerFilename = (char*)malloc(CONFIG_MAX_LINE_SIZE*sizeof(char))) == NULL) {
             *msg = SP_CONFIG_ALLOC_FAIL;
             printf(ALLOCATION_FAILURE_MSG);
@@ -863,7 +859,7 @@ bool spConfigIsExtractionMode(const SPConfig config, SP_CONFIG_MSG* msg){
 
     if (config == NULL) {
         *msg = SP_CONFIG_INVALID_ARGUMENT;
-        return false;// todo did they said if return true or false here?
+        return false;
     }
 
     if (config->spExtractionMode)
@@ -880,7 +876,7 @@ bool spConfigMinimalGui(const SPConfig config, SP_CONFIG_MSG* msg){
 
     if (config == NULL) {
         *msg = SP_CONFIG_INVALID_ARGUMENT;
-        return false; // todo did they said if return true or false here?
+        return false; 
     }
 
     if (config->spMinimalGUI)

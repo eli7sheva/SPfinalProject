@@ -4,10 +4,7 @@
 #include <stdbool.h>
 /**
  * SP Bounded Priority Queue summary
- *
- * TODO Complete documentation
  */
-
 
 /** type used to define Bounded priority queue **/
 typedef struct sp_bp_queue_t* SPBPQueue;
@@ -44,9 +41,6 @@ SPBPQueue spBPQueueCreate(int maxSize);
  */
 SPBPQueue spBPQueueCopy(SPBPQueue source);
 
-/**
- * TODO Complete documentation
- */
 void spBPQueueDestroy(SPBPQueue source);
 
 /**
