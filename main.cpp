@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 			}
 
 		}
-		// free memory before entring to the loop again
+		// free memory before entering the loop again
 		
 		free(closest_images);
 		if (query_features != NULL) {

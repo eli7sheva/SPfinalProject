@@ -147,6 +147,9 @@ int* nearestImages(double* arr, int size, int nearestNImages){
         first_minimums[i] = (int)arr_with_indixes[i][1];
     }
 
+    for (i = 0; i < size; i++){
+    	free(arr_with_indixes[i]);
+    }
     free(arr_with_indixes);
     return first_minimums;
 }
@@ -329,7 +332,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
             databaseFeatures);
 
         if (featureClosestImages == NULL) {
-            // free everythin
+            // free everything
             free(hintsPerImage);
             free(featureClosestImages);
             return NULL; // error log is printed inside getNClosestImagesForFeature
@@ -343,6 +346,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
                 }
             }
         }
+        free(featureClosestImages);
     }
 
     // find the nearest images
@@ -354,6 +358,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
         return NULL; // error log is printed inside nearestImages
 
     }
+    free(hintsPerImage);
     return closestImages;
 }
 
