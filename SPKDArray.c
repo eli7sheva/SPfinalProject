@@ -49,11 +49,69 @@ int getD(SPKDArray kdArray){
 	return kdArray->d;
 }
 
+/*
+ * function that allocates memory for a new SPKDArray with all its field
+ * param:
+ * 		 KDArray: address to store the new SPKDArray
+ * 		 size: number of points to allocate
+ * 		 dim: number of dimentions
+ * return:
+ * 		-1 if an allocation error occurred
+ * 		 1 otherwise
+ */
+int mallocForInitKdArray(SPKDArray* KDArray, int size, int dim){
+	int i;
+	int j;
+
+	//allocate memory for *KDArray
+	if ((*KDArray = (SPKDArray)malloc(sizeof(**KDArray)))==NULL){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
+	// allocate memory for *KDArray->array_of_points
+	if ( ((*KDArray)->array_of_points = (SPPoint*)malloc(size*sizeof(SPPoint))) == NULL){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+		free(*KDArray);
+		return -1;
+	}
+
+	//allocate memory for *KDArray->matrix_of_sorted_indexes, this will be a d*n matrix, the i'th row is the indexes of the points in arr sorted according to their i'th dimension
+	if ( ((*KDArray)->matrix_of_sorted_indexes = (int**)malloc(dim*sizeof(int*))) == NULL){
+		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+		for (i=0; i<size; i++){
+			spPointDestroy((*KDArray)->array_of_points[i]);
+		}
+		free((*KDArray)->array_of_points);
+		free(*KDArray);
+		return -1;
+	}
+	for (i=0; i<dim; i++){
+		if( ((*KDArray)->matrix_of_sorted_indexes[i]=(int*)malloc(size*sizeof(int))) == NULL){
+			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
+			for (j=0; j<i; j++){
+				free((*KDArray)->matrix_of_sorted_indexes[j]);
+			}
+			free((*KDArray)->matrix_of_sorted_indexes);
+
+			for (i=0; i<size; i++){
+				spPointDestroy((*KDArray)->array_of_points[j]);
+			}
+			free((*KDArray)->array_of_points);
+			free(*KDArray);
+			return -1;
+		}
+	}
+	return 1;
+}
+
 SPKDArray Init(SPPoint* arr, int size){
 	SPKDArray KDArray;
 	int d;                  // d = the dimension of the points (assuming dimension is the same for all points)
 	double** index_val_arr; //double array containing n rows. each row contains the index and the value of a specific coordinate in the point of that index
 	int i,j;
+	int malloc_result;     // holds the result of the call to mallocForInitKdArray
+
 
 	//check validation of the parameters
 	if (size<1){
@@ -70,16 +128,10 @@ SPKDArray Init(SPPoint* arr, int size){
 	//initialize d
 	d = spPointGetDimension(arr[0]);
 
-	//allocate memory for KDArray
-	if ((KDArray = (SPKDArray)malloc(sizeof(*KDArray)))==NULL){
-		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		return NULL;
-	}
-
-	// allocate memory for KDArray->array_of_points
-	if ( (KDArray->array_of_points = (SPPoint*)malloc(size*sizeof(SPPoint))) == NULL){
-		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		free(KDArray);
+	// allocate memory for KDArray and its fields
+	malloc_result = mallocForInitKdArray(&KDArray, size, d);
+	if (malloc_result==-1){
+		// the memory freeing would already be done inside mallocForInitKdArray
 		return NULL;
 	}
 
@@ -89,40 +141,7 @@ SPKDArray Init(SPPoint* arr, int size){
 		if (KDArray->array_of_points[i] == NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(SPPOINTCOPY_RETURNED_NULL, __FILE__, __func__, __LINE__);
-			for (j=0; j<i; j++){
-				spPointDestroy(KDArray->array_of_points[j]);
-			}
-			free(KDArray->array_of_points);
-			free(KDArray);
-			return NULL;
-		}
-	}
-
-	//allocate memory for KDArray->matrix_of_sorted_indexes, this will be a d*n matrix, the i'th row is the indexes of the points in arr sorted according to their i'th dimension
-	if ( (KDArray->matrix_of_sorted_indexes = (int**)malloc(d*sizeof(int*))) == NULL){
-		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		for (i=0; i<size; i++){
-			spPointDestroy(KDArray->array_of_points[i]);
-		}
-		free(KDArray->array_of_points);
-		free(KDArray);
-		return NULL;
-	}
-	for (i=0; i<d; i++){
-		if( (KDArray->matrix_of_sorted_indexes[i]=(int*)malloc(size*sizeof(int))) == NULL){
-			spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-			for (j=0; j<i; j++){
-				free(KDArray->matrix_of_sorted_indexes[j]);
-			}
-			free(KDArray->matrix_of_sorted_indexes);
-			
-			for (i=0; i<size; i++){
-				spPointDestroy(KDArray->array_of_points[j]);
-			}
-			free(KDArray->array_of_points);
-			free(KDArray);
-
-
+			destroyKDArray(KDArray);
 			return NULL;
 		}
 	}
@@ -130,16 +149,7 @@ SPKDArray Init(SPPoint* arr, int size){
 	//allocate memory for index_val_arr: n rows, 2 columns
 	if ( (index_val_arr = (double**)malloc(size*sizeof(double*))) == NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
-		for (j=0; j<d; j++){
-			free(KDArray->matrix_of_sorted_indexes[j]);
-		}
-		free(KDArray->matrix_of_sorted_indexes);
-		
-		for (i=0; i<size; i++){
-			spPointDestroy(KDArray->array_of_points[j]);
-		}
-		free(KDArray->array_of_points);
-		free(KDArray);
+		destroyKDArray(KDArray);
 		return NULL;
 	}
 
@@ -150,18 +160,7 @@ SPKDArray Init(SPPoint* arr, int size){
 				free(index_val_arr[j]);
 			}
 			free(index_val_arr);
-
-			for (j=0; j<d; j++){
-				free(KDArray->matrix_of_sorted_indexes[j]);
-			}
-			free(KDArray->matrix_of_sorted_indexes);
-			
-			for (i=0; i<size; i++){
-				spPointDestroy(KDArray->array_of_points[j]);
-			}
-			free(KDArray->array_of_points);
-			free(KDArray);
-
+			destroyKDArray(KDArray);
 			return NULL;
 		}
 	}
@@ -197,6 +196,9 @@ SPKDArray Init(SPPoint* arr, int size){
 
 	return KDArray;
 }
+
+
+
 
 int copmareByValue(const void* elem1, const void* elem2){
 	double* tuple1 = *(double**) elem1;
