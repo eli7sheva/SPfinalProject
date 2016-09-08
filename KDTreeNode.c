@@ -423,37 +423,37 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	if (spPointGetAxisCoor(*P,curr->Dim)<=curr->Val){
 		//continue search on left subtree
 		subtree_searched = LEFT;
-		return_val = kNearestNeighbors((*curr->Left), bpq, P);
+		return_val = kNearestNeighbors(*(curr->Left), bpq, P);
 		//if error occurred in the recursive call
-		if (return_val==0){
+		if (return_val==-1){
 			return -1;
 		}
 	}
 	else{
 		//continue search on right subtree
 		subtree_searched = RIGHT;
-		return_val = kNearestNeighbors((*curr->Right), bpq, P);
+		return_val = kNearestNeighbors(*(curr->Right), bpq, P);
 		//if error occurred in the recursive call
-		if (return_val==0){
+		if (return_val==-1){
 			return -1;
 		}
 	}
 
-	//if bpq is not full or the candidate's hypersphere crosses the splitting plane
+	//if bpq is not full or the candidate's hyper sphere crosses the splitting plane
 	hypersphere = curr->Val - spPointGetAxisCoor(*P,curr->Dim);
-	if ( (!spBPQueueIsFull(bpq)) || ((hypersphere*hypersphere) < spBPQueueMaxValue(bpq)) ){
+	if ( (!spBPQueueIsFull(bpq)) || (((hypersphere*hypersphere) < spBPQueueMaxValue(bpq))) ){
 		//search the subtree that wasn't searched yet
 		if (strcmp(subtree_searched, LEFT)==0){
-			return_val = kNearestNeighbors((*curr->Right), bpq, P);
+			return_val = kNearestNeighbors(*(curr->Right), bpq, P);
 			//if error occurred in the recursive call
-			if (return_val==0){
+			if (return_val==-1){
 				return -1;
 			}
 		}
 		else{ //(subtree_searched==RIGHT)
-			return_val = kNearestNeighbors((*curr->Left), bpq, P);
+			return_val = kNearestNeighbors(*(curr->Left), bpq, P);
 			//if error occurred in the recursive call
-			if (return_val==0){
+			if (return_val==-1){
 				return -1;
 			}
 		}
