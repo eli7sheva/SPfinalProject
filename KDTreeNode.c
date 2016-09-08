@@ -86,22 +86,6 @@ int getDimentionMaxSpread(SPKDArray KDArray){
 }
 
 /*
- * returns the dimension to split by if the parameter is RANDOM
- * @param KDArray a SPKDArray object
- * @return a random int between 0 and KDArray->d -1
- */
-int getDimentionRandom(SPKDArray KDArray){
-	int rand_dimension;
-	int d = getD(KDArray);
-	//Initialize random number generator
-	srand(time(NULL));
-	//get random number between 0 and d-1
-	rand_dimension = rand()%d;
-	return rand_dimension;
-}
-
-
-/*
  * the recursive function creating the KD tree, stores it in the adress root
  * @param
  * 		KDArray: a SPKDArray object
@@ -159,8 +143,7 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 
 	//Assign split_dimension according to value of spKDTreeSplitMethod
 	if(split_method==0){   //0==RANDOM
-			split_dimension = rand()%d; //getDimentionRandom(KDArray);
-			printf("split dim = %d\n", split_dimension); //todo remove this
+			split_dimension = rand()%d;
 		}
 	else if(split_method==1){  // 1==MAX_SPREAD
 		split_dimension = getDimentionMaxSpread(KDArray);
