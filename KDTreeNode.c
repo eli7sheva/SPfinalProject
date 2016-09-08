@@ -159,7 +159,8 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 
 	//Assign split_dimension according to value of spKDTreeSplitMethod
 	if(split_method==0){   //0==RANDOM
-			split_dimension = getDimentionRandom(KDArray);
+			split_dimension = rand()%d; //getDimentionRandom(KDArray);
+			printf("split dim = %d\n", split_dimension); //todo remove this
 		}
 	else if(split_method==1){  // 1==MAX_SPREAD
 		split_dimension = getDimentionMaxSpread(KDArray);
