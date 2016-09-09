@@ -78,7 +78,7 @@ int compare(const void *a, const void * b) {
 
 /** given an array of doubles returns an array containing the indexes of the
  *  lowest nearestNImages numbers from the original array
-  * @param arr - array of L2-Squared distances 
+  * @param arr - array holding hits for the image of the index its in
   * @param size - the size of array arr
   * @param nearestNImages the number of the best (closest) distances to find
   * 
@@ -88,7 +88,7 @@ int compare(const void *a, const void * b) {
   * returns an array containing the indexes of the lowest nearestNImages numbers from the original array
   *         or NULL in case of error
   */
-int* nearestImages(double* arr, int size, int nearestNImages){
+int* nearestImages(int* arr, int size, int nearestNImages){
     /*
     * in order to return lowest nearestNImages numbers from arr, this function sorts arr using qsort and keeping indexes order
     * arr_with_indixes - will hold the matrix of dimensions size X 2 where first row is a copy of arr and second row is the indexes of each value in arr
@@ -135,7 +135,7 @@ int* nearestImages(double* arr, int size, int nearestNImages){
 
     // initialize arr_with_indexes
     for(i = 0; i < size; i++){
-        arr_with_indixes[i][0] = arr[i];    // copy value from arr
+        arr_with_indixes[i][0] = (double)arr[i];    // copy value from arr
         arr_with_indixes[i][1] = i;         // set index before sorting
     }
 
@@ -277,6 +277,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint featureA, KDTreeNode root){
 	if (knnResult!=1){
 		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 		spLoggerPrintDebug(KNN_RETURNED_NULL, __FILE__, __func__, __LINE__);
+		spBPQueueDestroy(bpq);
 		return NULL;
 	}
 
@@ -284,6 +285,7 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint featureA, KDTreeNode root){
 	if ((best_spKNN_features = (int*)malloc(spKNN*sizeof(int)))==NULL){
 		spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
 		free(best_spKNN_features);
+		spBPQueueDestroy(bpq);
 		return NULL;
 	}
 
@@ -303,7 +305,6 @@ int* getSPKNNClosestFeatures(int spKNN, SPPoint featureA, KDTreeNode root){
 
 	}
 	spBPQueueDestroy(bpq);
-
 	return best_spKNN_features;
 }
 
@@ -312,7 +313,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
     int j;
     int k;
     int* featureClosestImages; // array holds the spKNN indexes of the closest images to a feature of the  query
-    double* hintsPerImage;  // array counts number of hints per image
+    int* hintsPerImage;  // array counts number of hints per image
     int* closestImages; // array holds the spNumOfSimilarImages indexes of the closest images to the query image
 
     // return NULL if one of the parameters is not initialized
@@ -321,7 +322,7 @@ int* getKClosestImages(int nearestKImages, int bestNFeatures, SPPoint* queryFeat
         return NULL;
     }
 
-    if ((hintsPerImage = (double*)calloc(numberOfImages, sizeof(double))) == NULL) {
+    if ((hintsPerImage = (int*)calloc(numberOfImages, sizeof(double))) == NULL) {
         spLoggerPrintError(ALLOC_ERROR_MSG, __FILE__, __func__, __LINE__);
         return NULL;
     }

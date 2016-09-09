@@ -106,8 +106,9 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	int split_result;
 	int recursive_result;
 	int initNode_result;
-	double split_median;
-	int median_index;
+	int median_index;   	//the last index of the left half
+	int index_of_mid_point; //the index from matrix_of_sorted_indexes[split_dimension][median_index]
+	double split_median;	//the value of array_of_points[index_of_mid_point] of coor split_dimension
 	SPPoint tmp_point;
 	int n; //number of point in KDArray
 	int d; //number of dimensions in KDArray
@@ -128,6 +129,7 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	//if KDArray has only one point
 	if (n==1){
 		getCopyOfPointfromArrayOfPoints(KDArray, 0, &tmp_point);
+		//create new node
 		initNode_result = InitNode(-1,INFINITY,&leftNode,&rightNode,tmp_point,root);//to create node with left and right as null we send pointer to node
 		if (initNode_result==-1){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -170,7 +172,8 @@ int CreateKDTree(SPKDArray KDArray, int last_split_dim, int split_method, KDTree
 	}
 
 	median_index = getN(left_array)-1; //the last index in the left part of the split
-	getCopyOfPointfromArrayOfPoints(left_array, median_index, &tmp_point); //the last point from the left half
+	index_of_mid_point = getValFromMatrixOfSortedIndexes(KDArray, split_dimension, median_index);
+	getCopyOfPointfromArrayOfPoints(KDArray, index_of_mid_point, &tmp_point); //the last point from the left half
 	split_median = spPointGetAxisCoor(tmp_point,split_dimension); //get the value of the median, by which the split occurred
 	spPointDestroy(tmp_point);
 	
@@ -370,11 +373,27 @@ void DestroyKDTreeNode(KDTreeNode node){
 }
 
 int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
+	//parameters needed if curr is leaf:
+	SPPoint data; 			//holds the point that belongs to the Node curr
+	int index;   			// holds the index of data
+	double distance; 		//L2Square distance between data and p
 	SPListElement newElement;
+
+	//parameters needed if curr is NOT leaf:
+	double P_dim; 			//holds P[dim]
+	char* subtree_searched; // equals either LEFT or RIGHT and indicates the subtree that was searches already
+	int return_val;         // holds the result of the recursive call
 	SP_BPQUEUE_MSG msg;
-	int return_val;
-	char* subtree_searched;
+
+
 	double hypersphere;
+
+
+	//check parameter validation:
+	if (bpq==NULL || P==NULL){
+		spLoggerPrintError(INVALID_ARG_ERROR, __FILE__, __func__, __LINE__);
+		return -1;
+	}
 
 	//reached end of tree
 	if (curr==NULL){
@@ -382,10 +401,13 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	}
 	
 	//reached a leaf
-	if (curr->Data!=NULL){
+	if (curr->Dim==-1){
+		KDTreeNodegetData(curr, &data); //get the point that belongs to the leaf
 		//create new ListElement:
 		//index=index of the point that is the Data of curr. value=distance between the point of curr to P
-		newElement = spListElementCreate(spPointGetIndex(curr->Data), spPointL2SquaredDistance(*P,curr->Data));
+		index = spPointGetIndex(data);
+		distance = spPointL2SquaredDistance(*P,data);
+		newElement = spListElementCreate(index, distance);
 		//if there was a problem creating newElement
 		if (newElement==NULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
@@ -398,13 +420,23 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 		if (msg!=SP_BPQUEUE_SUCCESS && msg!=SP_BPQUEUE_FULL){
 			spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
 			spLoggerPrintDebug(SPBPQUEUEENGUEUE_RETURNED_NULL, __FILE__, __func__, __LINE__);
+			spListElementDestroy(newElement);
+			spPointDestroy(data);
 			return -1;
 		}
+		spPointDestroy(data);
 		spListElementDestroy(newElement);
 		return 1;
 	}
-	//recursive call to left or right
-	if (spPointGetAxisCoor(*P,curr->Dim)<=curr->Val){
+
+	//if curr is not a leaf: recursive call to left or right
+	//check validation of curr->Val
+	if (curr->Val==INFINITY){
+		spLoggerPrintError(GENERAL_ERROR_MSG, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+	P_dim = spPointGetAxisCoor(*P,curr->Dim);
+	if (P_dim <= curr->Val){
 		//continue search on left subtree
 		subtree_searched = LEFT;
 		return_val = kNearestNeighbors(*(curr->Left), bpq, P);
@@ -424,7 +456,7 @@ int kNearestNeighbors(KDTreeNode curr , SPBPQueue bpq, SPPoint* P){
 	}
 
 	//if bpq is not full or the candidate's hyper sphere crosses the splitting plane
-	hypersphere = curr->Val - spPointGetAxisCoor(*P,curr->Dim);
+	hypersphere = curr->Val - P_dim;
 	if ( (!spBPQueueIsFull(bpq)) || (((hypersphere*hypersphere) < spBPQueueMaxValue(bpq))) ){
 		//search the subtree that wasn't searched yet
 		if (strcmp(subtree_searched, LEFT)==0){

@@ -344,7 +344,7 @@ static bool KNNBasicTest(){
 	int serach_result;
 	int index;
 
-	bpq = spBPQueueCreate(1);
+	bpq = spBPQueueCreate(3);
 	point_array = getPointArray();
 	initTree_result = InitTree(point_array, size, split_method, &root);
 	ASSERT_TRUE(initTree_result==1); //InitTree completed successfully
@@ -383,6 +383,55 @@ static bool KNNBasicTest(){
 	return true;
 }
 
+SPPoint* get10PointArray4D(){
+	SPPoint* point_array = (SPPoint*)malloc(10*sizeof(SPPoint));
+	double data0[4] = {1.0,-60.0,7.0,234.0};
+	double data1[4] = {28.0, 100.0, 94.0, -70.0};
+	double data2[4] = {123.0, 2.0, 21.0, -97.0};
+	double data3[4] = {5.0, 6.0, -5.0, 10.0};
+	double data4[4] = {333.0, -2.0, 37.0, 69.0};
+	double data5[4] = {-410.0, -170.0, -249.0, 172.0};
+	double data6[4] = {-484.0, -34.0, 283.0, 137.0};
+	double data7[4] = {14.0, 58.0, -327.0, 155.0};
+	double data8[4] = {398.0, 323.0, 411.0, 228.0};
+	double data9[4] = {-150.0, 456.0, -89.0, 252.0};
+	point_array[0] = spPointCreate(data0, 4, 0);
+	point_array[1] = spPointCreate(data1, 4, 1);
+	point_array[2] = spPointCreate(data2, 4, 2);
+	point_array[3] = spPointCreate(data3, 4, 3);
+	point_array[4] = spPointCreate(data4, 4, 4);
+	point_array[5] = spPointCreate(data5, 4, 0);
+	point_array[6] = spPointCreate(data6, 4, 1);
+	point_array[7] = spPointCreate(data7, 4, 2);
+	point_array[8] = spPointCreate(data8, 4, 3);
+	point_array[9] = spPointCreate(data9, 4, 4);
+	return point_array;
+}
+
+static bool initIncrment10p4D(){
+	SPPoint* point_array = get10PointArray4D();
+	int split_method = 2; //INCREMENTAL
+	int size = 10;
+	int i;
+	KDTreeNode root;
+	int InitTree_result;
+
+	InitTree_result = InitTree(point_array, size, split_method, &root);
+	if(InitTree_result==-1){
+		DestroyKDTreeNode(root);
+	}
+	//check root
+	ASSERT_TRUE(KDTreeNodegetDim(root)==0);
+	ASSERT_TRUE(KDTreeNodegetVal(root)==5.0);
+	//free memory
+	for (i=0;i<10;i++){
+		spPointDestroy(point_array[i]);
+	}
+	free(point_array);
+	DestroyKDTreeNode(root);
+	return true;
+}
+
 
 int main() {
 	RUN_TEST(InitNodeBasicTest);
@@ -390,5 +439,6 @@ int main() {
 	RUN_TEST(InitTreeIncrementalTest);
 	RUN_TEST(InitTreeMaxSpreadTest);
 	RUN_TEST(KNNBasicTest);
+	RUN_TEST(initIncrment10p4D);
 	return 0;
 }
